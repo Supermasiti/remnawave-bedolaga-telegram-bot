@@ -1264,7 +1264,7 @@ async def activate_trial(
         if price_kopeks > 0 and user.balance_kopeks < price_kopeks:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f'Insufficient balance. Need {price_kopeks / 100:.2f} RUB',
+                detail=f'Insufficient balance. Need {price_kopeks / 100:.2f} USD',
             )
         trial_description = 'Активация триальной подписки'
         success = await subtract_user_balance(

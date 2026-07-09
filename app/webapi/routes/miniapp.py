@@ -345,23 +345,13 @@ def _autopay_response_extras(
     return extras
 
 
-async def _get_usd_to_rub_rate() -> float:
-    try:
-        rate = await currency_converter.get_usd_to_rub_rate()
-    except Exception:
-        rate = 0.0
-    if not rate or rate <= 0:
-        rate = _CRYPTOBOT_FALLBACK_RATE
-    return float(rate)
+def _get_usd_to_rub_rate_unused() -> None:
+    pass  # removed after USD-native migration
 
-
-def _compute_cryptobot_limits(rate: float) -> tuple[int, int]:
-    min_kopeks = max(1, int(math.ceil(rate * _CRYPTOBOT_MIN_USD * 100)))
-    max_kopeks = int(math.floor(rate * _CRYPTOBOT_MAX_USD * 100))
-    max_kopeks = max(max_kopeks, min_kopeks)
+def _compute_cryptobot_limits() -> tuple[int, int]:
+    min_kopeks = int(_CRYPTOBOT_MIN_USD * 100)
+    max_kopeks = int(_CRYPTOBOT_MAX_USD * 100)
     return min_kopeks, max_kopeks
-
-
 def _current_request_timestamp() -> str:
     return datetime.now(UTC).replace(microsecond=0).isoformat()
 
@@ -813,14 +803,13 @@ async def get_payment_methods(
         )
 
     if settings.is_cryptobot_enabled():
-        rate = await _get_usd_to_rub_rate()
-        min_amount_kopeks, max_amount_kopeks = _compute_cryptobot_limits(rate)
+        min_amount_kopeks, max_amount_kopeks = _compute_cryptobot_limits()
         methods.append(
             MiniAppPaymentMethod(
                 id='cryptobot',
                 icon='🪙',
                 requires_amount=True,
-                currency='RUB',
+                currency='USD',
                 min_amount_kopeks=min_amount_kopeks,
                 max_amount_kopeks=max_amount_kopeks,
                 integration_type=MiniAppPaymentIntegrationType.REDIRECT,
@@ -833,7 +822,7 @@ async def get_payment_methods(
                 id='heleket',
                 icon='🪙',
                 requires_amount=True,
-                currency='RUB',
+                currency='USD',
                 min_amount_kopeks=100 * 100,
                 max_amount_kopeks=100_000 * 100,
                 integration_type=MiniAppPaymentIntegrationType.REDIRECT,
@@ -1240,17 +1229,16 @@ async def create_payment_link(
             raise HTTPException(status.HTTP_400_BAD_REQUEST, detail='Payment method is unavailable')
         if amount_kopeks is None or amount_kopeks <= 0:
             raise HTTPException(status.HTTP_400_BAD_REQUEST, detail='Amount must be positive')
-        rate = await _get_usd_to_rub_rate()
-        min_amount_kopeks, max_amount_kopeks = _compute_cryptobot_limits(rate)
+        min_amount_kopeks, max_amount_kopeks = _compute_cryptobot_limits()
         if amount_kopeks < min_amount_kopeks:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
-                detail=f'Amount is below minimum ({min_amount_kopeks / 100:.2f} RUB)',
+                detail=f'Amount is below minimum ({min_amount_kopeks / 100:.2f} USD)',
             )
         if amount_kopeks > max_amount_kopeks:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
-                detail=f'Amount exceeds maximum ({max_amount_kopeks / 100:.2f} RUB)',
+                detail=f'Amount exceeds maximum ({max_amount_kopeks / 100:.2f} USD)',
             )
 
         try:
@@ -1310,12 +1298,12 @@ async def create_payment_link(
         if amount_kopeks < min_amount_kopeks:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
-                detail=f'Amount is below minimum ({min_amount_kopeks / 100:.2f} RUB)',
+                detail=f'Amount is below minimum ({min_amount_kopeks / 100:.2f} USD)',
             )
         if amount_kopeks > max_amount_kopeks:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
-                detail=f'Amount exceeds maximum ({max_amount_kopeks / 100:.2f} RUB)',
+                detail=f'Amount exceeds maximum ({max_amount_kopeks / 100:.2f} USD)',
             )
 
         payment_service = PaymentService()
@@ -2240,7 +2228,7 @@ async def _resolve_stars_payment_status(
         status='paid',
         is_paid=True,
         amount_kopeks=transaction.amount_kopeks,
-        currency='RUB',
+        currency='USD',
         completed_at=transaction.completed_at or transaction.created_at,
         transaction_id=transaction.id,
         external_id=transaction.external_id,
@@ -2283,7 +2271,7 @@ async def _resolve_tribute_payment_status(
         status='paid',
         is_paid=True,
         amount_kopeks=transaction.amount_kopeks,
-        currency='RUB',
+        currency='USD',
         completed_at=transaction.completed_at or transaction.created_at,
         transaction_id=transaction.id,
         external_id=transaction.external_id,
@@ -5084,7 +5072,7 @@ async def _build_subscription_settings(
 
     settings_payload = MiniAppSubscriptionSettings(
         subscription_id=subscription.id,
-        currency=(getattr(user, 'balance_currency', None) or 'RUB').upper(),
+        currency=(getattr(user, 'balance_currency', None) or 'USD').upper(),
         current=MiniAppSubscriptionCurrentSettings(
             servers=current_servers,
             traffic_limit_gb=subscription.traffic_limit_gb,
@@ -5143,7 +5131,7 @@ async def get_subscription_renewal_options_endpoint(
     if settings.is_tariffs_mode() and not subscription.tariff_id:
         return MiniAppSubscriptionRenewalOptionsResponse(
             periods=[],
-            currency=(getattr(user, 'balance_currency', None) or 'RUB').upper(),
+            currency=(getattr(user, 'balance_currency', None) or 'USD').upper(),
             balance_kopeks=getattr(user, 'balance_kopeks', 0),
             balance_label=settings.format_price(getattr(user, 'balance_kopeks', 0)),
             status_message='Classic subscriptions cannot be renewed. Please purchase a tariff.',
@@ -5157,7 +5145,7 @@ async def get_subscription_renewal_options_endpoint(
     )
 
     balance_kopeks = getattr(user, 'balance_kopeks', 0)
-    currency = (getattr(user, 'balance_currency', None) or 'RUB').upper()
+    currency = (getattr(user, 'balance_currency', None) or 'USD').upper()
 
     promo_group = getattr(user, 'promo_group', None)
     promo_group_model = (
@@ -5393,14 +5381,13 @@ async def submit_subscription_renewal_endpoint(
         if not settings.is_cryptobot_enabled():
             raise HTTPException(status.HTTP_400_BAD_REQUEST, detail='Payment method is unavailable')
 
-        rate = await _get_usd_to_rub_rate()
-        min_amount_kopeks, max_amount_kopeks = _compute_cryptobot_limits(rate)
+        min_amount_kopeks, max_amount_kopeks = _compute_cryptobot_limits()
         if missing_amount < min_amount_kopeks:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
                 detail={
                     'code': 'amount_below_minimum',
-                    'message': f'Amount is below minimum ({min_amount_kopeks / 100:.2f} RUB)',
+                    'message': f'Amount is below minimum ({min_amount_kopeks / 100:.2f} USD)',
                 },
             )
         if missing_amount > max_amount_kopeks:
@@ -5408,7 +5395,7 @@ async def submit_subscription_renewal_endpoint(
                 status.HTTP_400_BAD_REQUEST,
                 detail={
                     'code': 'amount_above_maximum',
-                    'message': f'Amount exceeds maximum ({max_amount_kopeks / 100:.2f} RUB)',
+                    'message': f'Amount exceeds maximum ({max_amount_kopeks / 100:.2f} USD)',
                 },
             )
 

@@ -15,7 +15,7 @@ from app.config import settings
 
 _logger = structlog.get_logger(__name__)
 
-_FALLBACK_LANGUAGE = 'ru'
+_FALLBACK_LANGUAGE = 'en'
 
 _BASE_DIR = Path(__file__).resolve().parent
 _DEFAULT_LOCALES_DIR = _BASE_DIR / 'locales'
@@ -224,7 +224,7 @@ def ensure_locale_templates() -> None:
             _copy_locale(template, destination / template.name)
         return
 
-    for locale_code in ('ru', 'en', 'fa'):
+    for locale_code in ('en', 'es', 'pt'):
         source_path = _DEFAULT_LOCALES_DIR / f'{locale_code}.json'
         target_path = destination / f'{locale_code}.json'
 

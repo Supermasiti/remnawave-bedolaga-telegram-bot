@@ -45,9 +45,12 @@ def resolve_config_method_id(method: str) -> str:
 
 
 def format_quick_amount(amount_kopeks: int) -> str:
+    from app.config import settings
+
+    symbol = settings.CURRENCY_SYMBOL
     if amount_kopeks % 100 == 0:
-        return f'{amount_kopeks // 100} ₽'
-    return f'{amount_kopeks / 100:.2f} ₽'
+        return f'{symbol}{amount_kopeks // 100}'
+    return f'{symbol}{amount_kopeks / 100:.2f}'
 
 
 async def _load_quick_amounts(db: AsyncSession, method: str, min_amount_kopeks: int | None = None) -> list[int]:

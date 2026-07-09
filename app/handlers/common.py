@@ -16,12 +16,13 @@ async def handle_delete_ban_notification(
     callback: types.CallbackQuery,
 ):
     """Удаляет уведомление о бане при нажатии на кнопку"""
+    texts = get_texts(callback.from_user.language_code if callback.from_user else None)
     try:
         await callback.message.delete()
-        await callback.answer('Уведомление удалено')
+        await callback.answer(texts.t('NOTIFICATION_DELETED', 'Notification deleted'))
     except Exception as e:
         logger.warning('Не удалось удалить уведомление', error=e)
-        await callback.answer('Не удалось удалить', show_alert=False)
+        await callback.answer(texts.t('NOTIFICATION_DELETE_FAILED', 'Could not delete'), show_alert=False)
 
 
 async def handle_webhook_notification_close(

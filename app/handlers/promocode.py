@@ -6,7 +6,7 @@ from aiogram.types import InaccessibleMessage
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.models import User
-from app.keyboards.inline import get_back_keyboard
+from app.keyboards.inline import _get_days_word, get_back_keyboard
 from app.localization.texts import get_texts
 from app.services.admin_notification_service import AdminNotificationService
 from app.services.promocode_service import PromoCodeService
@@ -174,12 +174,12 @@ async def process_promocode(message: types.Message, db_user: User, state: FSMCon
             buttons.append(
                 [
                     types.InlineKeyboardButton(
-                        text=f'{name} ({days} дн.)',
+                        text=f'{name} ({days} {_get_days_word(days, db_user.language)})',
                         callback_data=f'promo_sub:{sub["id"]}:{promo_code}',
                     )
                 ]
             )
-        buttons.append([types.InlineKeyboardButton(text='❌ Отмена', callback_data='back_to_menu')])
+        buttons.append([types.InlineKeyboardButton(text=texts.CANCEL, callback_data='back_to_menu')])
         await message.answer(
             texts.t(
                 'PROMOCODE_SELECT_SUBSCRIPTION',
@@ -238,19 +238,19 @@ async def handle_promo_subscription_select(
     callback: types.CallbackQuery, db_user: User, db: AsyncSession, state: FSMContext
 ):
     """Handle subscription selection for promocode with days in multi-tariff."""
+    texts = get_texts(db_user.language)
+
     parts = (callback.data or '').split(':')
     if len(parts) < 3:
-        await callback.answer('Неверный формат', show_alert=True)
+        await callback.answer(texts.t('INVALID_FORMAT_ALERT', 'Invalid format'), show_alert=True)
         return
 
     try:
         sub_id = int(parts[1])
         code = ':'.join(parts[2:])  # code may contain colons
     except (ValueError, IndexError):
-        await callback.answer('Ошибка', show_alert=True)
+        await callback.answer(texts.ERROR, show_alert=True)
         return
-
-    texts = get_texts(db_user.language)
     result = await activate_promocode_for_registration(db, db_user.id, code, callback.bot, subscription_id=sub_id)
 
     if result['success']:

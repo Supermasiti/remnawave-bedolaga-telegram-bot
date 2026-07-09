@@ -120,16 +120,16 @@ def format_price_button(
 
     Examples:
         With discount and price > 0:
-            "📅 30 дней - 990₽ ➜ 693₽ (-30%)!"
+            "📅 30 дней - $9.90 ➜ $6.93 (-30%)!"
 
         With final price = 0:
             "📅 30 дней"
 
         With emphasis:
-            "🔥 📅 30 дней - 8990₽ ➜ 6293₽ (-30%)! 🔥"
+            "🔥 📅 30 дней - $89.90 ➜ $62.93 (-30%)! 🔥"
 
         Without discount:
-            "📅 30 дней - 990₽"
+            "📅 30 дней - $9.90"
     """
     # Format button text differently if final price is 0
     if price_info.final_price == 0:
@@ -167,10 +167,10 @@ def format_price_text(period_label: str, price_info: PriceInfo, format_price_fun
 
     Examples:
         With discount:
-            "📅 30 дней - 990₽ ➜ 693₽"
+            "📅 30 дней - $9.90 ➜ $6.93"
 
         Without discount:
-            "📅 30 дней - 990₽"
+            "📅 30 дней - $9.90"
 
         With zero price:
             "📅 30 дней"

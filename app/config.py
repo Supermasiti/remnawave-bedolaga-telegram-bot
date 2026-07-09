@@ -951,8 +951,8 @@ class Settings(BaseSettings):
     SKIP_RULES_ACCEPT: bool = False
     SKIP_REFERRAL_CODE: bool = False
 
-    DEFAULT_LANGUAGE: str = 'ru'
-    AVAILABLE_LANGUAGES: str = 'ru,en,ua,zh,fa'
+    DEFAULT_LANGUAGE: str = 'es'
+    AVAILABLE_LANGUAGES: str = 'es,en,pt,zh,fa'
     LANGUAGE_SELECTION_ENABLED: bool = True
 
     PRIVACY_POLICY_DISPLAY_MODE: str = 'both'
@@ -962,6 +962,16 @@ class Settings(BaseSettings):
 
     # Округление цен при отображении (≤50 коп вниз, >50 коп вверх)
     PRICE_ROUNDING_ENABLED: bool = True
+    CURRENCY_SYMBOL: str = '$'
+
+    # === Локальная валюта отображения (LatAm) ===
+    # Оплата всегда выполняется в USD (Stars/CryptoBot); эти настройки влияют
+    # только на то, как цена ПОКАЗЫВАЕТСЯ пользователю рядом с курсом USD.
+    DISPLAY_CURRENCY_ENABLED: bool = True
+    DISPLAY_CURRENCY_API_URL: str = 'https://open.er-api.com/v6/latest/USD'
+    DISPLAY_CURRENCY_REFRESH_HOURS: int = 12
+    DISPLAY_CURRENCY_ES: str = 'MXN'  # валюта для интерфейса на испанском
+    DISPLAY_CURRENCY_PT: str = 'BRL'  # валюта для интерфейса на португальском
 
     LOG_LEVEL: str = 'INFO'
     LOG_FILE: str = 'logs/bot.log'
@@ -1095,7 +1105,7 @@ class Settings(BaseSettings):
     APP_CONFIG_CACHE_TTL: int = 3600
 
     VERSION_CHECK_ENABLED: bool = True
-    VERSION_CHECK_REPO: str = 'fr1ngg/remnawave-bedolaga-telegram-bot'
+    VERSION_CHECK_REPO: str = 'BEDOLAGA-DEV/remnawave-bedolaga-telegram-bot'
     VERSION_CHECK_INTERVAL_HOURS: int = 1
 
     BACKUP_AUTO_ENABLED: bool = True
@@ -1767,7 +1777,7 @@ class Settings(BaseSettings):
         return bool(value)
 
     def get_available_languages(self) -> list[str]:
-        defaults = ['ru', 'en', 'ua', 'zh', 'fa']
+        defaults = ['es', 'en', 'pt', 'zh', 'fa']
 
         try:
             langs = self.AVAILABLE_LANGUAGES
@@ -1828,14 +1838,14 @@ class Settings(BaseSettings):
             # Округление: ≤50 коп вниз, >50 коп вверх
             if kopeks > 50:
                 rubles += 1
-            return f'{sign}{rubles} ₽'
+            return f'{sign}{self.CURRENCY_SYMBOL}{rubles}'
 
         # Без округления - показываем точное значение
         if kopeks:
             value = f'{sign}{rubles}.{kopeks:02d}'.rstrip('0').rstrip('.')
-            return f'{value} ₽'
+            return f'{self.CURRENCY_SYMBOL}{value}'
 
-        return f'{sign}{rubles} ₽'
+        return f'{sign}{self.CURRENCY_SYMBOL}{rubles}'
 
     def get_reports_chat_id(self) -> str | None:
         if self.ADMIN_REPORTS_CHAT_ID:
@@ -2987,7 +2997,7 @@ class Settings(BaseSettings):
         self, amount_kopeks: int, telegram_user_id: int | None = None, user_db_id: int | None = None
     ) -> str:
         # Базовое описание
-        description = f'{self.PAYMENT_BALANCE_DESCRIPTION} на {self.format_price(amount_kopeks)}'
+        description = f'{self.PAYMENT_BALANCE_DESCRIPTION}: {self.format_price(amount_kopeks)}'
 
         # Добавляем идентификатор пользователя (TG ID приоритет, fallback на DB ID)
         if telegram_user_id is not None:
@@ -3001,7 +3011,7 @@ class Settings(BaseSettings):
     def get_subscription_payment_description(self, period_days: int, amount_kopeks: int) -> str:
         return self.PAYMENT_SUBSCRIPTION_TEMPLATE.format(
             service_name=self.PAYMENT_SERVICE_NAME,
-            description=f'{self.PAYMENT_SUBSCRIPTION_DESCRIPTION} на {period_days} дней',
+            description=f'{self.PAYMENT_SUBSCRIPTION_DESCRIPTION}: {period_days}d',
         )
 
     def get_custom_payment_description(self, description: str) -> str:

@@ -1750,8 +1750,8 @@
   "SUBSCRIPTION_NOT_FOUND": "❌ Abonelik bulunamadı",
   "SUBSCRIPTION_NO_ACTIVE_LINK": "Aktif bir aboneliğiniz yok veya bağlantı hala oluşturuluyor",
   "SUBSCRIPTION_NO_SERVERS": "Sunucu yok",
-  "SUBSCRIPTION_OVERVIEW_TEMPLATE": "👤 {full_name}\n💰 Denge: {balance}\n📱 Abonelik: {status_emoji} {status_display}{warning}{tariff_info_block}\n\n📱 Abonelik detayları\n🎭 Tip: {subscription_type}\n📅 Şu tarihe kadar geçerlidir: {end_date}\n⏰ Kalan süre: {time_left}\n📈 Trafik: {traffic}\n🌍 Sunucular: {servers}\n📱 Cihazlar: {devices_used} / {device_limit}",
-  "SUBSCRIPTION_DAILY_OVERVIEW_TEMPLATE": "👤 {full_name}\n💰 Denge: {balance}\n📱 Abonelik: {status_emoji} {status_display}{warning}{tariff_info_block}\n\n📱 Abonelik detayları\n🎭 Tip: {subscription_type}\n📈 Trafik: {traffic}\n🌍 Sunucular: {servers}\n📱 Cihazlar: {devices_used} / {device_limit}",
+  "SUBSCRIPTION_OVERVIEW_TEMPLATE": "👤 {full_name}\n💰 Denge: {balance}\n📱 Abonelik: {status_emoji} {status_display}{warning}{tariff_info_block}\n\n📱 Abonelik detayları\n🎭 Tip: {subscription_type}\n📅 Şu tarihe kadar geçerlidir: {end_date}\n⏰ Kalan süre: {time_left}\n📈 Trafik: {traffic}\n🌍 Sunucular: {servers}{devices_line}",
+  "SUBSCRIPTION_DAILY_OVERVIEW_TEMPLATE": "👤 {full_name}\n💰 Denge: {balance}\n📱 Abonelik: {status_emoji} {status_display}{warning}{tariff_info_block}\n\n📱 Abonelik detayları\n🎭 Tip: {subscription_type}\n📈 Trafik: {traffic}\n🌍 Sunucular: {servers}{devices_line}",
   "SUBSCRIPTION_DEACTIVATED_CHANNEL_UNSUBSCRIBE": "🚫 Gerekli bir kanaldan ayrıldığınız için aboneliğiniz duraklatıldı.\n\nVPN erişimini geri yüklemek için tüm kanallara abone olun.",
   "SUBSCRIPTION_DEACTIVATED_CHANNEL_UNSUBSCRIBE_MULTI": "🚫 Gerekli bir kanaldan ayrıldığınız için abonelikleriniz duraklatıldı.\n\nVPN erişimini geri yüklemek için tüm kanallara abone olun.",
   "SUBSCRIPTION_PROMO_DISCOUNT_HINT": "⚡ Ekstra {percent}% indirim aktiftir ve otomatik olarak uygulanacaktır. Diğer indirimlerle birlikte uygulanır.",
@@ -1761,7 +1761,7 @@
   "SUBSCRIPTION_REACTIVATED_CHANNEL_SUBSCRIBE": "✅ Aboneliğiniz geri yüklendi!\n\nKanallara abone olduğunuz için teşekkür ederiz. VPN tekrar aktif.",
   "SUBSCRIPTION_REACTIVATED_CHANNEL_SUBSCRIBE_MULTI": "✅ Abonelikleriniz geri yüklendi!\n\nKanallara abone olduğunuz için teşekkür ederiz. VPN tekrar aktif.",
   "SUBSCRIPTION_SETTINGS_BUTTON": "⚙️ Ayarlar",
-  "SUBSCRIPTION_SETTINGS_OVERVIEW": "⚙️ <b>Abonelik ayarları</b>\n\n📊 <b>Mevcut parametreler:</b>\n🌐 Ülkeler: {countries_count}\n📈 Trafik: {traffic_used} / {traffic_limit}\n📱 Cihazlar: {devices_used} / {devices_limit}\n\nNeyi değiştirmek istediğinizi seçin:",
+  "SUBSCRIPTION_SETTINGS_OVERVIEW": "⚙️ <b>Abonelik ayarları</b>\n\n📊 <b>Mevcut parametreler:</b>\n🌐 Ülkeler: {countries_count}\n📈 Trafik: {traffic_used} / {traffic_limit}\n{devices_line}\n\nNeyi değiştirmek istediğinizi seçin:",
   "SUBSCRIPTION_SETTINGS_PAID_ONLY": "⚠️ Ayarlar yalnızca ücretli abonelikler için kullanılabilir",
   "SUBSCRIPTION_SPECIFIC_APP_TITLE": "📱 <b>{app_name} - {device_name}</b>",
   "SUBSCRIPTION_STATUS_ACTIVE": "Aktif",
@@ -1775,5 +1775,7 @@
   "SUBSCRIPTION_TIME_LEFT_HOURS": "{hours} hr",
   "SUBSCRIPTION_TIME_LEFT_MINUTES": "{minutes} min",
   "SUBSCRIPTION_TRAFFIC_LIMITED": "{used} / {limit} GB",
-  "SUBSCRIPTION_TRAFFIC_UNLIMITED": "∞ (sınırsız) | Kullanıldı: {used} GB"
+  "SUBSCRIPTION_TRAFFIC_UNLIMITED": "∞ (sınırsız) | Kullanıldı: {used} GB",
+  "DEVICES_LINE_TEMPLATE": "\n📱 Cihazlar: {devices_used} / {device_limit}",
+  "SETTINGS_DEVICES_LINE_TEMPLATE": "📱 Cihazlar: {devices_used} / {devices_limit}"
 }

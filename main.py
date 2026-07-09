@@ -21,6 +21,7 @@ from app.services.backup_service import backup_service
 from app.services.ban_notification_service import ban_notification_service
 from app.services.broadcast_service import broadcast_service
 from app.services.contest_rotation_service import contest_rotation_service
+from app.services.currency_service import currency_service
 from app.services.daily_subscription_service import daily_subscription_service
 from app.services.log_rotation_service import log_rotation_service
 from app.services.maintenance_service import maintenance_service
@@ -373,6 +374,22 @@ async def main():
             except Exception as e:
                 stage.warning(f'Ошибка запуска сервиса отчетов: {e}')
                 logger.error('❌ Ошибка запуска сервиса отчетов', error=e)
+
+        async with timeline.stage(
+            'Курсы валют (LatAm)',
+            '💱',
+            success_message='Курсы валют готовы',
+        ) as stage:
+            try:
+                if settings.DISPLAY_CURRENCY_ENABLED:
+                    await currency_service.start()
+                    stage.log(f'es → {settings.DISPLAY_CURRENCY_ES}, pt → {settings.DISPLAY_CURRENCY_PT}')
+                    stage.success('Курсы валют загружены')
+                else:
+                    stage.skip('Отображение локальной валюты отключено настройками')
+            except Exception as e:
+                stage.warning(f'Ошибка запуска сервиса курсов валют: {e}')
+                logger.error('❌ Ошибка запуска сервиса курсов валют', error=e)
 
         async with timeline.stage(
             'Реферальные конкурсы',
@@ -894,6 +911,12 @@ async def main():
             await reporting_service.stop()
         except Exception as e:
             logger.error('Ошибка остановки сервиса отчетов', error=e)
+
+        logger.info('ℹ️ Остановка сервиса курсов валют...')
+        try:
+            await currency_service.stop()
+        except Exception as e:
+            logger.error('Ошибка остановки сервиса курсов валют', error=e)
 
         logger.info('ℹ️ Остановка сервиса конкурсов...')
         try:

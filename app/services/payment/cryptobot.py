@@ -46,7 +46,7 @@ class _UserNotificationPayload:
     text: str
     parse_mode: str | None
     reply_markup: Any
-    amount_rubles: float
+    amount_usd: float
     asset: str
 
 
@@ -248,25 +248,17 @@ class CryptoBotPaymentMixin:
                 amount_usd = updated_payment.amount_float
 
                 try:
-                    amount_rubles = await currency_converter.usd_to_rub(amount_usd)
-                    amount_rubles_rounded = math.ceil(amount_rubles)
-                    amount_kopeks = int(amount_rubles_rounded * 100)
-                    conversion_rate = amount_rubles / amount_usd if amount_usd > 0 else 0
+                    amount_kopeks = round(amount_usd * 100)
                     logger.info(
-                        'Конвертация USD->RUB',
+                        'CryptoBot payment amount (USD native)',
                         amount_usd=amount_usd,
-                        amount_rubles=amount_rubles,
-                        amount_rubles_rounded=amount_rubles_rounded,
-                        conversion_rate=conversion_rate,
+                        amount_kopeks=amount_kopeks,
                     )
                 except Exception as error:
                     logger.warning(
-                        'Ошибка конвертации валют для платежа , используем курс 1:1', invoice_id=invoice_id, error=error
+                        'Ошибка расчёта суммы для платежа', invoice_id=invoice_id, error=error
                     )
-                    amount_rubles = amount_usd
-                    amount_rubles_rounded = math.ceil(amount_rubles)
-                    amount_kopeks = int(amount_rubles_rounded * 100)
-                    conversion_rate = 1.0
+                    amount_kopeks = round(amount_usd * 100)
 
                 if amount_kopeks <= 0:
                     logger.error(
@@ -284,7 +276,7 @@ class CryptoBotPaymentMixin:
                     amount_kopeks=amount_kopeks,
                     description=(
                         'Пополнение через CryptoBot '
-                        f'({updated_payment.amount} {updated_payment.asset} → {amount_rubles_rounded:.2f}₽)'
+                        f'({updated_payment.amount} {updated_payment.asset} → ${amount_kopeks / 100:.2f})'
                     ),
                     payment_method=PaymentMethod.CRYPTOBOT,
                     external_id=invoice_id,
@@ -367,7 +359,6 @@ class CryptoBotPaymentMixin:
                             '✅ <b>Пополнение успешно!</b>\n\n'
                             f'💰 Сумма: {settings.format_price(amount_kopeks)}\n'
                             f'🪙 Платеж: {updated_payment.amount} {updated_payment.asset}\n'
-                            f'💱 Курс: 1 USD = {conversion_rate:.2f}₽\n'
                             f'🆔 Транзакция: {invoice_id[:8]}...\n\n'
                             'Баланс пополнен автоматически!'
                         )
@@ -376,7 +367,7 @@ class CryptoBotPaymentMixin:
                             text=message_text,
                             parse_mode='HTML',
                             reply_markup=keyboard,
-                            amount_rubles=amount_rubles_rounded,
+                            amount_usd=amount_kopeks / 100,
                             asset=updated_payment.asset,
                         )
                     except Exception as error:
@@ -655,7 +646,7 @@ class CryptoBotPaymentMixin:
             logger.info(
                 'Отправлено уведомление пользователю о пополнении',
                 telegram_id=payload.telegram_id,
-                amount_rubles=f'{payload.amount_rubles:.2f}',
+                amount_usd=f'{payload.amount_usd:.2f}',
                 asset=payload.asset,
             )
         except Exception as error:

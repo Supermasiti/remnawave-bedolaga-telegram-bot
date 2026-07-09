@@ -11,6 +11,7 @@ from app.keyboards.inline import (
     get_happ_download_button_row,
 )
 from app.localization.texts import get_texts
+from app.utils.formatting import format_period
 from app.utils.subscription_utils import (
     convert_subscription_link_to_happ_scheme,
     get_display_subscription_link,
@@ -54,19 +55,19 @@ async def handle_connect_subscription(
                     _t = await _get_tariff(db, sub.tariff_id)
                     tariff_name = _t.name if _t else f'#{sub.id}'
                 else:
-                    tariff_name = f'Подписка #{sub.id}'
+                    tariff_name = texts.t('SUBSCRIPTION_HASH_NAME', 'Subscription #{id}').format(id=sub.id)
                 days_left = max(0, (sub.end_date - datetime.now(UTC)).days) if sub.end_date else 0
                 keyboard.append(
                     [
                         types.InlineKeyboardButton(
-                            text=f'🔗 {tariff_name} ({days_left}д.)',
+                            text=f'🔗 {tariff_name} ({format_period(days_left, db_user.language)})',
                             callback_data=f'sl:{sub.id}',
                         )
                     ]
                 )
-            keyboard.append([types.InlineKeyboardButton(text='◀️ Назад', callback_data='back_to_menu')])
+            keyboard.append([types.InlineKeyboardButton(text=texts.BACK, callback_data='back_to_menu')])
             await callback.message.edit_text(
-                '🔗 <b>Подключиться</b>\n\nВыберите подписку:',
+                texts.t('CONNECT_SELECT_SUBSCRIPTION_MESSAGE', '🔗 <b>Connect</b>\n\nSelect a subscription:'),
                 reply_markup=types.InlineKeyboardMarkup(inline_keyboard=keyboard),
             )
             await callback.answer()

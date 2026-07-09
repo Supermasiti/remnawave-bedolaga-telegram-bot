@@ -936,7 +936,7 @@
   "BACK_TO_TICKETS": "⬅️ Back to tickets",
   "BALANCE_BUTTON": "💰 Balance: {balance}",
   "BALANCE_BUTTON_DEFAULT": "💰 Balance: {balance}",
-  "BALANCE_BUTTON_ZERO": "💰 Balance: 0 ₽",
+  "BALANCE_BUTTON_ZERO": "💰 Balance: $0",
   "BALANCE_HISTORY": "📊 Transaction history",
   "BALANCE_INFO": "\n💰 <b>Balance: {balance}</b>\n\nChoose an action:\n",
   "BALANCE_SUPPORT_REQUEST": "🛠️ Request via support",

@@ -25,6 +25,7 @@ from app.services.subscription_checkout_service import (
 )
 from app.services.subscription_service import SubscriptionService
 from app.states import SubscriptionStates
+from app.utils.formatting import format_period
 from app.utils.pricing_utils import (
     apply_percentage_discount,
     calculate_prorated_price,
@@ -333,7 +334,7 @@ async def apply_countries_changes(callback: types.CallbackQuery, db_user: User, 
 
     if total_cost > 0 and db_user.balance_kopeks < total_cost:
         missing_kopeks = total_cost - db_user.balance_kopeks
-        required_text = f'{texts.format_price(total_cost)} (за {charged_days} дн.)'
+        required_text = f'{texts.format_price(total_cost)} ({format_period(charged_days, db_user.language)})'
         message_text = texts.t(
             'ADDON_INSUFFICIENT_FUNDS_MESSAGE',
             (
@@ -374,9 +375,10 @@ async def apply_countries_changes(callback: types.CallbackQuery, db_user: User, 
 
     try:
         if added and total_cost > 0:
-            success = await subtract_user_balance(
-                db, db_user, total_cost, f'Добавление стран: {", ".join(added_names)} за {charged_days} дн.'
-            )
+            add_countries_description = texts.t(
+                'ADD_COUNTRIES_TX_DESCRIPTION', 'Add countries: {names} for {period}'
+            ).format(names=', '.join(added_names), period=format_period(charged_days, db_user.language))
+            success = await subtract_user_balance(db, db_user, total_cost, add_countries_description)
             if not success:
                 await callback.answer(
                     texts.t('PAYMENT_CHARGE_ERROR', '⚠️ Ошибка списания средств'),
@@ -389,7 +391,7 @@ async def apply_countries_changes(callback: types.CallbackQuery, db_user: User, 
                 user_id=db_user.id,
                 type=TransactionType.SUBSCRIPTION_PAYMENT,
                 amount_kopeks=total_cost,
-                description=f'Добавление стран к подписке: {", ".join(added_names)} за {charged_days} дн.',
+                description=add_countries_description,
             )
 
         if added:
@@ -508,11 +510,15 @@ async def apply_countries_changes(callback: types.CallbackQuery, db_user: User, 
 
 
 async def select_country(callback: types.CallbackQuery, state: FSMContext, db_user: User, db: AsyncSession):
+    texts = get_texts(db_user.language)
     country_uuid = callback.data.split('_')[1]
     data = await state.get_data()
 
     if 'period_days' not in data:
-        await callback.answer('❌ Данные подписки устарели. Начните оформление заново.', show_alert=True)
+        await callback.answer(
+            texts.t('SUBSCRIPTION_DATA_STALE_ALERT', '❌ Subscription data is outdated. Please start over.'),
+            show_alert=True,
+        )
         return
 
     selected_countries = data.get('countries', [])
@@ -525,7 +531,10 @@ async def select_country(callback: types.CallbackQuery, state: FSMContext, db_us
     allowed_country_ids = {country['uuid'] for country in countries}
 
     if country_uuid not in allowed_country_ids and country_uuid not in selected_countries:
-        await callback.answer('❌ Сервер недоступен для вашей промогруппы', show_alert=True)
+        await callback.answer(
+            texts.t('SERVER_UNAVAILABLE_FOR_PROMO_GROUP_ALERT', '❌ Server unavailable for your promo group'),
+            show_alert=True,
+        )
         return
 
     data['countries'] = selected_countries
@@ -553,7 +562,7 @@ async def countries_continue(callback: types.CallbackQuery, state: FSMContext, d
     texts = get_texts(db_user.language)
 
     if not data.get('countries'):
-        await callback.answer('⚠️ Выберите хотя бы одну страну!', show_alert=True)
+        await callback.answer(texts.t('SELECT_AT_LEAST_ONE_COUNTRY_ALERT', '⚠️ Select at least one country!'), show_alert=True)
         return
 
     if not settings.is_devices_selection_enabled():
@@ -646,7 +655,7 @@ async def _get_available_countries(promo_group_id: int | None = None):
         fallback_countries = [
             {
                 'uuid': 'default-free',
-                'name': '🆓 Бесплатный сервер',
+                'name': '🆓 Free server',
                 'price_kopeks': 0,
                 'is_available': True,
                 'description': '',

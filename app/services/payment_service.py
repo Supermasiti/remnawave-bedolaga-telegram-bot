@@ -868,12 +868,7 @@ class PaymentService(
                 logger.warning('CryptoBot is not enabled, cannot create guest payment')
                 return None
 
-            amount_rubles = amount_kopeks / 100
-            try:
-                amount_usd = await currency_converter.rub_to_usd(amount_rubles)
-            except Exception as conv_error:
-                logger.error('Currency conversion failed for CryptoBot guest payment', error=conv_error)
-                return None
+            amount_usd = amount_kopeks / 100
 
             # Encode guest metadata into the payload string (CryptoBot uses payload, not metadata dict)
             payload_str = json.dumps(guest_metadata, ensure_ascii=False)

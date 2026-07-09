@@ -37,6 +37,7 @@ from app.services.remnawave_service import RemnaWaveService
 from app.services.subscription_service import SubscriptionService
 from app.services.user_cart_service import user_cart_service
 from app.states import SubscriptionStates
+from app.utils.formatting import format_period
 from app.utils.pagination import paginate_list
 from app.utils.pricing_utils import (
     apply_percentage_discount,
@@ -104,9 +105,10 @@ async def get_current_devices_detailed(db_user: User, subscription=None) -> dict
         return {'count': 0, 'devices': []}
 
 
-async def get_servers_display_names(squad_uuids: list[str]) -> str:
+async def get_servers_display_names(squad_uuids: list[str], language: str | None = None) -> str:
+    texts = get_texts(language)
     if not squad_uuids:
-        return 'Нет серверов'
+        return texts.t('NO_SERVERS_LABEL', 'No servers')
 
     try:
         from app.database.crud.server_squad import get_server_squad_by_uuid
@@ -134,20 +136,22 @@ async def get_servers_display_names(squad_uuids: list[str]) -> str:
 
         if not server_names:
             if len(squad_uuids) == 1:
-                return '🎯 Тестовый сервер'
-            return f'{len(squad_uuids)} стран'
+                return texts.t('TEST_SERVER_LABEL', '🎯 Test server')
+            return texts.t('COUNTRIES_COUNT_LABEL', '{count} countries').format(count=len(squad_uuids))
 
         if len(server_names) > 6:
             displayed = ', '.join(server_names[:6])
             remaining = len(server_names) - 6
-            return f'{displayed} и ещё {remaining}'
+            return texts.t('SERVERS_AND_MORE_LABEL', '{displayed} and {remaining} more').format(
+                displayed=displayed, remaining=remaining
+            )
         return ', '.join(server_names)
 
     except Exception as e:
         logger.error('Ошибка получения названий серверов', error=e)
         if len(squad_uuids) == 1:
-            return '🎯 Тестовый сервер'
-        return f'{len(squad_uuids)} стран'
+            return texts.t('TEST_SERVER_LABEL', '🎯 Test server')
+        return texts.t('COUNTRIES_COUNT_LABEL', '{count} countries').format(count=len(squad_uuids))
 
 
 async def get_current_devices_count(db_user: User, subscription=None) -> str:
@@ -382,11 +386,11 @@ async def confirm_change_devices(
         )
         price, charged_days = calculate_prorated_price(discounted_per_month, subscription.end_date)
         total_discount = int(discount_per_month * charged_days / 30)
-        period_label = f'{charged_days} дн.' if charged_days > 1 else '1 день'
+        period_label = format_period(charged_days, db_user.language)
 
         if price > 0 and db_user.balance_kopeks < price:
             missing_kopeks = price - db_user.balance_kopeks
-            required_text = f'{texts.format_price(price)} (за {period_label})'
+            required_text = f'{texts.format_price(price)} ({period_label})'
             message_text = texts.t(
                 'ADDON_INSUFFICIENT_FUNDS_MESSAGE',
                 (
@@ -611,9 +615,10 @@ async def execute_change_devices(
 
     try:
         if price > 0:
-            success = await subtract_user_balance(
-                db, db_user, price, f'Изменение количества устройств с {current_devices} до {new_devices_count}'
-            )
+            change_devices_description = texts.t(
+                'CHANGE_DEVICES_TX_DESCRIPTION', 'Change devices from {old} to {new}'
+            ).format(old=current_devices, new=new_devices_count)
+            success = await subtract_user_balance(db, db_user, price, change_devices_description)
 
             if not success:
                 await callback.answer(
@@ -628,7 +633,9 @@ async def execute_change_devices(
                 user_id=db_user.id,
                 type=TransactionType.SUBSCRIPTION_PAYMENT,
                 amount_kopeks=price,
-                description=f'Изменение устройств с {current_devices} до {new_devices_count} за {charged_days} дн.',
+                description=texts.t(
+                    'CHANGE_DEVICES_TX_DESCRIPTION_WITH_PERIOD', 'Change devices from {old} to {new} for {period}'
+                ).format(old=current_devices, new=new_devices_count, period=format_period(charged_days, db_user.language)),
             )
 
         # Re-lock subscription after subtract_user_balance committed (released all locks)
@@ -658,7 +665,9 @@ async def execute_change_devices(
                     refund_user.balance_kopeks += price
                     await db.commit()
                 await callback.answer(
-                    f'⚠️ Лимит устройств ({max_devices}) превышен. Баланс возвращён.',
+                    texts.t('DEVICE_LIMIT_EXCEEDED_REFUNDED', '⚠️ Device limit ({limit}) exceeded. Balance refunded.').format(
+                        limit=max_devices
+                    ),
                     show_alert=True,
                 )
                 return
@@ -674,7 +683,7 @@ async def execute_change_devices(
                 refund_user.balance_kopeks += price
                 await db.commit()
                 await callback.answer(
-                    '⚠️ Изменение уже применено. Баланс возвращён.',
+                    texts.t('DEVICE_CHANGE_ALREADY_APPLIED_REFUNDED', '⚠️ Change already applied. Balance refunded.'),
                     show_alert=True,
                 )
                 return
@@ -1102,7 +1111,7 @@ async def process_device_rename(message: types.Message, db_user: User, db: Async
         return
 
     raw = (message.text or '').strip()
-    if raw.lower() in {'/cancel', 'cancel', 'отмена'}:
+    if raw.lower() in {'/cancel', 'cancel', 'cancelar', 'отмена'}:
         await message.answer(texts.t('DEVICE_RENAME_CANCELLED', '✖️ Переименование отменено'))
         # NB: НЕ выходим здесь — проваливаемся ниже, чтобы перерисовать список
         # устройств. Иначе пользователь остаётся без списка и без кнопки «назад».
@@ -1546,7 +1555,7 @@ async def confirm_add_devices(callback: types.CallbackQuery, db_user: User, db: 
         # Прорейт по остатку подписки (как трафик/серверы), без потолка.
         price, charged_days = calculate_prorated_price(discounted_per_month, subscription.end_date)
         total_discount = int(discount_per_month * charged_days / 30)
-        period_label = f'{charged_days} дн.' if charged_days > 1 else '1 день'
+        period_label = format_period(charged_days, db_user.language)
     else:
         # Для обычных тарифов - по дням (как в кабинете)
         now = datetime.now(UTC)
@@ -1565,7 +1574,7 @@ async def confirm_add_devices(callback: types.CallbackQuery, db_user: User, db: 
         # Прорейт по остатку подписки (как трафик/серверы), без потолка.
         price, charged_days = calculate_prorated_price(discounted_per_month, subscription.end_date)
         total_discount = int(discount_per_month * charged_days / 30)
-        period_label = f'{charged_days} дн.' if charged_days > 1 else '1 день'
+        period_label = format_period(charged_days, db_user.language)
 
     logger.info(
         'Добавление устройств: ₽/мес × = ₽ (скидка ₽)',
@@ -1578,7 +1587,7 @@ async def confirm_add_devices(callback: types.CallbackQuery, db_user: User, db: 
 
     if price > 0 and db_user.balance_kopeks < price:
         missing_kopeks = price - db_user.balance_kopeks
-        required_text = f'{texts.format_price(price)} (за {period_label})'
+        required_text = f'{texts.format_price(price)} ({period_label})'
         message_text = texts.t(
             'ADDON_INSUFFICIENT_FUNDS_MESSAGE',
             (
@@ -1624,12 +1633,13 @@ async def confirm_add_devices(callback: types.CallbackQuery, db_user: User, db: 
         return
 
     try:
-        success = await subtract_user_balance(
-            db, db_user, price, f'Добавление {devices_count} устройств на {period_label}'
+        add_devices_description = texts.t('ADD_DEVICES_TX_DESCRIPTION', 'Add {count} devices for {period}').format(
+            count=devices_count, period=period_label
         )
+        success = await subtract_user_balance(db, db_user, price, add_devices_description)
 
         if not success:
-            await callback.answer('⚠️ Ошибка списания средств', show_alert=True)
+            await callback.answer(texts.t('PAYMENT_CHARGE_ERROR', '⚠️ Ошибка списания средств'), show_alert=True)
             return
 
         # Re-lock subscription after subtract_user_balance committed (released all locks)
@@ -1655,7 +1665,9 @@ async def confirm_add_devices(callback: types.CallbackQuery, db_user: User, db: 
             refund_user.balance_kopeks += price
             await db.commit()
             await callback.answer(
-                f'⚠️ Лимит устройств ({max_devices}) превышен. Баланс возвращён.',
+                texts.t('DEVICE_LIMIT_EXCEEDED_REFUNDED', '⚠️ Device limit ({limit}) exceeded. Balance refunded.').format(
+                    limit=max_devices
+                ),
                 show_alert=True,
             )
             return
@@ -1682,7 +1694,7 @@ async def confirm_add_devices(callback: types.CallbackQuery, db_user: User, db: 
             user_id=db_user.id,
             type=TransactionType.SUBSCRIPTION_PAYMENT,
             amount_kopeks=price,
-            description=f'Добавление {devices_count} устройств на {period_label}',
+            description=add_devices_description,
         )
 
         await db.refresh(db_user)
@@ -1700,14 +1712,17 @@ async def confirm_add_devices(callback: types.CallbackQuery, db_user: User, db: 
         except Exception as e:
             logger.error('Ошибка отправки уведомления о докупке устройств', error=e)
 
-        success_text = (
-            '✅ Устройства успешно добавлены!\n\n'
-            f'📱 Добавлено: {devices_count} устройств\n'
-            f'Новый лимит: {subscription.device_limit} устройств\n'
+        success_text = texts.t(
+            'ADD_DEVICES_SUCCESS_MESSAGE',
+            '✅ Devices successfully added!\n\n📱 Added: {added} devices\nNew limit: {new_limit} devices\n',
+        ).format(added=devices_count, new_limit=subscription.device_limit)
+        success_text += texts.t('CHARGED_FOR_PERIOD_LINE', '💰 Charged: {amount} ({period})').format(
+            amount=texts.format_price(price), period=period_label
         )
-        success_text += f'💰 Списано: {texts.format_price(price)} (за {period_label})'
         if total_discount > 0:
-            success_text += f' (скидка {devices_discount_percent}%: -{texts.format_price(total_discount)})'
+            success_text += texts.t('DISCOUNT_SUFFIX_LINE', ' (discount {percent}%: -{amount})').format(
+                percent=devices_discount_percent, amount=texts.format_price(total_discount)
+            )
 
         await callback.message.edit_text(success_text, reply_markup=get_back_keyboard(db_user.language))
 
@@ -1964,37 +1979,33 @@ async def handle_specific_app_guide(
 async def show_device_connection_help(
     callback: types.CallbackQuery, db_user: User, db: AsyncSession, state: FSMContext = None
 ):
+    texts = get_texts(db_user.language)
     subscription, sub_id = await _resolve_subscription(callback, db_user, db, state)
     if subscription is None:
         return
     subscription_link = get_display_subscription_link(subscription)
 
     if not subscription_link:
-        await callback.answer('❌ Ссылка подписки недоступна', show_alert=True)
+        await callback.answer(texts.t('SUBSCRIPTION_LINK_UNAVAILABLE', '❌ Ссылка подписки недоступна'), show_alert=True)
         return
 
-    help_text = f"""
-📱 <b>Как подключить устройство заново</b>
-
-После сброса устройства вам нужно:
-
-<b>1. Получить ссылку подписки:</b>
-📋 Скопируйте ссылку ниже или найдите её в разделе "Моя подписка"
-
-<b>2. Настроить VPN приложение:</b>
-• Откройте ваше VPN приложение
-• Найдите функцию "Добавить подписку" или "Import"
-• Вставьте скопированную ссылку
-
-<b>3. Подключиться:</b>
-• Выберите сервер
-• Нажмите "Подключить"
-
-<b>🔗 Ваша ссылка подписки:</b>
-<code>{html_mod.escape(subscription_link)}</code>
-
-💡 <b>Совет:</b> Сохраните эту ссылку - она понадобится для подключения новых устройств
-"""
+    help_text = texts.t(
+        'DEVICE_CONNECTION_HELP_TEXT',
+        '\n📱 <b>How to reconnect a device</b>\n\n'
+        'After resetting a device, you need to:\n\n'
+        '<b>1. Get the subscription link:</b>\n'
+        '📋 Copy the link below or find it in the "My subscription" section\n\n'
+        '<b>2. Set up your VPN app:</b>\n'
+        '• Open your VPN app\n'
+        '• Find the "Add subscription" or "Import" feature\n'
+        '• Paste the copied link\n\n'
+        '<b>3. Connect:</b>\n'
+        '• Choose a server\n'
+        '• Tap "Connect"\n\n'
+        '<b>🔗 Your subscription link:</b>\n'
+        '<code>{link}</code>\n\n'
+        '💡 <b>Tip:</b> Save this link - you will need it to connect new devices\n',
+    ).format(link=html_mod.escape(subscription_link))
 
     await callback.message.edit_text(
         help_text, reply_markup=get_device_management_help_keyboard(db_user.language), parse_mode='HTML'

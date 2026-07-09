@@ -22,21 +22,25 @@ async def start_stars_payment(callback: types.CallbackQuery, db_user: User, stat
     texts = get_texts(db_user.language)
 
     if not settings.TELEGRAM_STARS_ENABLED:
-        await callback.answer('❌ Пополнение через Stars временно недоступно', show_alert=True)
+        await callback.answer(texts.t('STARS_TOPUP_UNAVAILABLE_ALERT', '❌ Top-up via Stars is temporarily unavailable'), show_alert=True)
         return
 
     # Проверка ограничения на пополнение
     if getattr(db_user, 'restriction_topup', False):
-        reason = html.escape(getattr(db_user, 'restriction_reason', None) or 'Действие ограничено администратором')
+        reason = html.escape(
+            getattr(db_user, 'restriction_reason', None)
+            or texts.t('TOPUP_RESTRICTION_DEFAULT_REASON', 'This action is restricted by the administrator')
+        )
         support_url = settings.get_support_contact_url()
         keyboard = []
         if support_url:
-            keyboard.append([types.InlineKeyboardButton(text='🆘 Обжаловать', url=support_url)])
+            keyboard.append(
+                [types.InlineKeyboardButton(text=texts.USER_RESTRICTION_APPEAL_BUTTON, url=support_url)]
+            )
         keyboard.append([types.InlineKeyboardButton(text=texts.BACK, callback_data='menu_balance')])
 
         await callback.message.edit_text(
-            f'🚫 <b>Пополнение ограничено</b>\n\n{reason}\n\n'
-            'Если вы считаете это ошибкой, вы можете обжаловать решение.',
+            texts.USER_RESTRICTION_TOPUP_BLOCKED.format(reason=reason),
             reply_markup=types.InlineKeyboardMarkup(inline_keyboard=keyboard),
         )
         await callback.answer()
@@ -64,16 +68,20 @@ async def process_stars_payment_amount(message: types.Message, db_user: User, am
 
     # Проверка ограничения на пополнение
     if getattr(db_user, 'restriction_topup', False):
-        reason = html.escape(getattr(db_user, 'restriction_reason', None) or 'Действие ограничено администратором')
+        reason = html.escape(
+            getattr(db_user, 'restriction_reason', None)
+            or texts.t('TOPUP_RESTRICTION_DEFAULT_REASON', 'This action is restricted by the administrator')
+        )
         support_url = settings.get_support_contact_url()
         keyboard = []
         if support_url:
-            keyboard.append([types.InlineKeyboardButton(text='🆘 Обжаловать', url=support_url)])
+            keyboard.append(
+                [types.InlineKeyboardButton(text=texts.USER_RESTRICTION_APPEAL_BUTTON, url=support_url)]
+            )
         keyboard.append([types.InlineKeyboardButton(text=texts.BACK, callback_data='menu_balance')])
 
         await message.answer(
-            f'🚫 <b>Пополнение ограничено</b>\n\n{reason}\n\n'
-            'Если вы считаете это ошибкой, вы можете обжаловать решение.',
+            texts.USER_RESTRICTION_TOPUP_BLOCKED.format(reason=reason),
             reply_markup=types.InlineKeyboardMarkup(inline_keyboard=keyboard),
             parse_mode='HTML',
         )
@@ -83,7 +91,7 @@ async def process_stars_payment_amount(message: types.Message, db_user: User, am
     texts = get_texts(db_user.language)
 
     if not settings.TELEGRAM_STARS_ENABLED:
-        await message.answer('⚠️ Оплата Stars временно недоступна')
+        await message.answer(texts.t('STARS_PAYMENT_TEMP_UNAVAILABLE', '⚠️ Stars payment is temporarily unavailable'))
         return
 
     try:
@@ -94,13 +102,17 @@ async def process_stars_payment_amount(message: types.Message, db_user: User, am
         payment_service = PaymentService(message.bot)
         invoice_link = await payment_service.create_stars_invoice(
             amount_kopeks=amount_kopeks,
-            description=f'Пополнение баланса на {texts.format_price(amount_kopeks)}',
+            description=settings.get_balance_payment_description(
+                amount_kopeks,
+                telegram_user_id=db_user.telegram_id,
+                user_db_id=db_user.id,
+            ),
             payload=f'balance_{db_user.id}_{amount_kopeks}',
         )
 
         keyboard = types.InlineKeyboardMarkup(
             inline_keyboard=[
-                [types.InlineKeyboardButton(text='⭐ Оплатить', url=invoice_link)],
+                [types.InlineKeyboardButton(text=texts.t('STARS_PAY_BUTTON', '⭐ Pay'), url=invoice_link)],
                 [types.InlineKeyboardButton(text=texts.BACK, callback_data='balance_topup')],
             ]
         )
@@ -122,11 +134,19 @@ async def process_stars_payment_amount(message: types.Message, db_user: User, am
                 logger.warning('Не удалось удалить сообщение с запросом суммы Stars', delete_error=delete_error)
 
         invoice_message = await message.answer(
-            f'⭐ <b>Оплата через Telegram Stars</b>\n\n'
-            f'💰 Сумма: {texts.format_price(amount_kopeks)}\n'
-            f'⭐ К оплате: {stars_amount} звезд\n'
-            f'📊 Курс: {stars_rate}₽ за звезду\n\n'
-            f'Нажмите кнопку ниже для оплаты:',
+            texts.t(
+                'STARS_INVOICE_MESSAGE',
+                '⭐ <b>Payment via Telegram Stars</b>\n\n'
+                '💰 Amount: {amount}\n'
+                '⭐ To pay: {stars_amount} stars\n'
+                '📊 Rate: {rate}{currency_symbol} per star\n\n'
+                'Tap the button below to pay:',
+            ).format(
+                amount=texts.format_price(amount_kopeks),
+                stars_amount=stars_amount,
+                rate=stars_rate,
+                currency_symbol=settings.CURRENCY_SYMBOL,
+            ),
             reply_markup=keyboard,
             parse_mode='HTML',
         )
@@ -140,4 +160,4 @@ async def process_stars_payment_amount(message: types.Message, db_user: User, am
 
     except Exception as e:
         logger.error('Ошибка создания Stars invoice', error=e)
-        await message.answer('⚠️ Ошибка создания платежа')
+        await message.answer(texts.t('STARS_INVOICE_CREATE_ERROR', '⚠️ Error creating the payment'))

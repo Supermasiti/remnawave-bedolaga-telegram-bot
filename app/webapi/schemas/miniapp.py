@@ -439,7 +439,7 @@ class MiniAppPaymentMethod(BaseModel):
     name: str | None = None
     icon: str | None = None
     requires_amount: bool = False
-    currency: str = 'RUB'
+    currency: str = 'USD'
     min_amount_kopeks: int | None = None
     max_amount_kopeks: int | None = None
     amount_step_kopeks: int | None = None
@@ -843,7 +843,7 @@ class MiniAppSubscriptionBillingContext(BaseModel):
 
 class MiniAppSubscriptionSettings(BaseModel):
     subscription_id: int
-    currency: str = 'RUB'
+    currency: str = 'USD'
     current: MiniAppSubscriptionCurrentSettings
     servers: MiniAppSubscriptionServersSettings
     traffic: MiniAppSubscriptionTrafficSettings

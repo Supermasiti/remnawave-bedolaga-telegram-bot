@@ -26,6 +26,7 @@ from app.database.crud.user import (
 from app.database.crud.user_message import get_random_active_message
 from app.database.models import GuestPurchase, GuestPurchaseStatus, PinnedMessage, SubscriptionStatus, UserStatus
 from app.keyboards.inline import (
+    _get_days_word,
     get_back_keyboard,
     get_language_selection_keyboard,
     get_main_menu_keyboard_async,
@@ -164,17 +165,22 @@ async def _activate_pending_gift_after_registration(
             logger.warning('Gift not found for deep link token', token_prefix=gift_token[:5])
             return
 
+        texts = get_texts(user.language)
+
         # Prevent self-activation: buyer cannot activate their own gift
         if gift_purchase.buyer_user_id is not None and gift_purchase.buyer_user_id == user.id:
             await answer_func(
-                '⚠️ Нельзя активировать свой собственный подарок.\nОтправьте код другу!',
+                texts.t(
+                    'GIFT_SELF_ACTIVATION_BLOCKED',
+                    "⚠️ You can't activate your own gift.\nSend the code to a friend!",
+                ),
                 parse_mode=ParseMode.HTML,
             )
             return
 
         if gift_purchase.status == GuestPurchaseStatus.DELIVERED.value:
             await answer_func(
-                'ℹ️ Этот подарок уже был активирован.',
+                texts.t('GIFT_ALREADY_ACTIVATED', 'ℹ️ This gift has already been activated.'),
                 parse_mode=ParseMode.HTML,
             )
             return
@@ -185,7 +191,7 @@ async def _activate_pending_gift_after_registration(
         }
         if gift_purchase.status not in activatable_statuses:
             await answer_func(
-                '❌ Этот подарок невозможно активировать.',
+                texts.t('GIFT_CANNOT_BE_ACTIVATED', '❌ This gift cannot be activated.'),
                 parse_mode=ParseMode.HTML,
             )
             return
@@ -202,10 +208,12 @@ async def _activate_pending_gift_after_registration(
         await db.flush()
         await svc_activate(db, gift_purchase.token, skip_notification=True)
         tariff_name = html.escape(gift_purchase.tariff.name) if gift_purchase.tariff else ''
+        days_word = _get_days_word(gift_purchase.period_days, user.language)
         await answer_func(
-            f'🎁 <b>Подарок активирован!</b>\n'
-            f'{tariff_name} — {gift_purchase.period_days} дн.\n\n'
-            f'Ваша подписка обновлена.',
+            texts.t(
+                'GIFT_ACTIVATED_WITH_TARIFF',
+                '🎁 <b>Gift activated!</b>\n{tariff_name} — {days} {days_word}\n\nYour subscription has been updated.',
+            ).format(tariff_name=tariff_name, days=gift_purchase.period_days, days_word=days_word),
             parse_mode=ParseMode.HTML,
         )
     except Exception:
@@ -215,7 +223,10 @@ async def _activate_pending_gift_after_registration(
         )
         try:
             await answer_func(
-                '❌ Произошла ошибка при активации подарка. Попробуйте активировать через личный кабинет.',
+                get_texts(user.language).t(
+                    'GIFT_ACTIVATION_ERROR_USE_CABINET',
+                    '❌ An error occurred while activating the gift. Please try activating it from your account.',
+                ),
                 parse_mode=ParseMode.HTML,
             )
         except Exception:
@@ -517,7 +528,7 @@ async def _apply_campaign_bonus_if_needed(
             'CAMPAIGN_BONUS_TARIFF',
             "🎁 Вам выдан тариф '{tariff_name}' на {days} дней!\n📊 Трафик: {traffic}\n📱 Устройств: {devices}",
         ).format(
-            tariff_name=result.tariff_name or 'Подарочный',
+            tariff_name=result.tariff_name or texts.t('DEFAULT_GIFT_TARIFF_NAME', 'Gift'),
             days=result.tariff_duration_days,
             traffic=traffic_text,
             devices=result.subscription_device_limit,
@@ -652,7 +663,7 @@ async def handle_potential_referral_code(message: types.Message, state: FSMConte
 
 
 def _get_language_prompt_text() -> str:
-    return '🌐 Выберите язык / Choose your language:'
+    return '🌐 Elige tu idioma / Choose your language:'
 
 
 async def _prompt_language_selection(message: types.Message, state: FSMContext) -> None:
@@ -845,7 +856,12 @@ async def cmd_start(message: types.Message, state: FSMContext, db: AsyncSession,
                 )
             else:
                 logger.warning('Web auth attempt from unregistered user', telegram_id=message.from_user.id)
-                await message.answer('❌ Сначала зарегистрируйтесь в боте, затем попробуйте войти в кабинет.')
+                await message.answer(
+                    get_texts(settings.DEFAULT_LANGUAGE).t(
+                        'WEB_AUTH_NOT_REGISTERED',
+                        '❌ Please register in the bot first, then try signing in to the cabinet.',
+                    )
+                )
             return
         start_parameter = None  # Invalid token, ignore
 
@@ -2893,18 +2909,26 @@ async def process_webauth_confirm(
         return
 
     if callback.data == 'webauth_deny':
-        await callback.message.edit_text('❌ Вход отменён.')
+        await callback.message.edit_text(
+            get_texts(settings.DEFAULT_LANGUAGE).t('WEB_AUTH_LOGIN_CANCELLED', '❌ Sign-in cancelled.')
+        )
         return
 
     # Extract token from callback_data: "webauth_confirm:{token}"
     token = callback.data.split(':', 1)[1] if ':' in callback.data else ''
     if len(token) < WEB_AUTH_TOKEN_MIN_LENGTH:
-        await callback.message.edit_text('❌ Ошибка: неверный токен.')
+        await callback.message.edit_text(
+            get_texts(settings.DEFAULT_LANGUAGE).t('WEB_AUTH_INVALID_TOKEN', '❌ Error: invalid token.')
+        )
         return
 
     user = await get_user_by_telegram_id(db, callback.from_user.id)
     if not user or user.status != UserStatus.ACTIVE.value:
-        await callback.message.edit_text('❌ Учётная запись неактивна.')
+        await callback.message.edit_text(
+            get_texts(user.language if user else settings.DEFAULT_LANGUAGE).t(
+                'WEB_AUTH_ACCOUNT_INACTIVE', '❌ Account is inactive.'
+            )
+        )
         return
 
     linked = await link_web_auth_token(token, callback.from_user.id, user.id)

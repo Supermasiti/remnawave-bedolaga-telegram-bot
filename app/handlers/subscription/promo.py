@@ -336,7 +336,7 @@ async def claim_discount_offer(
 
     success_message = _format_text_with_placeholders(success_template, format_values)
 
-    await callback.answer('✅ Скидка активирована!', show_alert=True)
+    await callback.answer(texts.get('DISCOUNT_ACTIVATED_ALERT', '✅ Discount activated!'), show_alert=True)
 
     offer_type = None
     if isinstance(extra_data, dict):

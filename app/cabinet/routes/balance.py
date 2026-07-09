@@ -240,13 +240,13 @@ async def create_stars_invoice(
     if request.amount_kopeks < 100:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Minimum amount is 1.00 RUB',
+            detail='Minimum amount is $0.01',
         )
 
     if request.amount_kopeks > 1000000:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Maximum amount is 10,000.00 RUB',
+            detail='Maximum amount is $10,000.00',
         )
 
     # Calculate Stars amount and normalize kopeks to match exact star value
@@ -332,13 +332,13 @@ async def create_topup(
     if request.amount_kopeks < method.min_amount_kopeks:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f'Minimum amount is {method.min_amount_kopeks / 100:.2f} RUB',
+            detail=f'Minimum amount is {method.min_amount_kopeks / 100:.2f} USD',
         )
 
     if request.amount_kopeks > method.max_amount_kopeks:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f'Maximum amount is {method.max_amount_kopeks / 100:.2f} RUB',
+            detail=f'Maximum amount is {method.max_amount_kopeks / 100:.2f} USD',
         )
 
     amount_rubles = request.amount_kopeks / 100
@@ -399,24 +399,7 @@ async def create_topup(
                     detail='CryptoBot payment method is unavailable',
                 )
 
-            try:
-                rate = await currency_converter.get_usd_to_rub_rate()
-            except Exception:
-                rate = 0.0
-            if not rate or rate <= 0:
-                rate = 95.0
-
-            try:
-                amount_usd = float(
-                    (Decimal(request.amount_kopeks) / Decimal(100) / Decimal(str(rate))).quantize(
-                        Decimal('0.01'), rounding=ROUND_HALF_UP
-                    )
-                )
-            except (InvalidOperation, ValueError):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail='Unable to convert amount to USD',
-                )
+            amount_usd = round(request.amount_kopeks / 100, 2)
 
             payment_service = PaymentService()
             result = await payment_service.create_cryptobot_payment(

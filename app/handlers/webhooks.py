@@ -8,6 +8,7 @@ from app.database.crud.user import add_user_balance, get_user_by_id
 from app.database.database import AsyncSessionLocal
 from app.database.models import PaymentMethod, TransactionType
 from app.external.tribute import TributeService
+from app.localization.texts import get_texts
 
 
 logger = structlog.get_logger(__name__)
@@ -118,6 +119,9 @@ async def handle_successful_payment(message: types.Message):
                     user = await get_user_by_id(db, user_id)
 
                     if user:
+                        texts = get_texts(user.language)
+                        topup_description = texts.t('STARS_TOPUP_TX_DESCRIPTION', 'Top-up via Telegram Stars')
+
                         # Атомарно: баланс + единственная DEPOSIT-транзакция с external_id
                         # коммитятся вместе ниже. add_user_balance без своей транзакции и без
                         # самостоятельного коммита — иначе двойная запись + orphan при сбое.
@@ -125,7 +129,7 @@ async def handle_successful_payment(message: types.Message):
                             db,
                             user,
                             amount_kopeks,
-                            'Пополнение через Telegram Stars',
+                            topup_description,
                             create_transaction=False,
                             commit=False,
                         )
@@ -135,15 +139,17 @@ async def handle_successful_payment(message: types.Message):
                             user_id=user.id,
                             type=TransactionType.DEPOSIT,
                             amount_kopeks=amount_kopeks,
-                            description='Пополнение через Telegram Stars',
+                            description=topup_description,
                             payment_method=PaymentMethod.TELEGRAM_STARS,
                             external_id=payment.telegram_payment_charge_id,
                             commit=False,
                         )
 
                         await message.answer(
-                            f'✅ Баланс успешно пополнен на {settings.format_price(amount_kopeks)}!\n\n'
-                            'Средства зачислены на ваш баланс!'
+                            texts.t(
+                                'STARS_TOPUP_SUCCESS_MESSAGE',
+                                '✅ Balance successfully topped up by {amount}!\n\nFunds have been credited to your balance!',
+                            ).format(amount=settings.format_price(amount_kopeks))
                         )
 
                         logger.info(
@@ -167,4 +173,7 @@ async def handle_pre_checkout_query(pre_checkout_query: types.PreCheckoutQuery):
 
     except Exception as e:
         logger.error('Ошибка в pre-checkout query', error=e)
-        await pre_checkout_query.answer(ok=False, error_message='Ошибка обработки платежа')
+        texts = get_texts(settings.DEFAULT_LANGUAGE)
+        await pre_checkout_query.answer(
+            ok=False, error_message=texts.t('PAYMENT_PROCESSING_ERROR', 'Error processing the payment')
+        )

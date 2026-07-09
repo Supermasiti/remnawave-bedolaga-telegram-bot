@@ -1494,8 +1494,8 @@
   "SUBSCRIPTION_NOT_FOUND": "❌ اشتراک یافت نشد",
   "SUBSCRIPTION_NO_ACTIVE_LINK": "⚠ اشتراک فعالی ندارید یا لینک در حال ایجاد است",
   "SUBSCRIPTION_NO_SERVERS": "❌ سروری در دسترس نیست",
-  "SUBSCRIPTION_OVERVIEW_TEMPLATE": "👤 {full_name}\n💰 موجودی: {balance}\n📱 اشتراک: {status_emoji} {status_display}{warning}{tariff_info_block}\n\n📱 اطلاعات اشتراک\n🎭 نوع: {subscription_type}\n📅 اعتبار تا: {end_date}\n⏰ باقی‌مانده: {time_left}\n📈 ترافیک: {traffic}\n🌍 سرورها: {servers}\n📱 دستگاه‌ها: {devices_used} / {device_limit}",
-  "SUBSCRIPTION_DAILY_OVERVIEW_TEMPLATE": "👤 {full_name}\n💰 موجودی: {balance}\n📱 اشتراک: {status_emoji} {status_display}{warning}{tariff_info_block}\n\n📱 اطلاعات اشتراک\n🎭 نوع: {subscription_type}\n📈 ترافیک: {traffic}\n🌍 سرورها: {servers}\n📱 دستگاه‌ها: {devices_used} / {device_limit}",
+  "SUBSCRIPTION_OVERVIEW_TEMPLATE": "👤 {full_name}\n💰 موجودی: {balance}\n📱 اشتراک: {status_emoji} {status_display}{warning}{tariff_info_block}\n\n📱 اطلاعات اشتراک\n🎭 نوع: {subscription_type}\n📅 اعتبار تا: {end_date}\n⏰ باقی‌مانده: {time_left}\n📈 ترافیک: {traffic}\n🌍 سرورها: {servers}{devices_line}",
+  "SUBSCRIPTION_DAILY_OVERVIEW_TEMPLATE": "👤 {full_name}\n💰 موجودی: {balance}\n📱 اشتراک: {status_emoji} {status_display}{warning}{tariff_info_block}\n\n📱 اطلاعات اشتراک\n🎭 نوع: {subscription_type}\n📈 ترافیک: {traffic}\n🌍 سرورها: {servers}{devices_line}",
   "SUBSCRIPTION_DEACTIVATED_CHANNEL_UNSUBSCRIBE": "🚫 اشتراک شما متوقف شده است زیرا از کانال اجباری خارج شدید.\n\nبرای بازیابی دسترسی VPN در همه کانال‌ها عضو شوید.",
   "SUBSCRIPTION_DEACTIVATED_CHANNEL_UNSUBSCRIBE_MULTI": "🚫 اشتراک‌های شما متوقف شده‌اند زیرا از کانال اجباری خارج شدید.\n\nبرای بازیابی دسترسی VPN در همه کانال‌ها عضو شوید.",
   "SUBSCRIPTION_PROMO_DISCOUNT_HINT": "⚡ تخفیف اضافی {percent}% فعال شد.\n\nبا سایر تخفیف‌ها جمع می‌شود!",
@@ -1505,7 +1505,7 @@
   "SUBSCRIPTION_REACTIVATED_CHANNEL_SUBSCRIBE": "✅ اشتراک شما بازیابی شد!\n\nبا تشکر از عضویت در کانال‌ها. VPN دوباره فعال است.",
   "SUBSCRIPTION_REACTIVATED_CHANNEL_SUBSCRIBE_MULTI": "✅ اشتراک‌های شما بازیابی شدند!\n\nبا تشکر از عضویت در کانال‌ها. VPN دوباره فعال است.",
   "SUBSCRIPTION_SETTINGS_BUTTON": "⚙️ تنظیمات",
-  "SUBSCRIPTION_SETTINGS_OVERVIEW": "⚙️ <b>تنظیمات اشتراک</b>\n\n📊 <b>پارامترهای فعلی:</b>\n🌐 کشورها: {countries_count}\n📈 ترافیک: {traffic_used} / {traffic_limit}\n📱 دستگاه‌ها: {devices_used} / {devices_limit}\n\nانتخاب کنید چه چیزی را می‌خواهید تغییر دهید:",
+  "SUBSCRIPTION_SETTINGS_OVERVIEW": "⚙️ <b>تنظیمات اشتراک</b>\n\n📊 <b>پارامترهای فعلی:</b>\n🌐 کشورها: {countries_count}\n📈 ترافیک: {traffic_used} / {traffic_limit}\n{devices_line}\n\nانتخاب کنید چه چیزی را می‌خواهید تغییر دهید:",
   "SUBSCRIPTION_SETTINGS_PAID_ONLY": "⚠️ تنظیمات فقط برای اشتراک پولی",
   "SUBSCRIPTION_SPECIFIC_APP_TITLE": "📱 <b>{app_name} - {device_name}</b>",
   "SUBSCRIPTION_STATUS_ACTIVE": "✅ فعال",
@@ -1788,7 +1788,6 @@
   "WEBHOOK_CLOSE_BUTTON": "✖️ بستن",
   "TRAFFIC_WARNING_ALERT": "⚠️ <b>هشدار ترافیک</b>\n\nاستفاده شده: {used:.1f} / {limit} گیگابایت ({percent:.0f}%)\n\nحد ترافیک شما تقریباً تمام شده است.",
   "LOW_BALANCE_ALERT": "⚠️ <b>موجودی کم</b>\n\nموجودی شما: {balance} ₽\nآستانه اطلاع‌رسانی: {threshold} ₽\n\nموجودی خود را شارژ کنید تا تمدید خودکار اشتراک با موفقیت انجام شود.",
-
   "SUBSCRIPTION_REVOKE_BTN": "🔄 صدور مجدد اشتراک",
   "SUBSCRIPTION_REVOKE_TITLE": "⚠️ صدور مجدد اشتراک",
   "SUBSCRIPTION_REVOKE_WARNING": "⚠️ <b>صدور مجدد اشتراک</b>\n\nاین عمل:\n• لینک اتصال جدیدی تولید می‌کند\n• تمام دستگاه‌های متصل را قطع می‌کند\n• لینک قدیمی دیگر کار نخواهد کرد\n\nادامه می‌دهید؟",
@@ -1956,5 +1955,7 @@
   "DEVICE_RENAME_TOO_LONG": "⚠️ نام بیش از حد طولانی است، به {max_len} نویسه کوتاه شد.",
   "AUTOPAY_NOT_AVAILABLE_FOR_DAILY": "پرداخت خودکار برای طرح‌های روزانه در دسترس نیست. کسر مبلغ روزی یک‌بار به‌طور خودکار انجام می‌شود.",
   "AUTOPAY_NOT_AVAILABLE_TRIAL": "پرداخت خودکار برای اشتراک‌های آزمایشی در دسترس نیست.",
-  "AUTOPAY_NOT_AVAILABLE_CLASSIC": "پرداخت خودکار در دسترس نیست. برای تمدید باید یک طرح انتخاب کنید."
+  "AUTOPAY_NOT_AVAILABLE_CLASSIC": "پرداخت خودکار در دسترس نیست. برای تمدید باید یک طرح انتخاب کنید.",
+  "DEVICES_LINE_TEMPLATE": "\n📱 دستگاه‌ها: {devices_used} / {device_limit}",
+  "SETTINGS_DEVICES_LINE_TEMPLATE": "📱 دستگاه‌ها: {devices_used} / {devices_limit}"
 }

@@ -18,24 +18,10 @@ _logger = structlog.get_logger(__name__)
 _cached_rules: dict[str, str] = {}
 
 
-_LANGUAGE_ALIASES = {
-    'uk': 'ua',
-}
+_LANGUAGE_ALIASES: dict[str, str] = {}
 
 
 _DYNAMIC_LANGUAGE_CONFIGS = {
-    'ru': {
-        'traffic_pattern': '📊 {size} ГБ - {price}',
-        'unlimited_pattern': '📊 Безлимит - {price}',
-        'support_info': (
-            '\n🛟 <b>Поддержка</b>\n\n'
-            'Это центр тикетов: создавайте обращения, просматривайте ответы и историю.\n\n'
-            '• 🎫 Создать тикет — опишите проблему или вопрос\n'
-            '• 📋 Мои тикеты — статус и переписка\n'
-            '• 💬 Связаться — написать напрямую (если нужно)\n\n'
-            'Старайтесь использовать тикеты — так мы быстрее поможем и ничего не потеряется.\n'
-        ),
-    },
     'fa': {
         'traffic_pattern': '📊 {size} گیگابایت - {price}',
         'unlimited_pattern': '📊 نامحدود - {price}',
@@ -58,21 +44,6 @@ _DYNAMIC_LANGUAGE_CONFIGS = {
             '• 📋 My tickets — status and conversation\n'
             '• 💬 Contact — message directly if needed\n\n'
             'Prefer tickets — it helps us respond faster and keep context.\n'
-        ),
-    },
-    'ua': {
-        'traffic_pattern': '📊 {size} ГБ - {price}',
-        'unlimited_pattern': '📊 Безліміт - {price}',
-        'support_info': (
-            '\n🛠️ <b>Технічна підтримка</b>\n\n'
-            'З усіх питань звертайтеся до нашої підтримки:\n\n'
-            '👤 {support_username}\n\n'
-            'Ми допоможемо з:\n'
-            '• Налаштуванням підключення\n'
-            '• Вирішенням технічних проблем\n'
-            '• Питаннями щодо оплати\n'
-            '• Іншими питаннями\n\n'
-            '⏰ Час відповіді: зазвичай протягом 1-2 годин\n'
         ),
     },
     'zh': {
@@ -200,12 +171,33 @@ class Texts:
             _logger.warning('Missing localization key', item=item, language=self.language)
         raise KeyError(item)
 
-    @staticmethod
-    def format_price(kopeks: int, round_kopeks: bool | None = None) -> str:
-        return settings.format_price(kopeks, round_kopeks=round_kopeks)
+    def format_price(self, kopeks: int, round_kopeks: bool | None = None) -> str:
+        base = settings.format_price(kopeks, round_kopeks=round_kopeks)
 
-    @staticmethod
-    def format_traffic(gb: float, is_limit: bool = True) -> str:
+        try:
+            from decimal import Decimal
+
+            from app.services.currency_service import (
+                currency_service,
+                get_currency_symbol,
+                get_display_currency_for_language,
+            )
+
+            currency_code = get_display_currency_for_language(self.language)
+            if currency_code == 'USD':
+                return base
+
+            usd_amount = Decimal(kopeks) / Decimal(100)
+            local_amount = currency_service.convert_usd(usd_amount, currency_code)
+            if local_amount is None:
+                return base
+
+            local_str = f'{get_currency_symbol(currency_code)}{local_amount:,.0f}'
+            return self.t('PRICE_WITH_USD_HINT', '{local} (~{usd} USD)').format(local=local_str, usd=base)
+        except Exception:
+            return base
+
+    def format_traffic(self, gb: float, is_limit: bool = True) -> str:
         """Format traffic value.
 
         Args:
@@ -213,10 +205,12 @@ class Texts:
             is_limit: If True, 0 means unlimited. If False, 0 means zero used.
         """
         if gb == 0:
-            return '∞ (безлимит)' if is_limit else '0 ГБ'
+            if is_limit:
+                return self.t('TRAFFIC_UNLIMITED_SHORT', '∞ (unlimited)')
+            return f'0 {self.t("TRAFFIC_UNIT_GB", "GB")}'
         if gb >= 1024:
-            return f'{gb / 1024:.1f} ТБ'
-        return f'{gb:.0f} ГБ'
+            return f'{gb / 1024:.1f} {self.t("TRAFFIC_UNIT_TB", "TB")}'
+        return f'{gb:.0f} {self.t("TRAFFIC_UNIT_GB", "GB")}'
 
 
 def get_texts(language: str = DEFAULT_LANGUAGE) -> Texts:

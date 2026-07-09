@@ -242,28 +242,7 @@ class StartupNotificationService:
                 f'<i>{timestamp}</i>'
             )
 
-            keyboard = InlineKeyboardMarkup(
-                inline_keyboard=[
-                    [
-                        InlineKeyboardButton(
-                            text='Поставить звезду',
-                            url=GITHUB_BOT_URL,
-                        ),
-                    ],
-                    [
-                        InlineKeyboardButton(
-                            text='Вебкабинет',
-                            url=GITHUB_CABINET_URL,
-                        ),
-                    ],
-                    [
-                        InlineKeyboardButton(
-                            text='Сообщество',
-                            url=COMMUNITY_URL,
-                        ),
-                    ],
-                ]
-            )
+            keyboard = None
 
             message_kwargs: dict = {
                 'chat_id': self.chat_id,

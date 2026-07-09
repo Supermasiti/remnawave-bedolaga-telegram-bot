@@ -289,13 +289,13 @@ async def start_multi_revoke(
     # Extract sub_id from callback_data
     parts = (callback.data or '').split(':')
     if len(parts) < 2:
-        await callback.answer('Неверный формат', show_alert=True)
+        await callback.answer(texts.t('INVALID_FORMAT_ALERT', 'Invalid format'), show_alert=True)
         return
 
     try:
         sub_id = int(parts[1])
     except (ValueError, TypeError):
-        await callback.answer('Неверный формат', show_alert=True)
+        await callback.answer(texts.t('INVALID_FORMAT_ALERT', 'Invalid format'), show_alert=True)
         return
 
     # Validate ownership (IDOR protection)

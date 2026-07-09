@@ -2206,25 +2206,14 @@ async def test_payment_provider(
             await callback.answer('❌ CryptoBot отключен', show_alert=True)
             return
 
-        amount_rubles = 100.0
-        try:
-            current_rate = await currency_converter.get_usd_to_rub_rate()
-        except Exception:
-            current_rate = None
-
-        if not current_rate or current_rate <= 0:
-            current_rate = 100.0
-
-        amount_usd = round(amount_rubles / current_rate, 2)
-        if amount_usd < 1:
-            amount_usd = 1.0
+        amount_usd = 1.0  # тестовый платёж $1
 
         payment_result = await payment_service.create_cryptobot_payment(
             db=db,
             user_id=db_user.id,
             amount_usd=amount_usd,
             asset=settings.CRYPTOBOT_DEFAULT_ASSET,
-            description=f'Тестовый платеж CryptoBot {amount_rubles:.0f} ₽ ({amount_usd:.2f} USD)',
+            description=f'Тестовый платеж CryptoBot ${amount_usd:.2f}',
             payload=f'admin_cryptobot_test_{db_user.id}_{int(time.time())}',
         )
 

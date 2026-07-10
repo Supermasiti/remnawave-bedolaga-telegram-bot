@@ -33,11 +33,12 @@ from app.utils.validators import sanitize_telegram_name
 logger = structlog.get_logger(__name__)
 
 
-def _normalize_language_code(language: str | None, fallback: str = 'ru') -> str:
+def _normalize_language_code(language: str | None, fallback: str | None = None) -> str:
+    resolved_fallback = fallback or settings.DEFAULT_LANGUAGE
     normalized = (language or '').strip().lower()
     if '-' in normalized:
         normalized = normalized.split('-', 1)[0]
-    return normalized or fallback
+    return normalized or resolved_fallback
 
 
 def _build_spending_stats_select():
@@ -278,7 +279,7 @@ async def create_user_no_commit(
     username: str = None,
     first_name: str = None,
     last_name: str = None,
-    language: str = 'ru',
+    language: str | None = None,
     referred_by_id: int = None,
     referral_code: str = None,
 ) -> User:
@@ -347,7 +348,7 @@ async def create_user(
     username: str = None,
     first_name: str = None,
     last_name: str = None,
-    language: str = 'ru',
+    language: str | None = None,
     referred_by_id: int = None,
     referral_code: str = None,
 ) -> User:
@@ -1361,7 +1362,7 @@ async def create_user_by_email(
     email: str,
     password_hash: str,
     first_name: str | None = None,
-    language: str = 'ru',
+    language: str | None = None,
     referred_by_id: int | None = None,
 ) -> User:
     """
@@ -1622,7 +1623,7 @@ async def create_user_by_oauth(
     first_name: str | None = None,
     last_name: str | None = None,
     username: str | None = None,
-    language: str = 'ru',
+    language: str | None = None,
     referred_by_id: int | None = None,
 ) -> User:
     """Create a new user via OAuth provider."""

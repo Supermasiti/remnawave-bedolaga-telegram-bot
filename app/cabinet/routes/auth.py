@@ -797,7 +797,7 @@ async def auth_telegram_widget(
             username=request.username,
             first_name=request.first_name,
             last_name=request.last_name,
-            language='ru',
+            language=settings.DEFAULT_LANGUAGE,
             referred_by_id=referrer_id,
         )
         logger.info('User created successfully: id=, telegram_id', user_id=user.id, telegram_id=user.telegram_id)
@@ -1638,7 +1638,7 @@ async def login_email(
                 email=request.email,
                 password_hash=password_hash,
                 first_name='Test User',
-                language='ru',
+                language=settings.DEFAULT_LANGUAGE,
             )
             user.email_verified = True
             user.email_verified_at = datetime.now(UTC)

@@ -28,10 +28,10 @@ class BulkBanService:
         db: AsyncSession,
         admin_user_id: int,
         telegram_ids: list[int],
-        reason: str = 'Заблокирован администратором по списку',
+        reason: str = 'Blocked by administrator (bulk list)',
         bot: Bot = None,
         notify_admin: bool = True,
-        admin_name: str = 'Администратор',
+        admin_name: str = 'Administrator',
     ) -> tuple[int, int, list[int]]:
         """
         Массовая блокировка пользователей по Telegram ID
@@ -77,14 +77,17 @@ class BulkBanService:
                     # Отправляем уведомление пользователю, если возможно
                     if bot:
                         try:
+                            from app.localization.texts import get_texts
+
+                            texts = get_texts(getattr(user, 'language', None))
                             await bot.send_message(
                                 chat_id=telegram_id,
-                                text=(
-                                    f'🚫 <b>Ваш аккаунт заблокирован</b>\n\n'
-                                    f'Причина: {reason}\n\n'
-                                    f'Если вы считаете, что блокировка произошла ошибочно, '
-                                    f'обратитесь в поддержку.'
-                                ),
+                                text=texts.t(
+                                    'BULK_BAN_NOTIFICATION',
+                                    '🚫 <b>Your account has been blocked</b>\n\n'
+                                    'Reason: {reason}\n\n'
+                                    'If you believe this happened by mistake, contact support.',
+                                ).format(reason=reason),
                                 parse_mode='HTML',
                             )
                         except Exception as e:

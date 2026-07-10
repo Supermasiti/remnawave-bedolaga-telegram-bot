@@ -83,7 +83,11 @@ async def charge_trial_activation_if_required(
     if price_kopeks <= 0:
         return 0
 
-    charge_description = description or 'Активация триальной подписки'
+    from app.localization.texts import get_texts
+
+    charge_description = description or get_texts(getattr(user, 'language', None)).t(
+        'TRIAL_PAYMENT_DESCRIPTION', 'Trial subscription activation'
+    )
 
     success = await subtract_user_balance(
         db,
@@ -120,7 +124,11 @@ async def refund_trial_activation_charge(
     if amount_kopeks <= 0:
         return True
 
-    refund_description = description or 'Возврат оплаты за активацию триальной подписки'
+    from app.localization.texts import get_texts
+
+    refund_description = description or get_texts(getattr(user, 'language', None)).t(
+        'TRIAL_REFUND_DESCRIPTION', 'Refund for failed trial activation'
+    )
 
     success = await add_user_balance(
         db,

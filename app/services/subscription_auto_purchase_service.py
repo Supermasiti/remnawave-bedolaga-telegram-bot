@@ -335,16 +335,19 @@ async def _prepare_auto_extend_context(
         return None
 
     # Формируем описание с учётом тарифа
+    texts = get_texts(getattr(user, 'language', None))
     if tariff_id:
         from app.database.crud.tariff import get_tariff_by_id
 
         tariff = await get_tariff_by_id(db, tariff_id)
-        tariff_name = tariff.name if tariff else 'тариф'
-        description = (
-            cart_data.get('description') or f'Продление тарифа {tariff_name} на {format_days_declension(period_days)}'
-        )
+        tariff_name = tariff.name if tariff else texts.t('MY_SUBS_DEFAULT_NAME', 'Plan')
+        description = cart_data.get('description') or texts.t(
+            'AUTO_EXTEND_TARIFF_TX_DESCRIPTION', 'Renewal of plan {name} for {days} days'
+        ).format(name=tariff_name, days=period_days)
     else:
-        description = cart_data.get('description') or f'Продление подписки на {format_days_declension(period_days)}'
+        description = cart_data.get('description') or texts.t(
+            'RENEWAL_TX_DESCRIPTION', 'Subscription renewal for {days} days'
+        ).format(days=period_days)
 
     device_limit = cart_data.get('device_limit')
     if device_limit is not None:
@@ -564,7 +567,9 @@ async def _auto_extend_subscription(
                 db,
                 user,
                 prepared.price_kopeks,
-                'Возврат: ошибка автопродления подписки',
+                get_texts(getattr(user, 'language', None)).t(
+                    'AUTO_EXTEND_FAILED_REFUND_TX_DESCRIPTION', 'Refund: automatic subscription renewal failed'
+                ),
                 create_transaction=True,
                 transaction_type=TransactionType.REFUND,
             )
@@ -644,10 +649,10 @@ async def _auto_extend_subscription(
     await _delete_cart_for_subscription(user.id, cart_data)
     await clear_subscription_checkout_draft(user.id)
 
-    texts = get_texts(getattr(user, 'language', 'ru'))
+    texts = get_texts(getattr(user, 'language', settings.DEFAULT_LANGUAGE))
     period_label = format_period_description(
         prepared.period_days,
-        getattr(user, 'language', 'ru'),
+        getattr(user, 'language', settings.DEFAULT_LANGUAGE),
     )
     new_end_date = updated_subscription.end_date
     end_date_label = format_local_datetime(new_end_date, '%d.%m.%Y %H:%M')
@@ -683,7 +688,9 @@ async def _auto_extend_subscription(
                 '✅ Subscription automatically extended for {period}.',
             ).format(period=period_label)
             if settings.is_multi_tariff_enabled() and prepared.tariff_name:
-                auto_message += f'\n📦 Тариф: «{prepared.tariff_name}»'
+                auto_message += texts.t('AUTO_PURCHASE_TARIFF_LINE', '\n📦 Plan: «{name}»').format(
+                    name=prepared.tariff_name
+                )
             details_message = texts.t(
                 'AUTO_PURCHASE_SUBSCRIPTION_EXTENDED_DETAILS',
                 'New expiration date: {date}.',
@@ -874,7 +881,9 @@ async def _auto_purchase_tariff(
 
     # Списываем баланс
     try:
-        description = f'Покупка тарифа {tariff.name} на {format_days_declension(period_days)}'
+        description = get_texts(getattr(user, 'language', None)).t(
+            'SUBSCRIPTION_PURCHASE_TARIFF_TX_DESCRIPTION', 'Purchase of plan {name} for {days} days'
+        ).format(name=tariff.name, days=period_days)
         success = await subtract_user_balance(
             db,
             user,
@@ -953,7 +962,9 @@ async def _auto_purchase_tariff(
                 db,
                 user,
                 final_price,
-                'Возврат: ошибка автопокупки тарифа',
+                get_texts(getattr(user, 'language', None)).t(
+                    'AUTO_PURCHASE_TARIFF_FAILED_REFUND_TX_DESCRIPTION', 'Refund: automatic plan purchase failed'
+                ),
                 create_transaction=True,
                 transaction_type=TransactionType.REFUND,
             )
@@ -1048,15 +1059,17 @@ async def _auto_purchase_tariff(
     # Send user notification only for Telegram users
     if bot and user.telegram_id:
         try:
-            texts = get_texts(getattr(user, 'language', 'ru'))
-            period_label = format_period_description(period_days, getattr(user, 'language', 'ru'))
+            texts = get_texts(getattr(user, 'language', settings.DEFAULT_LANGUAGE))
+            period_label = format_period_description(period_days, getattr(user, 'language', settings.DEFAULT_LANGUAGE))
 
             message = texts.t(
                 'AUTO_PURCHASE_SUBSCRIPTION_SUCCESS',
                 '✅ Подписка на {period} автоматически оформлена после пополнения баланса.',
             ).format(period=period_label)
             if settings.is_multi_tariff_enabled() and tariff_name_for_label:
-                message += f'\n📦 Тариф: «{tariff_name_for_label}»'
+                message += texts.t('AUTO_PURCHASE_TARIFF_LINE', '\n📦 Plan: «{name}»').format(
+                    name=tariff_name_for_label
+                )
 
             hint = texts.t(
                 'AUTO_PURCHASE_SUBSCRIPTION_HINT',
@@ -1207,7 +1220,9 @@ async def _auto_purchase_daily_tariff(
 
     # Списываем баланс за первый день
     try:
-        description = f'Активация суточного тарифа {tariff.name}'
+        description = get_texts(getattr(user, 'language', None)).t(
+            'DAILY_TARIFF_ACTIVATION_TX_DESCRIPTION', 'Daily plan activation {name}'
+        ).format(name=tariff.name)
         success = await subtract_user_balance(
             db,
             user,
@@ -1317,7 +1332,10 @@ async def _auto_purchase_daily_tariff(
                 db,
                 user,
                 final_price,
-                'Возврат: ошибка автопокупки суточного тарифа',
+                get_texts(getattr(user, 'language', None)).t(
+                    'AUTO_PURCHASE_DAILY_TARIFF_FAILED_REFUND_TX_DESCRIPTION',
+                    'Refund: automatic daily plan purchase failed',
+                ),
                 create_transaction=True,
                 transaction_type=TransactionType.REFUND,
             )
@@ -1406,14 +1424,15 @@ async def _auto_purchase_daily_tariff(
     # Send user notification only for Telegram users
     if bot and user.telegram_id:
         try:
-            texts = get_texts(getattr(user, 'language', 'ru'))
+            texts = get_texts(getattr(user, 'language', settings.DEFAULT_LANGUAGE))
 
-            message = (
-                f'✅ <b>Суточный тариф «{html.escape(tariff.name)}» активирован!</b>\n\n'
-                f'💰 Списано: {final_price / 100:.0f} ₽ за первый день\n'
-                f'🔄 Средства будут списываться автоматически раз в сутки.\n\n'
-                f'ℹ️ Вы можете приостановить подписку в любой момент.'
-            )
+            message = texts.t(
+                'DAILY_TARIFF_ACTIVATED_MESSAGE',
+                '✅ <b>Daily plan «{name}» activated!</b>\n\n'
+                '💰 Charged: {price} for the first day\n'
+                '🔄 Funds will be charged automatically once a day.\n\n'
+                'ℹ️ You can pause the subscription at any time.',
+            ).format(name=html.escape(tariff.name), price=settings.format_price(final_price))
 
             keyboard = InlineKeyboardMarkup(
                 inline_keyboard=[
@@ -1616,7 +1635,9 @@ async def _auto_add_devices(
         return False
 
     # Списываем баланс
-    description = f'Покупка {devices_to_add} доп. устройств'
+    description = get_texts(getattr(user, 'language', None)).t(
+        'SIMPLE_SUBSCRIPTION_DEVICES_PURCHASE_TX_DESCRIPTION', 'Purchase of {count} extra device(s)'
+    ).format(count=devices_to_add)
     try:
         success = await subtract_user_balance(
             db,
@@ -1743,7 +1764,7 @@ async def _auto_add_devices(
 
     # Уведомление пользователю
     if bot and user.telegram_id:
-        texts = get_texts(getattr(user, 'language', 'ru'))
+        texts = get_texts(getattr(user, 'language', settings.DEFAULT_LANGUAGE))
         try:
             message = texts.t(
                 'AUTO_PURCHASE_DEVICES_SUCCESS',
@@ -1975,7 +1996,9 @@ async def _auto_add_traffic(
         return False
 
     # Deduct balance
-    description = f'Докупка {traffic_gb} ГБ трафика'
+    description = get_texts(getattr(user, 'language', None)).t(
+        'TRAFFIC_PURCHASE_TX_DESCRIPTION', 'Extra traffic purchase: {gb} GB'
+    ).format(gb=traffic_gb)
     try:
         success = await subtract_user_balance(
             db,
@@ -2022,7 +2045,9 @@ async def _auto_add_traffic(
                 db,
                 user,
                 price_kopeks,
-                'Возврат: ошибка автопокупки трафика',
+                get_texts(getattr(user, 'language', None)).t(
+                    'AUTO_PURCHASE_TRAFFIC_FAILED_REFUND_TX_DESCRIPTION', 'Refund: automatic traffic purchase failed'
+                ),
                 create_transaction=True,
                 transaction_type=TransactionType.REFUND,
             )
@@ -2099,7 +2124,7 @@ async def _auto_add_traffic(
 
     # User notification
     if bot and user.telegram_id:
-        texts = get_texts(getattr(user, 'language', 'ru'))
+        texts = get_texts(getattr(user, 'language', settings.DEFAULT_LANGUAGE))
         try:
             message = texts.t(
                 'AUTO_PURCHASE_TRAFFIC_SUCCESS',
@@ -2331,7 +2356,9 @@ async def try_auto_extend_expired_after_topup(
     saved_promo_expires = getattr(user, 'promo_offer_discount_expires_at', None) if consume_promo_offer else None
 
     # Deduct balance
-    description = f'Автопродление истёкшей подписки на {format_days_declension(period_days)}'
+    description = get_texts(getattr(user, 'language', None)).t(
+        'RENEWAL_TX_DESCRIPTION', 'Subscription renewal for {days} days'
+    ).format(days=period_days)
     try:
         deducted = await subtract_user_balance(
             db,
@@ -2390,7 +2417,10 @@ async def try_auto_extend_expired_after_topup(
                 db,
                 user,
                 renewal_cost,
-                'Возврат: ошибка автопродления истёкшей подписки',
+                get_texts(getattr(user, 'language', None)).t(
+                    'AUTO_RENEW_EXPIRED_FAILED_REFUND_TX_DESCRIPTION',
+                    'Refund: automatic renewal of expired subscription failed',
+                ),
                 create_transaction=True,
                 transaction_type=TransactionType.REFUND,
             )
@@ -2455,8 +2485,8 @@ async def try_auto_extend_expired_after_topup(
                 action='update',
             )
 
-    texts = get_texts(getattr(user, 'language', 'ru'))
-    period_label = format_period_description(period_days, getattr(user, 'language', 'ru'))
+    texts = get_texts(getattr(user, 'language', settings.DEFAULT_LANGUAGE))
+    period_label = format_period_description(period_days, getattr(user, 'language', settings.DEFAULT_LANGUAGE))
     new_end_date = updated_subscription.end_date
     end_date_label = format_local_datetime(new_end_date, '%d.%m.%Y %H:%M')
 
@@ -2491,7 +2521,9 @@ async def try_auto_extend_expired_after_topup(
                 '✅ Subscription automatically extended for {period}.',
             ).format(period=period_label)
             if settings.is_multi_tariff_enabled() and tariff_name_for_label:
-                auto_message += f'\n📦 Тариф: «{tariff_name_for_label}»'
+                auto_message += texts.t('AUTO_PURCHASE_TARIFF_LINE', '\n📦 Plan: «{name}»').format(
+                    name=tariff_name_for_label
+                )
             details_message = texts.t(
                 'AUTO_PURCHASE_SUBSCRIPTION_EXTENDED_DETAILS',
                 'New expiration date: {date}.',
@@ -2675,7 +2707,9 @@ async def try_resume_disabled_daily_after_topup(
 
     # Deduct daily price FIRST (before changing status to avoid free-access window)
     previous_status = subscription.status
-    description = f'Суточная оплата тарифа «{tariff.name}» (авто-возобновление)'
+    description = get_texts(getattr(user, 'language', None)).t(
+        'DAILY_TARIFF_AUTO_RESUME_TX_DESCRIPTION', 'Daily payment for plan «{name}» (auto-resume)'
+    ).format(name=tariff.name)
     try:
         deducted = await subtract_user_balance(
             db,
@@ -2721,7 +2755,10 @@ async def try_resume_disabled_daily_after_topup(
                 db,
                 user,
                 daily_price,
-                'Возврат: ошибка авто-возобновления суточной подписки',
+                get_texts(getattr(user, 'language', None)).t(
+                    'AUTO_RESUME_DAILY_FAILED_REFUND_TX_DESCRIPTION',
+                    'Refund: automatic daily subscription resume failed',
+                ),
                 create_transaction=True,
                 transaction_type=TransactionType.REFUND,
             )
@@ -2869,7 +2906,7 @@ async def try_resume_disabled_daily_after_topup(
     # User notification
     if bot and user.telegram_id:
         try:
-            texts = get_texts(getattr(user, 'language', 'ru'))
+            texts = get_texts(getattr(user, 'language', settings.DEFAULT_LANGUAGE))
 
             message = texts.t(
                 'DAILY_SUBSCRIPTION_RESUMED_AFTER_TOPUP',
@@ -3242,7 +3279,7 @@ async def _process_legacy_generic_cart(
     subscription = purchase_result.get('subscription')
     transaction = purchase_result.get('transaction')
     was_trial_conversion = purchase_result.get('was_trial_conversion', False)
-    texts = get_texts(getattr(user, 'language', 'ru'))
+    texts = get_texts(getattr(user, 'language', settings.DEFAULT_LANGUAGE))
 
     if bot:
         try:
@@ -3268,7 +3305,7 @@ async def _process_legacy_generic_cart(
             try:
                 period_label = format_period_description(
                     selection.period.days,
-                    getattr(user, 'language', 'ru'),
+                    getattr(user, 'language', settings.DEFAULT_LANGUAGE),
                 )
                 auto_message = texts.t(
                     'AUTO_PURCHASE_SUBSCRIPTION_SUCCESS',
@@ -3280,7 +3317,9 @@ async def _process_legacy_generic_cart(
 
                         _t = await _get_tariff_label(db, subscription.tariff_id)
                         if _t:
-                            auto_message += f'\n📦 Тариф: «{_t.name}»'
+                            auto_message += texts.t('AUTO_PURCHASE_TARIFF_LINE', '\n📦 Plan: «{name}»').format(
+                                name=_t.name
+                            )
                     except Exception:
                         pass
 

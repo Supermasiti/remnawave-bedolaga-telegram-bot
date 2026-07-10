@@ -27,7 +27,7 @@ def format_date(dt: datetime | str, format_str: str = '%d.%m.%Y') -> str:
     return dt.strftime(format_str)
 
 
-def format_time_ago(dt: datetime | str, language: str = 'ru') -> str:
+def format_time_ago(dt: datetime | str, language: str = 'en') -> str:
     if isinstance(dt, str):
         if dt == 'now' or dt == '':
             dt = datetime.now(UTC)
@@ -40,55 +40,56 @@ def format_time_ago(dt: datetime | str, language: str = 'ru') -> str:
     now = datetime.now(UTC)
     diff = now - dt
 
-    language_code = (language or 'ru').split('-')[0].lower()
+    language_code = (language or 'en').split('-')[0].lower()
+    use_russian = language_code == 'ru'
 
     if diff.days > 0:
         if diff.days == 1:
-            return 'yesterday' if language_code == 'en' else 'вчера'
+            return 'вчера' if use_russian else 'yesterday'
         if diff.days < 7:
             value = diff.days
-            if language_code == 'en':
-                suffix = 'day' if value == 1 else 'days'
-                return f'{value} {suffix} ago'
-            return f'{value} дн. назад'
+            if use_russian:
+                return f'{value} дн. назад'
+            suffix = 'day' if value == 1 else 'days'
+            return f'{value} {suffix} ago'
         if diff.days < 30:
             value = diff.days // 7
-            if language_code == 'en':
-                suffix = 'week' if value == 1 else 'weeks'
-                return f'{value} {suffix} ago'
-            return f'{value} нед. назад'
+            if use_russian:
+                return f'{value} нед. назад'
+            suffix = 'week' if value == 1 else 'weeks'
+            return f'{value} {suffix} ago'
         if diff.days < 365:
             value = diff.days // 30
-            if language_code == 'en':
-                suffix = 'month' if value == 1 else 'months'
-                return f'{value} {suffix} ago'
-            return f'{value} мес. назад'
-        value = diff.days // 365
-        if language_code == 'en':
-            suffix = 'year' if value == 1 else 'years'
+            if use_russian:
+                return f'{value} мес. назад'
+            suffix = 'month' if value == 1 else 'months'
             return f'{value} {suffix} ago'
-        return f'{value} г. назад'
+        value = diff.days // 365
+        if use_russian:
+            return f'{value} г. назад'
+        suffix = 'year' if value == 1 else 'years'
+        return f'{value} {suffix} ago'
 
     if diff.seconds > 3600:
         value = diff.seconds // 3600
-        if language_code == 'en':
-            suffix = 'hour' if value == 1 else 'hours'
-            return f'{value} {suffix} ago'
-        return f'{value} ч. назад'
+        if use_russian:
+            return f'{value} ч. назад'
+        suffix = 'hour' if value == 1 else 'hours'
+        return f'{value} {suffix} ago'
 
     if diff.seconds > 60:
         value = diff.seconds // 60
-        if language_code == 'en':
-            suffix = 'minute' if value == 1 else 'minutes'
-            return f'{value} {suffix} ago'
-        return f'{value} мин. назад'
+        if use_russian:
+            return f'{value} мин. назад'
+        suffix = 'minute' if value == 1 else 'minutes'
+        return f'{value} {suffix} ago'
 
-    return 'just now' if language_code == 'en' else 'только что'
+    return 'только что' if use_russian else 'just now'
 
 
-def format_days_declension(days: int, language: str = 'ru') -> str:
-    language_code = (language or 'ru').split('-')[0].lower()
-    if language_code not in {'ru', 'fa'}:
+def format_days_declension(days: int, language: str = 'en') -> str:
+    language_code = (language or 'en').split('-')[0].lower()
+    if language_code != 'ru':
         return f'{days} day{"s" if days != 1 else ""}'
 
     if days % 10 == 1 and days % 100 != 11:
@@ -174,15 +175,15 @@ def format_username(username: str | None, user_id: int, full_name: str | None = 
     return f'ID{user_id}'
 
 
-def format_subscription_status(is_active: bool, is_trial: bool, end_date: datetime | str, language: str = 'ru') -> str:
+def format_subscription_status(is_active: bool, is_trial: bool, end_date: datetime | str, language: str = 'en') -> str:
     if isinstance(end_date, str):
         try:
             end_date = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
         except (ValueError, AttributeError):
             end_date = datetime.now(UTC)
 
-    language_code = (language or 'ru').split('-')[0].lower()
-    use_russian_fallback = language_code in {'ru', 'fa'}
+    language_code = (language or 'en').split('-')[0].lower()
+    use_russian_fallback = language_code == 'ru'
 
     if not is_active:
         return '❌ Неактивна' if use_russian_fallback else '❌ Inactive'
@@ -206,9 +207,9 @@ def format_subscription_status(is_active: bool, is_trial: bool, end_date: dateti
     return status
 
 
-def format_traffic_usage(used_gb: float, limit_gb: int, language: str = 'ru') -> str:
-    language_code = (language or 'ru').split('-')[0].lower()
-    use_russian_fallback = language_code in {'ru', 'fa'}
+def format_traffic_usage(used_gb: float, limit_gb: int, language: str = 'en') -> str:
+    language_code = (language or 'en').split('-')[0].lower()
+    use_russian_fallback = language_code == 'ru'
 
     if limit_gb == 0:
         if use_russian_fallback:
@@ -222,8 +223,8 @@ def format_traffic_usage(used_gb: float, limit_gb: int, language: str = 'ru') ->
     return f'{used_gb:.1f} GB / {limit_gb} GB ({percentage:.1f}%)'
 
 
-def format_boolean(value: bool, language: str = 'ru') -> str:
-    language_code = (language or 'ru').split('-')[0].lower()
-    if language_code in {'ru', 'fa'}:
+def format_boolean(value: bool, language: str = 'en') -> str:
+    language_code = (language or 'en').split('-')[0].lower()
+    if language_code == 'ru':
         return '✅ Да' if value else '❌ Нет'
     return '✅ Yes' if value else '❌ No'

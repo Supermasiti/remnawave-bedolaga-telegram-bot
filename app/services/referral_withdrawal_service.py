@@ -197,7 +197,7 @@ class ReferralWithdrawalService:
         if not settings.is_referral_withdrawal_enabled():
             return (
                 False,
-                'Функция вывода реферального баланса отключена',
+                'Referral balance withdrawal is disabled',
                 {
                     'total_earned': 0,
                     'own_deposits': 0,
@@ -218,7 +218,11 @@ class ReferralWithdrawalService:
         min_amount = settings.REFERRAL_WITHDRAWAL_MIN_AMOUNT_KOPEKS
 
         if available < min_amount:
-            return False, f'Минимальная сумма вывода: {min_amount / 100:.0f}₽. Доступно: {available / 100:.0f}₽', stats
+            return (
+                False,
+                f'Minimum withdrawal amount: {settings.format_price(min_amount)}. Available: {settings.format_price(available)}',
+                stats,
+            )
 
         # Проверяем cooldown (пропускаем в тестовом режиме)
         last_request = await self.get_last_withdrawal_request(db, user_id)
@@ -230,11 +234,11 @@ class ReferralWithdrawalService:
 
                 if datetime.now(UTC) < cooldown_end:
                     days_left = (cooldown_end - datetime.now(UTC)).days + 1
-                    return False, f'Следующий запрос на вывод будет доступен через {days_left} дн.', stats
+                    return False, f'Next withdrawal request will be available in {days_left} day(s)', stats
 
             # Проверяем, нет ли активной заявки
             if last_request.status == WithdrawalRequestStatus.PENDING.value:
-                return False, 'У вас уже есть активная заявка на рассмотрении', stats
+                return False, 'You already have an active request pending review', stats
 
         return True, 'OK', stats
 
@@ -435,12 +439,12 @@ class ReferralWithdrawalService:
         available = stats['available_total']
 
         if amount_kopeks > available:
-            return None, f'Недостаточно средств. Доступно: {available / 100:.0f}₽'
+            return None, f'Insufficient funds. Available: {settings.format_price(available)}'
 
         # В режиме "только реф. баланс" проверяем реф. баланс
         if settings.REFERRAL_WITHDRAWAL_ONLY_REFERRAL_BALANCE:
             if amount_kopeks > stats['available_referral']:
-                return None, f'Недостаточно реферального баланса. Доступно: {stats["available_referral"] / 100:.0f}₽'
+                return None, f'Insufficient referral balance. Available: {settings.format_price(stats["available_referral"])}'
 
         # Анализируем на отмывание
         analysis = await self.analyze_for_money_laundering(db, user_id)
@@ -510,7 +514,7 @@ class ReferralWithdrawalService:
             user_id=request.user_id,
             type=TransactionType.WITHDRAWAL.value,
             amount_kopeks=-request.amount_kopeks,
-            description=f'Вывод реферального баланса (заявка #{request.id})',
+            description=f'Referral balance withdrawal (request #{request.id})',
             is_completed=True,
             completed_at=datetime.now(UTC),
         )

@@ -208,7 +208,7 @@ async def renew_subscription(
             'saved_cart': True,
             'missing_amount': missing,
             'return_to_cart': True,
-            'description': f'Продление подписки на {request.period_days} дней'
+            'description': f'Subscription renewal for {request.period_days} days'
             + (f' ({tariff_name})' if tariff_name else ''),
             'discount_percent': discount_percent,
             'consume_promo_offer': promo_offer_discount_value > 0,
@@ -236,7 +236,7 @@ async def renew_subscription(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
             detail={
                 'code': 'insufficient_funds',
-                'message': f'Недостаточно средств. Не хватает {settings.format_price(missing, round_kopeks=False)}',
+                'message': f'Insufficient balance. Missing {settings.format_price(missing, round_kopeks=False)}',
                 'missing_amount': missing,
                 'cart_saved': True,
                 'cart_mode': 'extend',
@@ -245,7 +245,7 @@ async def renew_subscription(
 
     # Centralized renewal: balance deduction, extension, RemnaWave sync, admin notification,
     # server price recording, and compensating refund on failure.
-    renewal_description = f'Продление подписки на {request.period_days} дней' + (f' ({tariff.name})' if tariff else '')
+    renewal_description = f'Subscription renewal for {request.period_days} days' + (f' ({tariff.name})' if tariff else '')
     renewal_service = SubscriptionRenewalService()
 
     try:
@@ -262,7 +262,7 @@ async def renew_subscription(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
             detail={
                 'code': 'insufficient_funds',
-                'message': 'Недостаточно средств (concurrent check)',
+                'message': 'Insufficient balance (concurrent check)',
             },
         )
 

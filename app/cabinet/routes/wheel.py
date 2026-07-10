@@ -232,13 +232,13 @@ async def create_stars_invoice(
     if not config.is_enabled:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Колесо удачи недоступно',
+            detail='The wheel of fortune is not available',
         )
 
     if not config.spin_cost_stars_enabled or not config.spin_cost_stars:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Оплата Stars не включена',
+            detail='Stars payment is not enabled',
         )
 
     # Проверяем наличие активной подписки (multi-tariff aware)
@@ -260,7 +260,7 @@ async def create_stars_invoice(
     if not subscription or not subscription.is_active:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Для использования колеса необходима активная подписка',
+            detail='An active subscription is required to use the wheel',
         )
 
     # Проверяем лимит спинов
@@ -268,7 +268,7 @@ async def create_stars_invoice(
     if config.daily_spin_limit > 0 and spins_today >= config.daily_spin_limit:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Достигнут дневной лимит спинов',
+            detail='Daily spin limit reached',
         )
 
     # Проверяем наличие призов
@@ -276,7 +276,7 @@ async def create_stars_invoice(
     if not prizes:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Призы не настроены',
+            detail='Prizes are not configured',
         )
 
     stars_amount = config.spin_cost_stars
@@ -291,12 +291,12 @@ async def create_stars_invoice(
 
         async with create_bot() as bot:
             invoice_url = await bot.create_invoice_link(
-                title='Колесо удачи',
-                description=f'Спин колеса удачи ({stars_amount} ⭐)',
+                title='Wheel of Fortune',
+                description=f'Wheel of fortune spin ({stars_amount} ⭐)',
                 payload=payload,
                 provider_token='',
                 currency='XTR',
-                prices=[LabeledPrice(label='Спин колеса', amount=stars_amount)],
+                prices=[LabeledPrice(label='Wheel spin', amount=stars_amount)],
             )
 
         logger.info('Created Stars invoice for wheel spin: user=, stars', user_id=user.id, stars_amount=stars_amount)
@@ -310,5 +310,5 @@ async def create_stars_invoice(
         logger.error('Error creating invoice', error=e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail='Ошибка создания инвойса',
+            detail='Error creating the invoice',
         )

@@ -137,12 +137,12 @@ async def preview_tariff_switch(
     if is_upgrade and not settings.TARIFF_SWITCH_UPGRADE_ENABLED:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail='Повышение тарифа недоступно',
+            detail='Plan upgrade is not available',
         )
     if not is_upgrade and not settings.TARIFF_SWITCH_DOWNGRADE_ENABLED:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail='Понижение тарифа недоступно',
+            detail='Plan downgrade is not available',
         )
     base_upgrade_cost = switch_result.raw_cost
     discount_value = switch_result.discount_value
@@ -160,7 +160,7 @@ async def preview_tariff_switch(
         'new_tariff_name': new_tariff.name,
         'remaining_days': remaining_days,
         'upgrade_cost_kopeks': upgrade_cost,
-        'upgrade_cost_label': settings.format_price(upgrade_cost) if upgrade_cost > 0 else 'Бесплатно',
+        'upgrade_cost_label': settings.format_price(upgrade_cost) if upgrade_cost > 0 else 'Free',
         'balance_kopeks': balance,
         # Когда есть нехватка <1₽ (FX-rounding), показ копеек обязателен — без него
         # юзер видит "Баланс 150 ₽, не хватает 0 ₽" и думает что баг.
@@ -313,12 +313,12 @@ async def switch_tariff(
     if is_upgrade and not settings.TARIFF_SWITCH_UPGRADE_ENABLED:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail='Повышение тарифа недоступно',
+            detail='Plan upgrade is not available',
         )
     if not is_upgrade and not settings.TARIFF_SWITCH_DOWNGRADE_ENABLED:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail='Понижение тарифа недоступно',
+            detail='Plan downgrade is not available',
         )
 
     # Validate daily price for switching TO daily
@@ -348,15 +348,15 @@ async def switch_tariff(
             )
 
         if switching_to_daily:
-            description = f"Переход на суточный тариф '{new_tariff.name}'"
+            description = f"Switch to daily plan '{new_tariff.name}'"
         elif switching_from_daily:
-            description = f"Переход с суточного на тариф '{new_tariff.name}' ({new_period_days} дней)"
+            description = f"Switch from daily to plan '{new_tariff.name}' ({new_period_days} days)"
         else:
-            description = f"Переход на тариф '{new_tariff.name}' (доплата за {remaining_days} дней)"
+            description = f"Switch to plan '{new_tariff.name}' (surcharge for {remaining_days} days)"
 
         # Add discount info to description if applicable
         if period_discount_percent > 0 and discount_value > 0:
-            description += f' (скидка {period_discount_percent}%)'
+            description += f' (discount {period_discount_percent}%)'
 
         success = await subtract_user_balance(
             db,
@@ -405,7 +405,7 @@ async def switch_tariff(
         )
     else:
         # Free switch (downgrade) — record in history
-        description = f"Переход на тариф '{new_tariff.name}'"
+        description = f"Switch to plan '{new_tariff.name}'"
         await create_transaction(
             db=db,
             user_id=user.id,

@@ -276,12 +276,12 @@ async def create_stars_invoice(
 
         async with create_bot() as bot:
             invoice_url = await bot.create_invoice_link(
-                title='Пополнение баланса VPN',
-                description=f'Пополнение баланса на {normalized_kopeks / 100:.2f} ₽ ({stars_amount} ⭐)',
+                title='VPN Balance Top-up',
+                description=f'Balance top-up: {settings.format_price(normalized_kopeks)} ({stars_amount} ⭐)',
                 payload=payload,
                 provider_token='',
                 currency='XTR',
-                prices=[LabeledPrice(label='Пополнение баланса', amount=stars_amount)],
+                prices=[LabeledPrice(label='Balance top-up', amount=stars_amount)],
             )
 
         logger.info(
@@ -1041,7 +1041,7 @@ def _get_status_info(record: PendingPayment) -> tuple[str, str]:
     status = (record.status or '').lower()
 
     if record.is_paid:
-        return '✅', 'Оплачено'
+        return '✅', 'Paid'
 
     if record.method == PaymentMethod.PAL24:
         mapping = {
@@ -1108,11 +1108,11 @@ def _get_status_info(record: PendingPayment) -> tuple[str, str]:
 
     if record.method == PaymentMethod.CRYPTOBOT:
         mapping = {
-            'active': ('⏳', 'Ожидает оплаты'),
-            'paid': ('✅', 'Оплачено'),
-            'expired': ('⌛', 'Истёк'),
+            'active': ('⏳', 'Awaiting payment'),
+            'paid': ('✅', 'Paid'),
+            'expired': ('⌛', 'Expired'),
         }
-        return mapping.get(status, ('❓', 'Неизвестно'))
+        return mapping.get(status, ('❓', 'Unknown'))
 
     if record.method == PaymentMethod.CLOUDPAYMENTS:
         mapping = {
@@ -1194,7 +1194,7 @@ def _get_status_info(record: PendingPayment) -> tuple[str, str]:
         }
         return mapping.get(status, ('❓', 'Неизвестно'))
 
-    return '❓', 'Неизвестно'
+    return '❓', 'Unknown'
 
 
 def _is_checkable(record: PendingPayment) -> bool:
@@ -1482,7 +1482,7 @@ async def check_payment_status(
     if not _is_checkable(record):
         return ManualCheckResponse(
             success=False,
-            message='Ручная проверка недоступна для этого платежа',
+            message='Manual check is not available for this payment',
             payment=_record_to_response(record),
             status_changed=False,
         )
@@ -1501,7 +1501,7 @@ async def check_payment_status(
     if not updated:
         return ManualCheckResponse(
             success=False,
-            message='Не удалось проверить статус платежа',
+            message='Failed to check payment status',
             payment=_record_to_response(record),
             status_changed=False,
         )
@@ -1510,9 +1510,9 @@ async def check_payment_status(
 
     if status_changed:
         _, new_status_text = _get_status_info(updated)
-        message = f'Статус обновлён: {new_status_text}'
+        message = f'Status updated: {new_status_text}'
     else:
-        message = 'Статус не изменился'
+        message = 'Status has not changed'
 
     return ManualCheckResponse(
         success=True,

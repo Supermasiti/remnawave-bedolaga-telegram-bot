@@ -205,13 +205,12 @@ async def delete_welcome_text(db: AsyncSession, welcome_text: WelcomeText) -> No
 
 async def get_current_welcome_text_or_default() -> str:
     return (
-        'Привет, {user_name}! 🎁 3 дней VPN бесплатно! '
-        'Подключайтесь за минуту и забудьте о блокировках. '
-        '✅ До 1 Гбит/с скорость '
-        '✅ Умный VPN — можно не отключать для большинства российских сервисов '
-        '✅ Современные протоколы — максимум защиты и анонимности '
-        '💉 Всего 99₽/мес за 1 устройство '
-        '👇 Жмите кнопку и подключайтесь!'
+        'Hi, {user_name}! 🎁 3 days of free VPN! '
+        'Connect in a minute and forget about restrictions. '
+        '✅ Speeds up to 1 Gbit/s '
+        '✅ Smart VPN — keep it on for everyday use without any hassle '
+        '✅ Modern protocols — maximum privacy and security '
+        '👇 Tap the button below to connect!'
     )
 
 
@@ -222,10 +221,10 @@ def replace_placeholders(text: str, user) -> str:
     first_name = first_name.strip() if first_name else None
     username = username.strip() if username else None
 
-    user_name = html.escape(first_name or username or 'друг')
-    display_first_name = html.escape(first_name or 'друг')
-    display_username = f'@{html.escape(username)}' if username else html.escape(first_name or 'друг')
-    clean_username = html.escape(username or first_name or 'друг')
+    user_name = html.escape(first_name or username or 'friend')
+    display_first_name = html.escape(first_name or 'friend')
+    display_username = f'@{html.escape(username)}' if username else html.escape(first_name or 'friend')
+    clean_username = html.escape(username or first_name or 'friend')
 
     replacements = {
         '{user_name}': user_name,

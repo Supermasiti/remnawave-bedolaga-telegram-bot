@@ -33,13 +33,13 @@ class PartnerApplicationService:
         """
         user = await db.get(User, user_id)
         if not user:
-            return None, 'Пользователь не найден'
+            return None, 'User not found'
 
         if user.partner_status == PartnerStatus.APPROVED.value:
-            return None, 'Вы уже являетесь партнёром'
+            return None, 'You are already a partner'
 
         if user.partner_status == PartnerStatus.PENDING.value:
-            return None, 'У вас уже есть заявка на рассмотрении'
+            return None, 'You already have an application pending review'
 
         application = PartnerApplication(
             user_id=user_id,

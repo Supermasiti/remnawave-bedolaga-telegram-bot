@@ -261,7 +261,7 @@ async def _get_or_create_default_promo_group(db: AsyncSession) -> PromoGroup:
         return default_group
 
     default_group = PromoGroup(
-        name='Базовый юзер',
+        name='Basic user',
         server_discount_percent=0,
         traffic_discount_percent=0,
         device_discount_percent=0,

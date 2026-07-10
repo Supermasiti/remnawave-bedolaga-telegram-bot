@@ -379,7 +379,7 @@ class MiniAppSubscriptionPurchaseService:
         for period_days in available_periods:
             months = calculate_months_from_days(period_days)
             period_id = f'days:{period_days}'
-            label = format_period_description(period_days, getattr(user, 'language', 'ru'))
+            label = format_period_description(period_days, getattr(user, 'language', settings.DEFAULT_LANGUAGE))
 
             base_price_original = PERIOD_PRICES.get(period_days, 0)
             period_discount_percent = user.get_promo_discount('period', period_days)
@@ -1004,7 +1004,9 @@ class MiniAppSubscriptionPurchaseService:
                 )
             )
 
-        description = f'Покупка подписки на {pricing.selection.period.days} дней'
+        description = texts.t('SUBSCRIPTION_PURCHASE_TX_DESCRIPTION', 'Subscription purchase for {days} days').format(
+            days=pricing.selection.period.days
+        )
         success = await subtract_user_balance(
             db,
             user,
@@ -1206,7 +1208,9 @@ class MiniAppSubscriptionPurchaseService:
             user_id=user.id,
             type=TransactionType.SUBSCRIPTION_PAYMENT,
             amount_kopeks=pricing.final_total,
-            description=f'Подписка на {pricing.selection.period.days} дней ({pricing.months} мес)',
+            description=texts.t(
+                'SUBSCRIPTION_TX_DESCRIPTION_WITH_MONTHS', 'Subscription for {days} days ({months} mo.)'
+            ).format(days=pricing.selection.period.days, months=pricing.months),
             payment_method=PaymentMethod.BALANCE,
         )
 

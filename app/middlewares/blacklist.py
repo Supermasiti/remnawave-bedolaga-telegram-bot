@@ -32,9 +32,7 @@ class BlacklistMiddleware(BaseMiddleware):
 
         logger.warning('🚫 Пользователь из черного списка', user_id=user.id, username=user.username, reason=reason)
 
-        block_text = (
-            f'🚫 Доступ запрещен\n\nПричина: {reason}\n\nЕсли вы считаете, что это ошибка, обратитесь в поддержку.'
-        )
+        block_text = f'🚫 Access denied\n\nReason: {reason}\n\nIf you believe this is a mistake, contact support.'
 
         try:
             if isinstance(event, Message):
@@ -42,7 +40,7 @@ class BlacklistMiddleware(BaseMiddleware):
             elif isinstance(event, CallbackQuery):
                 await event.answer(block_text, show_alert=True)
             elif isinstance(event, PreCheckoutQuery):
-                await event.answer(ok=False, error_message='Доступ запрещен')
+                await event.answer(ok=False, error_message='Access denied')
         except Exception as e:
             logger.error('Ошибка отправки сообщения о блокировке пользователю', user_id=user.id, error=e)
 

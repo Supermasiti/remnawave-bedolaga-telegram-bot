@@ -384,7 +384,11 @@ class SubscriptionRenewalService:
         else:
             consume_promo_offer = bool(pricing.promo_offer_discount)
 
-        description_text = description or f'Продление подписки на {period_days} дней'
+        from app.localization.texts import get_texts
+
+        description_text = description or get_texts(getattr(user, 'language', None)).t(
+            'RENEWAL_TX_DESCRIPTION', 'Subscription renewal for {days} days'
+        ).format(days=period_days)
 
         # Save promo offer state before charge so we can restore on failure
         saved_promo_percent = int(getattr(user, 'promo_offer_discount_percent', 0) or 0) if consume_promo_offer else 0
@@ -440,7 +444,9 @@ class SubscriptionRenewalService:
                             db,
                             user,
                             charge_from_balance,
-                            'Возврат: ошибка продления подписки',
+                            get_texts(getattr(user, 'language', None)).t(
+                                'RENEWAL_FAILED_REFUND_TX_DESCRIPTION', 'Refund: subscription renewal failed'
+                            ),
                             create_transaction=True,
                             transaction_type=TransactionType.REFUND,
                         )

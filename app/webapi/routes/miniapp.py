@@ -3401,7 +3401,7 @@ async def get_subscription_details(
                     daily_price_kopeks, _, _ = PricingEngine.apply_stacked_discounts(
                         daily_price_kopeks, _group_pct, _offer_pct
                     )
-            daily_price_label = settings.format_price(daily_price_kopeks) + '/день' if daily_price_kopeks > 0 else None
+            daily_price_label = settings.format_price(daily_price_kopeks) + '/day' if daily_price_kopeks > 0 else None
             # Оставшееся время подписки (показываем даже при паузе)
             if subscription.end_date:
                 daily_next_charge_at = subscription.end_date
@@ -3641,7 +3641,7 @@ async def _get_current_tariff_model(db: AsyncSession, subscription, user=None) -
         traffic_limit_gb=tariff.traffic_limit_gb,
         traffic_limit_label=_format_traffic_limit_label(tariff.traffic_limit_gb)
         if settings.is_tariffs_mode()
-        else f'{tariff.traffic_limit_gb} ГБ',
+        else f'{tariff.traffic_limit_gb} GB',
         is_unlimited_traffic=tariff.traffic_limit_gb == 0,
         device_limit=tariff.device_limit,
         servers_count=servers_count,
@@ -3930,7 +3930,7 @@ async def activate_subscription_trial_endpoint(
             user,
             subscription,
             charged_amount,
-            refund_description='Возврат оплаты за активацию триала в мини-приложении',
+            refund_description='Refund: trial activation payment in the mini app',
         )
         if not revert_result.subscription_rolled_back:
             raise HTTPException(
@@ -3965,7 +3965,7 @@ async def activate_subscription_trial_endpoint(
             user,
             subscription,
             charged_amount,
-            refund_description='Возврат оплаты за активацию триала в мини-приложении',
+            refund_description='Refund: trial activation payment in the mini app',
         )
         if not revert_result.subscription_rolled_back:
             raise HTTPException(
@@ -4011,9 +4011,9 @@ async def activate_subscription_trial_endpoint(
     charged_amount_label = settings.format_price(charged_amount) if charged_amount > 0 else None
     if language_code in {'ru', 'fa'}:
         if duration_days:
-            message = f'Триал активирован на {duration_days} дн. Приятного пользования!'
+            message = f'Trial activated for {duration_days} days. Enjoy!'
         else:
-            message = 'Триал активирован. Приятного пользования!'
+            message = 'Trial activated. Enjoy!'
     elif duration_days:
         message = f'Trial activated for {duration_days} days. Enjoy!'
     else:
@@ -4021,7 +4021,7 @@ async def activate_subscription_trial_endpoint(
 
     if charged_amount_label:
         if language_code in {'ru', 'fa'}:
-            message = f'{message}\n\n💳 С вашего баланса списано {charged_amount_label}.'
+            message = f'{message}\n\n💳 {charged_amount_label} deducted from your balance.'
         else:
             message = f'{message}\n\n💳 {charged_amount_label} has been deducted from your balance.'
 
@@ -4455,7 +4455,7 @@ def _normalize_language_code(user: User | None) -> str:
 def _build_renewal_status_message(user: User | None) -> str:
     language_code = _normalize_language_code(user)
     if language_code in {'ru', 'fa'}:
-        return 'Стоимость указана с учётом ваших текущих серверов, трафика и устройств.'
+        return 'The price includes your current servers, traffic, and devices.'
     return 'Prices already include your current servers, traffic, and devices.'
 
 
@@ -4472,7 +4472,7 @@ def _build_promo_offer_payload(user: User | None) -> dict[str, Any] | None:
 
     language_code = _normalize_language_code(user)
     if language_code in {'ru', 'fa'}:
-        payload['message'] = 'Дополнительная скидка применяется автоматически.'
+        payload['message'] = 'The extra discount is applied automatically.'
     else:
         payload['message'] = 'Extra discount is applied automatically.'
 
@@ -4483,7 +4483,7 @@ def _format_payment_method_title(method: str) -> str:
     mapping = {
         'cryptobot': 'CryptoBot',
         'yookassa': 'YooKassa',
-        'yookassa_sbp': 'YooKassa СБП',
+        'yookassa_sbp': 'YooKassa SBP',
         'mulenpay': 'MulenPay',
         'pal24': 'Pal24',
         'wata': 'WataPay',
@@ -4512,15 +4512,15 @@ def _build_renewal_success_message(
     if language_code in {'ru', 'fa'}:
         if charged_amount > 0:
             message = (
-                f'Подписка{tariff_label} продлена до {date_label}. '
+                f'Subscription{tariff_label} renewed until {date_label}. '
                 if date_label
-                else f'Подписка{tariff_label} продлена. '
-            ) + f'Списано {amount_label}.'
+                else f'Subscription{tariff_label} renewed. '
+            ) + f'Charged {amount_label}.'
         else:
             message = (
-                f'Подписка{tariff_label} продлена до {date_label}.'
+                f'Subscription{tariff_label} renewed until {date_label}.'
                 if date_label
-                else f'Подписка{tariff_label} успешно продлена.'
+                else f'Subscription{tariff_label} renewed successfully.'
             )
     elif charged_amount > 0:
         message = (
@@ -4538,7 +4538,7 @@ def _build_renewal_success_message(
     if promo_discount_value > 0:
         discount_label = settings.format_price(promo_discount_value)
         if language_code in {'ru', 'fa'}:
-            message += f' Применена дополнительная скидка {discount_label}.'
+            message += f' An extra {discount_label} discount was applied.'
         else:
             message += f' Promo discount applied: {discount_label}.'
 
@@ -4550,17 +4550,8 @@ def _build_renewal_pending_message(
     missing_amount: int,
     method: str,
 ) -> str:
-    language_code = _normalize_language_code(user)
     amount_label = settings.format_price(max(0, missing_amount))
     method_title = _format_payment_method_title(method)
-
-    if language_code in {'ru', 'fa'}:
-        if method_title:
-            return (
-                f'Недостаточно средств на балансе. Доплатите {amount_label} через {method_title}, '
-                'чтобы завершить продление.'
-            )
-        return f'Недостаточно средств на балансе. Доплатите {amount_label}, чтобы завершить продление.'
 
     if method_title:
         return f'Not enough balance. Pay the remaining {amount_label} via {method_title} to finish the renewal.'
@@ -5311,7 +5302,7 @@ async def submit_subscription_renewal_endpoint(
 
     balance_kopeks = getattr(user, 'balance_kopeks', 0)
     missing_amount = calculate_missing_amount(balance_kopeks, final_total)
-    description = f'Продление подписки на {period_days} дней'
+    description = f'Subscription renewal for {period_days} days'
 
     if missing_amount <= 0:
         # Both tariff and classic modes use finalize() for consistent renewal handling
@@ -5787,7 +5778,7 @@ async def update_subscription_servers_endpoint(
             detail={
                 'code': 'insufficient_funds',
                 'message': (
-                    f'Недостаточно средств на балансе. Не хватает {settings.format_price(missing, round_kopeks=False)}'
+                    f'Insufficient balance. Missing {settings.format_price(missing, round_kopeks=False)}'
                 ),
             },
         )
@@ -5795,9 +5786,9 @@ async def update_subscription_servers_endpoint(
     if total_cost > 0:
         added_names = [catalog[uuid].get('name', uuid) for uuid in added]
         description = (
-            f'Добавление серверов: {", ".join(added_names)} за {charged_days} дн.'
+            f'Adding servers: {", ".join(added_names)} for {charged_days} days'
             if added_names
-            else 'Изменение списка серверов'
+            else 'Server list change'
         )
 
         success = await subtract_user_balance(
@@ -5978,12 +5969,12 @@ async def update_subscription_traffic_endpoint(
                 detail={
                     'code': 'insufficient_funds',
                     'message': (
-                        f'Недостаточно средств на балансе. Не хватает {settings.format_price(missing, round_kopeks=False)}'
+                        f'Insufficient balance. Missing {settings.format_price(missing, round_kopeks=False)}'
                     ),
                 },
             )
 
-        description = f'Переключение трафика с {subscription.traffic_limit_gb}GB на {new_traffic}GB'
+        description = f'Switching traffic from {subscription.traffic_limit_gb}GB to {new_traffic}GB'
 
         success = await subtract_user_balance(
             db,
@@ -6005,7 +5996,7 @@ async def update_subscription_traffic_endpoint(
             user_id=user.id,
             type=TransactionType.SUBSCRIPTION_PAYMENT,
             amount_kopeks=total_price_difference,
-            description=f'{description} за {days_remaining} дн.',
+            description=f'{description} for {days_remaining} days',
         )
 
     subscription.traffic_limit_gb = new_traffic
@@ -6088,7 +6079,7 @@ async def update_subscription_devices_endpoint(
     if not tariff_device_price or tariff_device_price <= 0:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
-            detail={'code': 'devices_unavailable', 'message': 'Докупка устройств недоступна'},
+            detail={'code': 'devices_unavailable', 'message': 'Buying extra devices is not available'},
         )
 
     # Enforce tariff max device limit
@@ -6097,7 +6088,7 @@ async def update_subscription_devices_endpoint(
             status.HTTP_400_BAD_REQUEST,
             detail={
                 'code': 'devices_limit_exceeded',
-                'message': f'Превышен максимальный лимит устройств ({tariff_max_device_limit})',
+                'message': f'Maximum device limit exceeded ({tariff_max_device_limit})',
             },
         )
 
@@ -6154,13 +6145,13 @@ async def update_subscription_devices_endpoint(
             detail={
                 'code': 'insufficient_funds',
                 'message': (
-                    f'Недостаточно средств на балансе. Не хватает {settings.format_price(missing, round_kopeks=False)}'
+                    f'Insufficient balance. Missing {settings.format_price(missing, round_kopeks=False)}'
                 ),
             },
         )
 
     if price_to_charge > 0:
-        description = f'Изменение количества устройств с {current_devices} до {new_devices}'
+        description = f'Changing device count from {current_devices} to {new_devices}'
         success = await subtract_user_balance(
             db,
             user,
@@ -6181,7 +6172,7 @@ async def update_subscription_devices_endpoint(
             user_id=user.id,
             type=TransactionType.SUBSCRIPTION_PAYMENT,
             amount_kopeks=price_to_charge,
-            description=f'{description} за {charged_days or max(1, math.ceil((subscription.end_date - datetime.now(UTC)).total_seconds() / 86400))} дн.',
+            description=f'{description} for {charged_days or max(1, math.ceil((subscription.end_date - datetime.now(UTC)).total_seconds() / 86400))} days',
         )
 
     if price_to_charge > 0:
@@ -6211,14 +6202,14 @@ async def update_subscription_devices_endpoint(
                     status.HTTP_409_CONFLICT,
                     detail={
                         'code': 'already_applied',
-                        'message': 'Изменение уже применено параллельным запросом. Баланс возвращён.',
+                        'message': 'The change was already applied by a concurrent request. Balance refunded.',
                     },
                 )
             raise HTTPException(
                 status.HTTP_409_CONFLICT,
                 detail={
                     'code': 'devices_limit_exceeded',
-                    'message': f'Превышен максимальный лимит устройств ({tariff_max_device_limit}). Баланс возвращён.',
+                    'message': f'Maximum device limit exceeded ({tariff_max_device_limit}). Balance refunded.',
                 },
             )
 
@@ -6257,8 +6248,8 @@ async def update_subscription_devices_endpoint(
 def _format_traffic_limit_label(traffic_gb: int) -> str:
     """Форматирует лимит трафика для отображения."""
     if traffic_gb == 0:
-        return '♾️ Безлимит'
-    return f'{traffic_gb} ГБ'
+        return '♾️ Unlimited'
+    return f'{traffic_gb} GB'
 
 
 async def _build_tariff_model(
@@ -6310,7 +6301,9 @@ async def _build_tariff_model(
                 MiniAppTariffPeriod(
                     days=period_days,
                     months=months,
-                    label=format_period_description(period_days),
+                    label=format_period_description(
+                        period_days, getattr(user, 'language', settings.DEFAULT_LANGUAGE)
+                    ),
                     price_kopeks=price_kopeks,
                     price_label=settings.format_price(price_kopeks),
                     price_per_month_kopeks=per_month,
@@ -6354,7 +6347,7 @@ async def _build_tariff_model(
             )
 
     daily_price_label = (
-        settings.format_price(daily_price_kopeks) + '/день' if is_daily and daily_price_kopeks > 0 else None
+        settings.format_price(daily_price_kopeks) + '/day' if is_daily and daily_price_kopeks > 0 else None
     )
 
     return MiniAppTariff(
@@ -6407,7 +6400,7 @@ async def _build_current_tariff_model(db: AsyncSession, tariff, promo_group=None
             )
 
     daily_price_label = (
-        settings.format_price(daily_price_kopeks) + '/день' if is_daily and daily_price_kopeks > 0 else None
+        settings.format_price(daily_price_kopeks) + '/day' if is_daily and daily_price_kopeks > 0 else None
     )
 
     return MiniAppCurrentTariff(
@@ -6596,18 +6589,18 @@ async def purchase_tariff_endpoint(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
             detail={
                 'code': 'insufficient_funds',
-                'message': f'Недостаточно средств. Не хватает {settings.format_price(missing, round_kopeks=False)}',
+                'message': f'Insufficient balance. Missing {settings.format_price(missing, round_kopeks=False)}',
                 'missing_amount': missing,
             },
         )
 
     # Списываем баланс
     if is_daily_tariff:
-        description = f"Активация суточного тарифа '{tariff.name}' (первый день)"
+        description = f"Daily plan activation '{tariff.name}' (first day)"
     elif discount_percent > 0:
-        description = f"Покупка тарифа '{tariff.name}' на {payload.period_days} дней (скидка {discount_percent}%)"
+        description = f"Purchase of plan '{tariff.name}' for {payload.period_days} days (discount {discount_percent}%)"
     else:
-        description = f"Покупка тарифа '{tariff.name}' на {payload.period_days} дней"
+        description = f"Purchase of plan '{tariff.name}' for {payload.period_days} days"
     success = await subtract_user_balance(
         db,
         user,
@@ -6705,7 +6698,7 @@ async def purchase_tariff_endpoint(
             'period_days': payload.period_days,
             'total_price': price_kopeks,
             'tariff_id': tariff.id,
-            'description': f'Продление тарифа {tariff.name} на {payload.period_days} дней',
+            'description': f'Renewal of plan {tariff.name} for {payload.period_days} days',
         }
         await user_cart_service.save_user_cart(user.id, cart_data)
         user_id_display = user.telegram_id or user.email or f'#{user.id}'
@@ -6719,7 +6712,7 @@ async def purchase_tariff_endpoint(
 
     return MiniAppTariffPurchaseResponse(
         success=True,
-        message=f"Тариф '{tariff.name}' успешно активирован",
+        message=f"Plan '{tariff.name}' activated successfully",
         subscription_id=subscription.id,
         tariff_id=tariff.id,
         tariff_name=tariff.name,
@@ -6849,7 +6842,7 @@ async def preview_tariff_switch_endpoint(
         new_tariff_name=new_tariff.name,
         remaining_days=remaining_days,
         upgrade_cost_kopeks=upgrade_cost,
-        upgrade_cost_label=settings.format_price(upgrade_cost) if upgrade_cost > 0 else 'Бесплатно',
+        upgrade_cost_label=settings.format_price(upgrade_cost) if upgrade_cost > 0 else 'Free',
         balance_kopeks=balance,
         # Когда показываем missing_amount_label с копейками (round_kopeks=False),
         # balance_label тоже должен быть с копейками — иначе пары "Баланс 150 ₽,
@@ -6970,15 +6963,15 @@ async def switch_tariff_endpoint(
                 status_code=status.HTTP_402_PAYMENT_REQUIRED,
                 detail={
                     'code': 'insufficient_funds',
-                    'message': f'Недостаточно средств. Не хватает {settings.format_price(missing, round_kopeks=False)}',
+                    'message': f'Insufficient balance. Missing {settings.format_price(missing, round_kopeks=False)}',
                     'missing_amount': missing,
                 },
             )
 
         if switching_from_daily:
-            description = f"Переход с суточного на тариф '{new_tariff.name}' ({new_period_days} дней)"
+            description = f"Switch from daily to plan '{new_tariff.name}' ({new_period_days} days)"
         else:
-            description = f"Переход на тариф '{new_tariff.name}' (доплата за {remaining_days} дней)"
+            description = f"Switch to plan '{new_tariff.name}' (surcharge for {remaining_days} days)"
         success = await subtract_user_balance(
             db,
             user,
@@ -7006,7 +6999,7 @@ async def switch_tariff_endpoint(
         )
     else:
         # Бесплатный переход (downgrade) — записываем в историю
-        description = f"Переход на тариф '{new_tariff.name}'"
+        description = f"Switch to plan '{new_tariff.name}'"
         switch_transaction = None
         await create_transaction(
             db=db,
@@ -7120,11 +7113,11 @@ async def switch_tariff_endpoint(
     lang = getattr(user, 'language', settings.DEFAULT_LANGUAGE)
     if upgrade_cost > 0:
         if lang == 'ru':
-            message = f"Тариф изменён на '{new_tariff.name}'. Списано {settings.format_price(upgrade_cost)}"
+            message = f"Plan changed to '{new_tariff.name}'. Charged {settings.format_price(upgrade_cost)}"
         else:
             message = f"Switched to '{new_tariff.name}'. Charged {settings.format_price(upgrade_cost)}"
     elif lang == 'ru':
-        message = f"Тариф изменён на '{new_tariff.name}'"
+        message = f"Plan changed to '{new_tariff.name}'"
     else:
         message = f"Switched to '{new_tariff.name}'"
 
@@ -7271,9 +7264,9 @@ async def purchase_traffic_topup_endpoint(
 
     # Списываем баланс
     if traffic_discount_percent > 0:
-        traffic_description = f'Докупка {payload.gb} ГБ трафика (скидка {traffic_discount_percent}%)'
+        traffic_description = f'Purchase of {payload.gb} GB extra traffic (discount {traffic_discount_percent}%)'
     else:
-        traffic_description = f'Докупка {payload.gb} ГБ трафика'
+        traffic_description = f'Purchase of {payload.gb} GB extra traffic'
     success = await subtract_user_balance(db, user, final_price, traffic_description)
     if not success:
         raise HTTPException(
@@ -7329,7 +7322,7 @@ async def purchase_traffic_topup_endpoint(
 
     return MiniAppTrafficTopupResponse(
         success=True,
-        message=f'Добавлено {payload.gb} ГБ трафика',
+        message=f'Added {payload.gb} GB of traffic',
         new_traffic_limit_gb=subscription.traffic_limit_gb,
         new_balance_kopeks=user.balance_kopeks,
         charged_kopeks=final_price,
@@ -7439,7 +7432,7 @@ async def toggle_daily_subscription_pause_endpoint(
                     db,
                     user,
                     daily_price,
-                    f'Суточная оплата тарифа «{tariff.name}» (возобновление)',
+                    f'Daily payment for plan «{tariff.name}» (resume)',
                     mark_as_paid_subscription=True,
                     commit=False,
                 )
@@ -7462,7 +7455,7 @@ async def toggle_daily_subscription_pause_endpoint(
                     user_id=user.id,
                     type=TransactionType.SUBSCRIPTION_PAYMENT,
                     amount_kopeks=daily_price,
-                    description=f'Суточная оплата тарифа «{tariff.name}» (возобновление)',
+                    description=f'Daily payment for plan «{tariff.name}» (resume)',
                     commit=False,
                 )
 
@@ -7497,7 +7490,7 @@ async def toggle_daily_subscription_pause_endpoint(
                 amount_kopeks=daily_price,
                 user_id=user.id,
                 type=TransactionType.SUBSCRIPTION_PAYMENT,
-                description=f'Суточная оплата тарифа «{tariff.name}» (возобновление)',
+                description=f'Daily payment for plan «{tariff.name}» (resume)',
             )
         except Exception as exc:
             logger.warning('Failed to emit resume transaction side effects (miniapp)', error=exc)
@@ -7589,9 +7582,9 @@ async def toggle_daily_subscription_pause_endpoint(
 
     lang = getattr(user, 'language', settings.DEFAULT_LANGUAGE)
     if new_paused_state:
-        message = 'Суточная подписка приостановлена' if lang == 'ru' else 'Daily subscription paused'
+        message = 'Daily subscription paused'
     else:
-        message = 'Суточная подписка возобновлена' if lang == 'ru' else 'Daily subscription resumed'
+        message = 'Daily subscription resumed'
 
     return MiniAppDailySubscriptionToggleResponse(
         success=True,

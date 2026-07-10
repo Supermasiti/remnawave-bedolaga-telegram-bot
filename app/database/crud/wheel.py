@@ -39,7 +39,7 @@ async def get_or_create_wheel_config(db: AsyncSession) -> WheelConfig:
     config = WheelConfig(
         id=1,
         is_enabled=False,
-        name='Колесо удачи',
+        name='Wheel of Fortune',
         spin_cost_stars=10,
         spin_cost_days=1,
         spin_cost_stars_enabled=True,

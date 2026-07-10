@@ -119,7 +119,11 @@ class AdvertisingCampaignService:
                 is_new_registration=False,
             )
 
-        description = f"Бонус за регистрацию по кампании '{campaign.name}'"
+        from app.localization.texts import get_texts
+
+        description = get_texts(getattr(user, 'language', None)).t(
+            'CAMPAIGN_REGISTRATION_BONUS_TX_DESCRIPTION', "Bonus for registering via campaign '{name}'"
+        ).format(name=campaign.name)
         success = await add_user_balance(
             db,
             user,

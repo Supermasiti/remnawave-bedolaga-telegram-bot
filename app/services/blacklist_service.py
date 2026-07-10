@@ -102,7 +102,7 @@ class BlacklistService:
 
                         # 2. Обрабатываем контент: вычленяем username, если он есть в начале
                         username = ''
-                        reason = 'Занесен в черный список'
+                        reason = 'Blacklisted'
 
                         if content:
                             if content.startswith('@'):

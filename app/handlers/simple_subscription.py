@@ -40,25 +40,38 @@ async def start_simple_subscription_purchase(
     texts = get_texts(db_user.language)
 
     if not settings.SIMPLE_SUBSCRIPTION_ENABLED:
-        await callback.answer('❌ Простая покупка подписки временно недоступна', show_alert=True)
+        await callback.answer(
+            texts.t('SIMPLE_SUBSCRIPTION_UNAVAILABLE_ALERT', '❌ Simple subscription purchase is temporarily unavailable'),
+            show_alert=True,
+        )
         return
 
     if settings.is_multi_tariff_enabled():
-        await callback.answer('Используйте выбор тарифа для управления подписками', show_alert=True)
+        await callback.answer(
+            texts.t('USE_TARIFF_SELECTION_ALERT', 'Use plan selection to manage subscriptions'), show_alert=True
+        )
         return
 
     # Проверка ограничения на покупку/продление подписки
     if getattr(db_user, 'restriction_subscription', False):
-        reason = html.escape(getattr(db_user, 'restriction_reason', None) or 'Действие ограничено администратором')
+        reason = html.escape(
+            getattr(db_user, 'restriction_reason', None)
+            or texts.t('RESTRICTION_DEFAULT_REASON', 'Action restricted by the administrator')
+        )
         support_url = settings.get_support_contact_url()
         keyboard = []
         if support_url:
-            keyboard.append([types.InlineKeyboardButton(text='🆘 Обжаловать', url=support_url)])
+            keyboard.append(
+                [types.InlineKeyboardButton(text=texts.t('APPEAL_BUTTON', '🆘 Appeal'), url=support_url)]
+            )
         keyboard.append([types.InlineKeyboardButton(text=texts.BACK, callback_data='subscription')])
 
         await callback.message.edit_text(
-            f'🚫 <b>Покупка подписки ограничена</b>\n\n{reason}\n\n'
-            'Если вы считаете это ошибкой, вы можете обжаловать решение.',
+            texts.t(
+                'SUBSCRIPTION_PURCHASE_RESTRICTED_MESSAGE',
+                '🚫 <b>Subscription purchase is restricted</b>\n\n{reason}\n\n'
+                'If you believe this is a mistake, you can appeal the decision.',
+            ).format(reason=reason),
             reply_markup=types.InlineKeyboardMarkup(inline_keyboard=keyboard),
         )
         await callback.answer()
@@ -163,24 +176,30 @@ async def start_simple_subscription_purchase(
     show_devices = settings.is_devices_selection_enabled()
 
     message_lines = [
-        '⚡ <b>Простая покупка подписки</b>',
+        texts.t('SIMPLE_SUBSCRIPTION_TITLE', '⚡ <b>Simple subscription purchase</b>'),
         '',
-        f'📅 Период: {subscription_params["period_days"]} дней',
+        texts.t('PERIOD_DAYS_LINE', '📅 Period: {period}').format(
+            period=format_period(subscription_params['period_days'], db_user.language)
+        ),
     ]
 
     if show_devices:
-        message_lines.append(f'📱 Устройства: {subscription_params["device_limit"]}')
+        message_lines.append(
+            texts.t('TARIFF_DEVICES_LINE_2', 'Devices: {devices}').format(devices=subscription_params['device_limit'])
+        )
 
     traffic_limit_gb = subscription_params['traffic_limit_gb']
-    traffic_label = 'Безлимит' if traffic_limit_gb == 0 else f'{traffic_limit_gb} ГБ'
+    traffic_label = texts.format_traffic(traffic_limit_gb)
 
     message_lines.extend(
         [
-            f'📊 Трафик: {traffic_label}',
-            f'🌍 Сервер: {server_label}',
+            texts.t('SIMPLE_SUBSCRIPTION_TRAFFIC_LINE', '📊 Traffic: {traffic}').format(traffic=traffic_label),
+            texts.t('SERVER_LINE', '🌍 Server: {server}').format(server=server_label),
             '',
-            f'💰 Стоимость: {settings.format_price(price_kopeks)}',
-            f'💳 Ваш баланс: {settings.format_price(user_balance_kopeks)}',
+            texts.t('COST_LINE', '💰 Cost: {amount}').format(amount=settings.format_price(price_kopeks)),
+            texts.t('YOUR_BALANCE_LINE', '💳 Your balance: {balance}').format(
+                balance=settings.format_price(user_balance_kopeks)
+            ),
             '',
         ]
     )
@@ -189,9 +208,12 @@ async def start_simple_subscription_purchase(
     if has_active_paid_subscription:
         # У пользователя уже есть активная платная подписка
         message_lines.append(
-            '⚠️ У вас уже есть активная платная подписка. '
-            'Покупка простой подписки изменит параметры вашей текущей подписки. '
-            'Требуется подтверждение.'
+            texts.t(
+                'SIMPLE_SUBSCRIPTION_OVERWRITE_WARNING',
+                '⚠️ You already have an active paid subscription. '
+                'Purchasing a simple subscription will change your current subscription parameters. '
+                'Confirmation required.',
+            )
         )
         message_text = '\n'.join(message_lines)
 
@@ -199,7 +221,8 @@ async def start_simple_subscription_purchase(
         keyboard_rows = [
             [
                 types.InlineKeyboardButton(
-                    text='✅ Подтвердить покупку', callback_data='simple_subscription_confirm_purchase'
+                    text=texts.t('CONFIRM_PURCHASE_BUTTON', '✅ Confirm purchase'),
+                    callback_data='simple_subscription_confirm_purchase',
                 )
             ],
             [types.InlineKeyboardButton(text=texts.BACK, callback_data='subscription_purchase')],
@@ -209,9 +232,16 @@ async def start_simple_subscription_purchase(
         # У пользователя нет активной платной подписки (или есть только пробная)
         # Показываем стандартный выбор метода оплаты
         if can_pay_from_balance:
-            message_lines.append('Вы можете оплатить подписку с баланса или выбрать другой способ оплаты.')
+            message_lines.append(
+                texts.t('PAY_FROM_BALANCE_OR_OTHER_HINT', 'You can pay from your balance or choose another payment method.')
+            )
         else:
-            message_lines.append('Баланс пока недостаточный для мгновенной оплаты. Выберите подходящий способ оплаты:')
+            message_lines.append(
+                texts.t(
+                    'BALANCE_NOT_ENOUGH_CHOOSE_METHOD_HINT',
+                    'Your balance is not enough for instant payment. Choose a suitable payment method:',
+                )
+            )
 
         message_text = '\n'.join(message_lines)
 
@@ -225,7 +255,7 @@ async def start_simple_subscription_purchase(
             keyboard_rows.append(
                 [
                     types.InlineKeyboardButton(
-                        text='✅ Оплатить с баланса',
+                        text=texts.t('PAY_FROM_BALANCE_BUTTON', '✅ Pay from balance'),
                         callback_data='simple_subscription_pay_with_balance',
                     )
                 ]
@@ -750,8 +780,12 @@ async def handle_simple_subscription_pay_with_balance_disabled(
     db: AsyncSession,
 ):
     """Показывает уведомление, если баланса недостаточно для прямой оплаты."""
+    texts = get_texts(db_user.language)
     await callback.answer(
-        '❌ Недостаточно средств на балансе. Пополните баланс или выберите другой способ оплаты.',
+        texts.t(
+            'INSUFFICIENT_BALANCE_CHOOSE_OTHER_METHOD_ALERT',
+            '❌ Insufficient balance. Top up your balance or choose another payment method.',
+        ),
         show_alert=True,
     )
 
@@ -2233,7 +2267,10 @@ async def confirm_simple_subscription_purchase(
     subscription_params = data.get('subscription_params', {})
 
     if not subscription_params:
-        await callback.answer('❌ Данные подписки устарели. Пожалуйста, начните сначала.', show_alert=True)
+        await callback.answer(
+            texts.t('SUBSCRIPTION_DATA_OUTDATED_ALERT', '❌ Subscription data is outdated. Please start over.'),
+            show_alert=True,
+        )
         return
 
     resolved_squad_uuid = await _ensure_simple_subscription_squad_uuid(
@@ -2281,12 +2318,17 @@ async def confirm_simple_subscription_purchase(
     user_balance_kopeks = getattr(db_user, 'balance_kopeks', 0)
 
     if total_required > 0 and user_balance_kopeks < total_required:
-        await callback.answer('❌ Недостаточно средств на балансе для оплаты подписки', show_alert=True)
+        await callback.answer(
+            texts.t('INSUFFICIENT_BALANCE_FOR_SUBSCRIPTION_ALERT', '❌ Insufficient balance to pay for the subscription'),
+            show_alert=True,
+        )
         return
 
     try:
         # Списываем средства с баланса пользователя
-        purchase_description = f'Оплата подписки на {subscription_params["period_days"]} дней'
+        purchase_description = texts.t(
+            'SIMPLE_SUBSCRIPTION_PAYMENT_TX_DESCRIPTION', 'Subscription payment for {days} days'
+        ).format(days=subscription_params['period_days'])
         success = await subtract_user_balance(
             db,
             db_user,
@@ -2297,7 +2339,9 @@ async def confirm_simple_subscription_purchase(
         )
 
         if not success:
-            await callback.answer('❌ Ошибка списания средств с баланса', show_alert=True)
+            await callback.answer(
+                texts.t('BALANCE_DEDUCTION_FAILED_ALERT', '❌ Error deducting funds from balance'), show_alert=True
+            )
             return
 
         # Создаём транзакцию для учёта списания
@@ -2365,9 +2409,17 @@ async def confirm_simple_subscription_purchase(
                 db,
                 db_user.id,
                 price_kopeks,
-                f'Возврат средств за неудавшуюся подписку на {subscription_params["period_days"]} дней',
+                texts.t('SIMPLE_SUBSCRIPTION_REFUND_TX_DESCRIPTION', 'Refund for a failed subscription of {days} days').format(
+                    days=subscription_params['period_days']
+                ),
             )
-            await callback.answer('❌ Ошибка создания подписки. Средства возвращены на баланс.', show_alert=True)
+            await callback.answer(
+                texts.t(
+                    'SUBSCRIPTION_CREATION_FAILED_REFUNDED_ALERT',
+                    '❌ Error creating the subscription. Funds have been refunded to your balance.',
+                ),
+                show_alert=True,
+            )
             return
 
         # Обновляем баланс пользователя
@@ -2406,26 +2458,34 @@ async def confirm_simple_subscription_purchase(
         show_devices = settings.is_devices_selection_enabled()
 
         success_lines = [
-            '✅ <b>Подписка успешно активирована!</b>',
+            texts.t('SIMPLE_SUBSCRIPTION_ACTIVATED_TITLE', '✅ <b>Subscription successfully activated!</b>'),
             '',
-            f'📅 Период: {subscription_params["period_days"]} дней',
+            texts.t('PERIOD_DAYS_LINE', '📅 Period: {period}').format(
+                period=format_period(subscription_params['period_days'], db_user.language)
+            ),
         ]
 
         if show_devices:
-            success_lines.append(f'📱 Устройства: {subscription_params["device_limit"]}')
+            success_lines.append(
+                texts.t('TARIFF_DEVICES_LINE_2', 'Devices: {devices}').format(devices=subscription_params['device_limit'])
+            )
 
         success_traffic_gb = subscription_params['traffic_limit_gb']
-        success_traffic_label = 'Безлимит' if success_traffic_gb == 0 else f'{success_traffic_gb} ГБ'
+        success_traffic_label = texts.format_traffic(success_traffic_gb)
 
         success_lines.extend(
             [
-                f'📊 Трафик: {success_traffic_label}',
-                f'🌍 Сервер: {server_label}',
+                texts.t('SIMPLE_SUBSCRIPTION_TRAFFIC_LINE', '📊 Traffic: {traffic}').format(traffic=success_traffic_label),
+                texts.t('SERVER_LINE', '🌍 Server: {server}').format(server=server_label),
                 '',
-                f'💰 Списано с баланса: {settings.format_price(price_kopeks)}',
-                f'💳 Ваш баланс: {settings.format_price(db_user.balance_kopeks)}',
+                texts.t('DEDUCTED_FROM_BALANCE_LINE', '💰 Deducted from balance: {amount}').format(
+                    amount=settings.format_price(price_kopeks)
+                ),
+                texts.t('YOUR_BALANCE_LINE', '💳 Your balance: {balance}').format(
+                    balance=settings.format_price(db_user.balance_kopeks)
+                ),
                 '',
-                "🔗 Для подключения перейдите в раздел 'Подключиться'",
+                texts.t('CONNECT_VIA_SECTION_HINT', "🔗 To connect, go to the 'Connect' section"),
             ]
         )
 
@@ -2491,7 +2551,9 @@ async def confirm_simple_subscription_purchase(
         if happ_row:
             keyboard_rows.append(happ_row)
 
-        keyboard_rows.append([types.InlineKeyboardButton(text='🏠 Главное меню', callback_data='back_to_menu')])
+        keyboard_rows.append(
+            [types.InlineKeyboardButton(text=texts.t('MAIN_MENU_BUTTON', '🏠 Main menu'), callback_data='back_to_menu')]
+        )
 
         keyboard = types.InlineKeyboardMarkup(inline_keyboard=keyboard_rows)
 
@@ -2532,7 +2594,10 @@ async def confirm_simple_subscription_purchase(
             exc_info=True,
         )
         await callback.answer(
-            '❌ Ошибка оплаты подписки. Попробуйте позже или обратитесь в поддержку.',
+            texts.t(
+                'SIMPLE_SUBSCRIPTION_PAYMENT_ERROR',
+                '❌ An error occurred while paying for the subscription. Please try again later or contact support.',
+            ),
             show_alert=True,
         )
         await state.clear()

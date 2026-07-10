@@ -637,7 +637,9 @@ async def add_traffic(callback: types.CallbackQuery, db_user: User, db: AsyncSes
             'base_price_kopeks': discounted_per_month,
             'discount_percent': traffic_discount_pct,
             'source': 'bot',
-            'description': f'Докупка {traffic_gb} ГБ трафика',
+            'description': texts.t('TRAFFIC_PURCHASE_TX_DESCRIPTION', 'Extra traffic purchase: {gb} GB').format(
+                gb=traffic_gb
+            ),
         }
         try:
             await user_cart_service.save_user_cart(db_user.id, cart_data)

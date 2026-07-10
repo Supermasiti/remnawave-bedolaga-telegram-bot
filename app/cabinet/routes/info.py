@@ -21,9 +21,10 @@ logger = structlog.get_logger(__name__)
 router = APIRouter(prefix='/info', tags=['Cabinet Info'])
 
 _LANGUAGE_META: dict[str, tuple[str, str]] = {
-    'ru': ('Русский', '🇷🇺'),
+    'es': ('Español', '🇪🇸'),
     'en': ('English', '🇬🇧'),
-    'ua': ('Українська', '🇺🇦'),
+    'pt': ('Português', '🇧🇷'),
+    'tr': ('Türkçe', '🇹🇷'),
     'zh': ('中文', '🇨🇳'),
     'fa': ('فارسی', '🇮🇷'),
 }

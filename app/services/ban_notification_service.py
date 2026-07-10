@@ -24,7 +24,7 @@ logger = structlog.get_logger(__name__)
 def get_delete_keyboard() -> InlineKeyboardMarkup:
     """Клавиатура с кнопкой удаления уведомления"""
     return InlineKeyboardMarkup(
-        inline_keyboard=[[InlineKeyboardButton(text='🗑 Удалить', callback_data='ban_notify:delete')]]
+        inline_keyboard=[[InlineKeyboardButton(text='🗑 Delete', callback_data='ban_notify:delete')]]
     )
 
 
@@ -104,7 +104,7 @@ class BanNotificationService:
             return False, f'Пользователь не найден: {user_identifier}', None
 
         # Формируем информацию о ноде (заметно выделяем)
-        node_info = f'🖥 <b>Нода:</b> <code>{node_name}</code>' if node_name else ''
+        node_info = f'🖥 <b>Node:</b> <code>{node_name}</code>' if node_name else ''
 
         # Формируем сообщение из настроек
         # Используем безопасное форматирование - если {node_info} отсутствует в шаблоне, не будет ошибки
@@ -120,9 +120,9 @@ class BanNotificationService:
 
         # Handle email-only users via notification delivery service
         if not user.telegram_id:
-            reason = f'IP лимит превышен: {ip_count}/{limit}. Бан на {ban_minutes} минут.'
+            reason = f'IP limit exceeded: {ip_count}/{limit}. Banned for {ban_minutes} minutes.'
             if node_name:
-                reason += f' Нода: {node_name}'
+                reason += f' Node: {node_name}'
             success = await notification_delivery_service.notify_ban(
                 user=user,
                 reason=reason,
@@ -283,8 +283,8 @@ class BanNotificationService:
             return False, f'Пользователь не найден: {user_identifier}', None
 
         # Формируем сообщение из настроек (заметно выделяем)
-        network_info = f'├ 🌐 Сеть: <b>{network_type}</b>\n' if network_type else ''
-        node_info = f'🖥 <b>Нода:</b> <code>{node_name}</code>' if node_name else ''
+        network_info = f'├ 🌐 Network: <b>{network_type}</b>\n' if network_type else ''
+        node_info = f'🖥 <b>Node:</b> <code>{node_name}</code>' if node_name else ''
 
         logger.info('WiFi notification', node_name=repr(node_name), node_info=repr(node_info))
 
@@ -301,11 +301,11 @@ class BanNotificationService:
 
         # Handle email-only users via notification delivery service
         if not user.telegram_id:
-            reason = f'Использование WiFi сети запрещено. Бан на {ban_minutes} минут.'
+            reason = f'Using a WiFi network is not allowed. Banned for {ban_minutes} minutes.'
             if network_type:
-                reason += f' Сеть: {network_type}'
+                reason += f' Network: {network_type}'
             if node_name:
-                reason += f' Нода: {node_name}'
+                reason += f' Node: {node_name}'
             success = await notification_delivery_service.notify_ban(
                 user=user,
                 reason=reason,
@@ -361,8 +361,8 @@ class BanNotificationService:
             return False, f'Пользователь не найден: {user_identifier}', None
 
         # Формируем сообщение из настроек (заметно выделяем)
-        network_info = f'├ 🌐 Сеть: <b>{network_type}</b>\n' if network_type else ''
-        node_info = f'🖥 <b>Нода:</b> <code>{node_name}</code>' if node_name else ''
+        network_info = f'├ 🌐 Network: <b>{network_type}</b>\n' if network_type else ''
+        node_info = f'🖥 <b>Node:</b> <code>{node_name}</code>' if node_name else ''
 
         # Безопасное форматирование
         format_vars = {'ban_minutes': ban_minutes, 'network_info': network_info, 'node_info': node_info}
@@ -376,11 +376,11 @@ class BanNotificationService:
 
         # Handle email-only users via notification delivery service
         if not user.telegram_id:
-            reason = f'Использование мобильной сети запрещено. Бан на {ban_minutes} минут.'
+            reason = f'Using a mobile network is not allowed. Banned for {ban_minutes} minutes.'
             if network_type:
-                reason += f' Сеть: {network_type}'
+                reason += f' Network: {network_type}'
             if node_name:
-                reason += f' Нода: {node_name}'
+                reason += f' Node: {node_name}'
             success = await notification_delivery_service.notify_ban(
                 user=user,
                 reason=reason,

@@ -78,11 +78,7 @@ def _format_time_left(seconds_left: int, language: str) -> str:
     days, remainder_minutes = divmod(total_minutes, 60 * 24)
     hours, minutes = divmod(remainder_minutes, 60)
 
-    language_code = (language or 'ru').split('-')[0].lower()
-    if language_code == 'en':
-        day_label, hour_label, minute_label = 'd', 'h', 'm'
-    else:
-        day_label, hour_label, minute_label = 'д', 'ч', 'м'
+    day_label, hour_label, minute_label = 'd', 'h', 'm'
 
     parts: list[str] = []
     if days:

@@ -211,7 +211,11 @@ async def reward_user_for_poll(
         return response.reward_amount_kopeks
 
     user = response.user
-    description = f'Награда за участие в опросе "{poll.title}"'
+    from app.localization.texts import get_texts
+
+    description = get_texts(getattr(user, 'language', None)).t(
+        'POLL_REWARD_TX_DESCRIPTION', 'Reward for participating in poll "{title}"'
+    ).format(title=poll.title)
 
     response.reward_given = True
     response.reward_amount_kopeks = poll.reward_amount_kopeks

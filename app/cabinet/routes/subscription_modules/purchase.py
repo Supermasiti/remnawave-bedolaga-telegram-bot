@@ -187,7 +187,7 @@ async def _build_tariff_response(
 
             periods.append(period_data)
 
-    traffic_label = '♾️ Безлимит' if tariff.traffic_limit_gb == 0 else f'{tariff.traffic_limit_gb} ГБ'
+    traffic_label = '♾️ Unlimited' if tariff.traffic_limit_gb == 0 else f'{tariff.traffic_limit_gb} GB'
 
     # Apply discount to daily price if applicable (group + promo-offer)
     daily_price = getattr(tariff, 'daily_price_kopeks', 0)
@@ -773,7 +773,7 @@ async def purchase_tariff(
                     'saved_cart': True,
                     'missing_amount': missing,
                     'return_to_cart': True,
-                    'description': f'Покупка суточного тарифа {tariff.name}',
+                    'description': f'Purchase of daily plan {tariff.name}',
                     'traffic_limit_gb': tariff.traffic_limit_gb,
                     'device_limit': effective_device_limit,
                     'allowed_squads': tariff.allowed_squads or [],
@@ -791,7 +791,7 @@ async def purchase_tariff(
                     'saved_cart': True,
                     'missing_amount': missing,
                     'return_to_cart': True,
-                    'description': f'Покупка тарифа {tariff.name} на {period_days} дней',
+                    'description': f'Purchase of plan {tariff.name} for {period_days} days',
                     'traffic_limit_gb': traffic_limit_gb,
                     'device_limit': effective_device_limit,
                     'allowed_squads': tariff.allowed_squads or [],
@@ -811,7 +811,7 @@ async def purchase_tariff(
                 status_code=status.HTTP_402_PAYMENT_REQUIRED,
                 detail={
                     'code': 'insufficient_funds',
-                    'message': f'Недостаточно средств. Не хватает {settings.format_price(missing, round_kopeks=False)}',
+                    'message': f'Insufficient balance. Missing {settings.format_price(missing, round_kopeks=False)}',
                     'missing_amount': missing,
                     'cart_saved': True,
                     'cart_mode': cart_data['cart_mode'],
@@ -832,13 +832,13 @@ async def purchase_tariff(
 
         # Charge balance
         if is_daily_tariff:
-            description = f"Активация суточного тарифа '{tariff.name}'"
+            description = f"Activation of daily plan '{tariff.name}'"
         else:
-            description = f"Покупка тарифа '{tariff.name}' на {period_days} дней"
+            description = f"Purchase of plan '{tariff.name}' for {period_days} days"
         if discount_percent > 0:
-            description += f' (скидка {discount_percent}%)'
+            description += f' (discount {discount_percent}%)'
         if promo_offer_discount_value > 0:
-            description += f' (промо -{promo_offer_discount_percent}%)'
+            description += f' (promo -{promo_offer_discount_percent}%)'
         success = await subtract_user_balance(
             db,
             user,
@@ -922,7 +922,7 @@ async def purchase_tariff(
                     db,
                     user,
                     price_kopeks,
-                    f"Возврат: тариф '{tariff.name}' уже активен",
+                    f"Refund: plan '{tariff.name}' is already active",
                     create_transaction=True,
                     transaction_type=TransactionType.REFUND,
                 )
@@ -1009,7 +1009,7 @@ async def purchase_tariff(
                     'period_days': period_days,
                     'total_price': price_kopeks,
                     'tariff_id': tariff.id,
-                    'description': f'Продление тарифа {tariff.name} на {period_days} дней',
+                    'description': f'Renewal of plan {tariff.name} for {period_days} days',
                 }
                 await user_cart_service.save_user_cart(user.id, cart_data)
                 logger.info('Tariff cart saved for auto-renewal (cabinet) user', user_id=user.id)
@@ -1034,7 +1034,7 @@ async def purchase_tariff(
 
         response: dict[str, Any] = {
             'success': True,
-            'message': f"Тариф '{tariff.name}' успешно активирован",
+            'message': f"Plan '{tariff.name}' activated successfully",
             'subscription': _subscription_to_response(subscription, user=user),
             'tariff_id': tariff.id,
             'tariff_name': tariff.name,
@@ -1266,7 +1266,7 @@ async def activate_trial(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f'Insufficient balance. Need {price_kopeks / 100:.2f} USD',
             )
-        trial_description = 'Активация триальной подписки'
+        trial_description = 'Trial subscription activation'
         success = await subtract_user_balance(
             db,
             user,

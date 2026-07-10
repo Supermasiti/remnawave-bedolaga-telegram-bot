@@ -554,7 +554,7 @@ async def sync_default_tariff_from_config(db: AsyncSession) -> Tariff | None:
         return None
 
     # Ищем тариф с именем "Стандартный" или первый тариф
-    result = await db.execute(select(Tariff).where(Tariff.name == 'Стандартный').limit(1))
+    result = await db.execute(select(Tariff).where(Tariff.name == 'Standard').limit(1))
     existing_tariff = result.scalar_one_or_none()
 
     if existing_tariff:
@@ -569,8 +569,8 @@ async def sync_default_tariff_from_config(db: AsyncSession) -> Tariff | None:
     if tariff_count == 0:
         # Создаём новый дефолтный тариф
         new_tariff = Tariff(
-            name='Стандартный',
-            description='Базовый тарифный план',
+            name='Standard',
+            description='Basic plan',
             is_active=True,
             is_trial_available=True,
             traffic_limit_gb=settings.DEFAULT_TRAFFIC_LIMIT_GB,

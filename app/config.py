@@ -420,7 +420,7 @@ class Settings(BaseSettings):
     MAINTENANCE_AUTO_ENABLE: bool = True
     MAINTENANCE_MONITORING_ENABLED: bool = True
     MAINTENANCE_RETRY_ATTEMPTS: int = 1
-    MAINTENANCE_MESSAGE: str = '🔧 Ведутся технические работы. Сервис временно недоступен. Попробуйте позже.'
+    MAINTENANCE_MESSAGE: str = '🔧 Maintenance in progress. The service is temporarily unavailable. Please try again later.'
 
     TELEGRAM_STARS_ENABLED: bool = True
     # ₽ per 1 ⭐. Matches Telegram's own cash-out rate (~0.95–1.0 ₽/⭐ as of
@@ -509,10 +509,10 @@ class Settings(BaseSettings):
     # Отключение превью ссылок в сообщениях бота
     DISABLE_WEB_PAGE_PREVIEW: bool = False
     ACTIVATE_BUTTON_VISIBLE: bool = False
-    ACTIVATE_BUTTON_TEXT: str = 'активировать'
-    PAYMENT_BALANCE_DESCRIPTION: str = 'Пополнение баланса'
-    PAYMENT_SUBSCRIPTION_DESCRIPTION: str = 'Оплата подписки'
-    PAYMENT_SERVICE_NAME: str = 'Интернет-сервис'
+    ACTIVATE_BUTTON_TEXT: str = 'activate'
+    PAYMENT_BALANCE_DESCRIPTION: str = 'Balance top-up'
+    PAYMENT_SUBSCRIPTION_DESCRIPTION: str = 'Subscription payment'
+    PAYMENT_SERVICE_NAME: str = 'VPN service'
     PAYMENT_BALANCE_TEMPLATE: str = '{service_name} - {description}'
     PAYMENT_SUBSCRIPTION_TEMPLATE: str = '{service_name} - {description}'
 
@@ -998,81 +998,81 @@ class Settings(BaseSettings):
     # Сообщение о блокировке за превышение лимита устройств
     # Переменные: {ip_count}, {limit}, {ban_minutes}, {node_info}
     BAN_MSG_PUNISHMENT: str = (
-        '🚫 <b>АККАУНТ ЗАБЛОКИРОВАН</b>\n'
+        '🚫 <b>ACCOUNT BLOCKED</b>\n'
         '━━━━━━━━━━━━━━━━━━━━━\n\n'
-        '❌ <b>Причина:</b> Превышен лимит устройств\n'
+        '❌ <b>Reason:</b> Device limit exceeded\n'
         '{node_info}\n'
-        '📊 <b>Детали нарушения:</b>\n'
-        '├ 📱 Устройств подключено: <b>{ip_count}</b>\n'
-        '├ 📋 Разрешено по тарифу: <b>{limit}</b>\n'
-        '└ ⏱ Время блокировки: <b>{ban_minutes} мин</b>\n\n'
+        '📊 <b>Violation details:</b>\n'
+        '├ 📱 Devices connected: <b>{ip_count}</b>\n'
+        '├ 📋 Allowed by plan: <b>{limit}</b>\n'
+        '└ ⏱ Block duration: <b>{ban_minutes} min</b>\n\n'
         '━━━━━━━━━━━━━━━━━━━━━\n'
-        '💡 <b>Что делать:</b>\n'
-        '1. Отключите лишние устройства от VPN\n'
-        '2. Дождитесь окончания блокировки\n'
-        '3. Подключитесь заново\n\n'
-        '🔄 Доступ восстановится автоматически'
+        '💡 <b>What to do:</b>\n'
+        '1. Disconnect extra devices from the VPN\n'
+        '2. Wait for the block to end\n'
+        '3. Reconnect\n\n'
+        '🔄 Access will be restored automatically'
     )
 
     # Сообщение о разблокировке
     BAN_MSG_ENABLED: str = (
-        '✅ <b>АККАУНТ РАЗБЛОКИРОВАН</b>\n'
+        '✅ <b>ACCOUNT UNBLOCKED</b>\n'
         '━━━━━━━━━━━━━━━━━━━━━\n\n'
-        '🎉 Ваш аккаунт успешно разблокирован!\n\n'
-        'Теперь вы можете снова пользоваться VPN.\n\n'
+        '🎉 Your account has been successfully unblocked!\n\n'
+        'You can now use the VPN again.\n\n'
         '━━━━━━━━━━━━━━━━━━━━━\n'
-        '⚠️ <b>Рекомендации:</b>\n'
-        '• Следите за количеством устройств\n'
-        '• Отключайте VPN когда не используете\n'
-        '• Не превышайте лимит по тарифу'
+        '⚠️ <b>Recommendations:</b>\n'
+        '• Keep track of the number of devices\n'
+        '• Turn off the VPN when not in use\n'
+        '• Don\'t exceed your plan\'s device limit'
     )
 
     # Сообщение о блокировке за WiFi
     # Переменные: {ban_minutes}, {network_info}, {node_info}
     BAN_MSG_WIFI: str = (
-        '🚫 <b>АККАУНТ ЗАБЛОКИРОВАН</b>\n'
+        '🚫 <b>ACCOUNT BLOCKED</b>\n'
         '━━━━━━━━━━━━━━━━━━━━━\n\n'
-        '❌ <b>Причина:</b> Использование WiFi сети\n'
+        '❌ <b>Reason:</b> Using a WiFi network\n'
         '{node_info}\n'
-        '📊 <b>Детали:</b>\n'
-        '├ 📶 Тип подключения: <b>WiFi</b>\n'
+        '📊 <b>Details:</b>\n'
+        '├ 📶 Connection type: <b>WiFi</b>\n'
         '{network_info}'
-        '└ ⏱ Время блокировки: <b>{ban_minutes} мин</b>\n\n'
+        '└ ⏱ Block duration: <b>{ban_minutes} min</b>\n\n'
         '━━━━━━━━━━━━━━━━━━━━━\n'
-        '💡 <b>Что делать:</b>\n'
-        '1. Отключитесь от WiFi\n'
-        '2. Используйте мобильный интернет\n'
-        '3. Дождитесь окончания блокировки\n\n'
-        '🔄 Доступ восстановится автоматически'
+        '💡 <b>What to do:</b>\n'
+        '1. Disconnect from WiFi\n'
+        '2. Use mobile data\n'
+        '3. Wait for the block to end\n\n'
+        '🔄 Access will be restored automatically'
     )
 
     # Сообщение о блокировке за мобильную сеть
     # Переменные: {ban_minutes}, {network_info}, {node_info}
     BAN_MSG_MOBILE: str = (
-        '🚫 <b>АККАУНТ ЗАБЛОКИРОВАН</b>\n'
+        '🚫 <b>ACCOUNT BLOCKED</b>\n'
         '━━━━━━━━━━━━━━━━━━━━━\n\n'
-        '❌ <b>Причина:</b> Использование мобильной сети\n'
+        '❌ <b>Reason:</b> Using a mobile network\n'
         '{node_info}\n'
-        '📊 <b>Детали:</b>\n'
-        '├ 📱 Тип подключения: <b>Мобильная сеть</b>\n'
+        '📊 <b>Details:</b>\n'
+        '├ 📱 Connection type: <b>Mobile network</b>\n'
         '{network_info}'
-        '└ ⏱ Время блокировки: <b>{ban_minutes} мин</b>\n\n'
+        '└ ⏱ Block duration: <b>{ban_minutes} min</b>\n\n'
         '━━━━━━━━━━━━━━━━━━━━━\n'
-        '💡 <b>Что делать:</b>\n'
-        '1. Подключитесь к WiFi\n'
-        '2. Дождитесь окончания блокировки\n'
-        '3. Используйте VPN только через WiFi\n\n'
-        '🔄 Доступ восстановится автоматически'
+        '💡 <b>What to do:</b>\n'
+        '1. Connect to WiFi\n'
+        '2. Wait for the block to end\n'
+        '3. Use the VPN only over WiFi\n\n'
+        '🔄 Access will be restored automatically'
     )
 
     # Сообщение-предупреждение
     # Переменные: {warning_message}
     BAN_MSG_WARNING: str = (
-        '⚠️ <b>ПРЕДУПРЕЖДЕНИЕ</b>\n'
+        '⚠️ <b>WARNING</b>\n'
         '━━━━━━━━━━━━━━━━━━━━━\n\n'
         '{warning_message}\n\n'
         '━━━━━━━━━━━━━━━━━━━━━\n'
-        '❗ При повторном нарушении аккаунт будет заблокирован'
+        '❗ On a repeat violation, the account will be blocked'
     )
 
     DEBUG: bool = False

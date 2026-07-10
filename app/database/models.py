@@ -1898,7 +1898,7 @@ class User(Base):
     first_name = Column(String(255), nullable=True)
     last_name = Column(String(255), nullable=True)
     status = Column(String(20), default=UserStatus.ACTIVE.value)
-    language = Column(String(5), default='ru')
+    language = Column(String(5), default='en')
     balance_kopeks = Column(Integer, default=0)
     used_promocodes = Column(Integer, default=0)
     has_had_paid_subscription = Column(Boolean, default=False, nullable=False)
@@ -3619,7 +3619,7 @@ class WheelConfig(Base):
 
     # Основные настройки
     is_enabled = Column(Boolean, default=False, nullable=False)
-    name = Column(String(255), default='Колесо удачи', nullable=False)
+    name = Column(String(255), default='Wheel of Fortune', nullable=False)
 
     # Стоимость спина
     spin_cost_stars = Column(Integer, default=10, nullable=False)  # Стоимость в Stars

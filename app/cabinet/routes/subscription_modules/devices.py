@@ -106,7 +106,7 @@ async def purchase_devices_legacy(
     if subscription.status not in ['active', 'trial']:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Ваша подписка неактивна',
+            detail='Your subscription is not active',
         )
 
     # Get tariff for device price (if exists)
@@ -127,7 +127,7 @@ async def purchase_devices_legacy(
     if not device_price or device_price <= 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Докупка устройств недоступна',
+            detail='Buying extra devices is not available',
         )
 
     # Устройства в пределах тарифного лимита — бесплатные
@@ -178,7 +178,7 @@ async def purchase_devices_legacy(
     if max_device_limit and new_devices > max_device_limit:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f'Максимальное количество устройств: {max_device_limit}',
+            detail=f'Maximum number of devices: {max_device_limit}',
         )
 
     # Check balance (skip for 100% discount)
@@ -222,9 +222,9 @@ async def purchase_devices_legacy(
 
     # Build description with discount info
     if devices_discount_percent > 0:
-        description = f'Покупка {request.devices} доп. устройств (скидка {devices_discount_percent}%)'
+        description = f'Purchase of {request.devices} extra device(s) (discount {devices_discount_percent}%)'
     else:
-        description = f'Покупка {request.devices} доп. устройств'
+        description = f'Purchase of {request.devices} extra device(s)'
 
     success = await subtract_user_balance(
         db=db,
@@ -263,7 +263,7 @@ async def purchase_devices_legacy(
         await db.commit()
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=f'Максимальное количество устройств: {max_device_limit}. Баланс возвращён.',
+            detail=f'Maximum number of devices: {max_device_limit}. Balance refunded.',
         )
 
     # Add devices (under lock)
@@ -352,7 +352,7 @@ async def purchase_devices(
         # Resolve subscription (ownership validated), then lock the row for concurrent safety
         resolved = await resolve_subscription(db, user, subscription_id)
         if not resolved:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='У вас нет активной подписки')
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='You have no active subscription')
 
         result = await db.execute(
             select(Subscription)
@@ -365,13 +365,13 @@ async def purchase_devices(
         if not subscription:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail='У вас нет активной подписки',
+                detail='You have no active subscription',
             )
 
         if subscription.status not in ['active', 'trial']:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Ваша подписка неактивна',
+                detail='Your subscription is not active',
             )
 
         # Get tariff for device price (if exists)
@@ -393,7 +393,7 @@ async def purchase_devices(
         if not device_price or device_price <= 0:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Докупка устройств недоступна',
+                detail='Buying extra devices is not available',
             )
 
         # Check max device limit (under row lock — prevents concurrent purchases exceeding limit)
@@ -402,7 +402,7 @@ async def purchase_devices(
         if max_device_limit and new_device_count > max_device_limit:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f'Максимальное количество устройств: {max_device_limit}',
+                detail=f'Maximum number of devices: {max_device_limit}',
             )
 
         # Calculate prorated price based on remaining days
@@ -498,9 +498,9 @@ async def purchase_devices(
 
         # Build description with discount info
         if devices_discount_percent > 0:
-            description = f'Покупка {request.devices} доп. устройств (скидка {devices_discount_percent}%)'
+            description = f'Purchase of {request.devices} extra device(s) (discount {devices_discount_percent}%)'
         else:
-            description = f'Покупка {request.devices} доп. устройств'
+            description = f'Purchase of {request.devices} extra device(s)'
 
         success = await subtract_user_balance(
             db=db,
@@ -539,7 +539,7 @@ async def purchase_devices(
             await db.commit()
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=f'Максимальное количество устройств: {max_device_limit}. Баланс возвращён.',
+                detail=f'Maximum number of devices: {max_device_limit}. Balance refunded.',
             )
 
         # Increase device limit (under lock)
@@ -625,7 +625,7 @@ async def purchase_devices(
 
         response: dict[str, Any] = {
             'success': True,
-            'message': f'Добавлено {request.devices} устройств',
+            'message': f'Added {request.devices} device(s)',
             'devices_added': request.devices,
             'new_device_limit': subscription.device_limit,
             'price_kopeks': price_kopeks,
@@ -647,7 +647,7 @@ async def purchase_devices(
         logger.error('Failed to purchase devices for user', user_id=user.id, error=e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail='Не удалось обработать покупку устройств',
+            detail='Failed to process device purchase',
         )
 
 
@@ -664,13 +664,13 @@ async def save_devices_cart(
     if not subscription:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='У вас нет активной подписки',
+            detail='You have no active subscription',
         )
 
     if subscription.status not in ['active', 'trial']:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Ваша подписка неактивна',
+            detail='Your subscription is not active',
         )
 
     # Get tariff for device price (if exists)
@@ -689,7 +689,7 @@ async def save_devices_cart(
     if not device_price or device_price <= 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Докупка устройств недоступна',
+            detail='Buying extra devices is not available',
         )
 
     # Check max device limit
@@ -698,7 +698,7 @@ async def save_devices_cart(
     if max_device_limit and new_device_count > max_device_limit:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f'Максимальное количество устройств: {max_device_limit}',
+            detail=f'Maximum number of devices: {max_device_limit}',
         )
 
     # Calculate prorated price based on remaining days
@@ -773,7 +773,7 @@ async def get_device_price(
     if not subscription or subscription.status not in ['active', 'trial']:
         return {
             'available': False,
-            'reason': 'Нет активной подписки',
+            'reason': 'No active subscription',
         }
 
     tariff = None
@@ -794,7 +794,7 @@ async def get_device_price(
     if not device_price or device_price <= 0:
         return {
             'available': False,
-            'reason': 'Докупка устройств недоступна',
+            'reason': 'Buying extra devices is not available',
         }
 
     # Check max device limit
@@ -804,7 +804,7 @@ async def get_device_price(
     if max_device_limit and current_devices >= max_device_limit:
         return {
             'available': False,
-            'reason': f'Достигнут максимум устройств ({max_device_limit})',
+            'reason': f'Maximum devices reached ({max_device_limit})',
             'current_device_limit': current_devices,
             'max_device_limit': max_device_limit,
         }
@@ -812,7 +812,7 @@ async def get_device_price(
     if max_device_limit and current_devices + devices > max_device_limit:
         return {
             'available': False,
-            'reason': f'Можно добавить максимум {can_add} устройств',
+            'reason': f'You can add at most {can_add} device(s)',
             'current_device_limit': current_devices,
             'max_device_limit': max_device_limit,
             'can_add': can_add,
@@ -1351,7 +1351,7 @@ async def reduce_devices(
         )
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail='Не удалось обновить VPN-панель. Попробуйте позже.',
+            detail='Failed to update the VPN panel. Please try again later.',
         )
 
     logger.info(

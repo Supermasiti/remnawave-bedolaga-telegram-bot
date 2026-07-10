@@ -91,18 +91,22 @@ class AuthMiddleware(BaseMiddleware):
                         await db.commit()
                         return result
                     if isinstance(event, Message):
-                        await event.answer('▶️ Для начала работы необходимо выполнить команду /start')
+                        await event.answer('▶️ Please run the /start command to begin')
                     elif isinstance(event, CallbackQuery):
-                        await event.answer('▶️ Необходимо начать с команды /start', show_alert=True)
+                        await event.answer('▶️ Please start with the /start command', show_alert=True)
                     logger.info('🚫 Заблокирован незарегистрированный пользователь', user_id=user.id)
                     return None
                 from app.database.models import UserStatus
+                from app.localization.texts import get_texts
 
                 if db_user.status == UserStatus.BLOCKED.value:
+                    blocked_text = get_texts(getattr(db_user, 'language', None)).t(
+                        'ACCOUNT_BLOCKED_MESSAGE', '🚫 Your account has been blocked by an administrator.'
+                    )
                     if isinstance(event, Message):
-                        await event.answer('🚫 Ваш аккаунт заблокирован администратором.')
+                        await event.answer(blocked_text)
                     elif isinstance(event, CallbackQuery):
-                        await event.answer('🚫 Ваш аккаунт заблокирован администратором.', show_alert=True)
+                        await event.answer(blocked_text, show_alert=True)
                     logger.info('🚫 Заблокированный пользователь попытался использовать бота', user_id=user.id)
                     return None
 
@@ -150,11 +154,18 @@ class AuthMiddleware(BaseMiddleware):
                         return result
                     if isinstance(event, Message):
                         await event.answer(
-                            '❌ Ваш аккаунт был удален.\n🔄 Для повторной регистрации выполните команду /start'
+                            get_texts(getattr(db_user, 'language', None)).t(
+                                'ACCOUNT_DELETED_MESSAGE',
+                                '❌ Your account has been deleted.\n🔄 To register again, run the /start command',
+                            )
                         )
                     elif isinstance(event, CallbackQuery):
                         await event.answer(
-                            '❌ Ваш аккаунт был удален. Для повторной регистрации выполните /start', show_alert=True
+                            get_texts(getattr(db_user, 'language', None)).t(
+                                'ACCOUNT_DELETED_MESSAGE_SHORT',
+                                '❌ Your account has been deleted. To register again, run /start',
+                            ),
+                            show_alert=True,
                         )
                     logger.info('❌ Удаленный пользователь попытался использовать бота без /start', user_id=user.id)
                     return None

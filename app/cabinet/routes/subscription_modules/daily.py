@@ -119,7 +119,7 @@ async def toggle_subscription_pause(
                     db,
                     user,
                     daily_price,
-                    f'Суточная оплата тарифа «{tariff.name}» (возобновление)',
+                    f'Daily payment for plan «{tariff.name}» (resume)',
                     mark_as_paid_subscription=True,
                 )
                 if not deducted:
@@ -142,7 +142,7 @@ async def toggle_subscription_pause(
                         user_id=user.id,
                         type=TransactionType.SUBSCRIPTION_PAYMENT,
                         amount_kopeks=daily_price,
-                        description=f'Суточная оплата тарифа «{tariff.name}» (возобновление)',
+                        description=f'Daily payment for plan «{tariff.name}» (resume)',
                     )
                 except Exception as exc:
                     logger.warning('Failed to create resume transaction', error=exc)

@@ -258,8 +258,8 @@ def _pluralize_days_ru(n: int) -> str:
     return 'дней'
 
 
-def format_period_description(days: int, language: str = 'ru') -> str:
-    language_code = (language or 'ru').split('-')[0].lower()
+def format_period_description(days: int, language: str = 'en') -> str:
+    language_code = (language or 'en').split('-')[0].lower()
     if language_code == 'ru':
         if days == 30:
             return '1 месяц'

@@ -184,7 +184,11 @@ class PromoCodeService:
                             )
 
                             # Add to result description
-                            result_description += f'\n🎁 Назначена промогруппа: {promo_group.name}'
+                            from app.localization.texts import get_texts
+
+                            result_description += get_texts(getattr(user, 'language', None)).t(
+                                'PROMOCODE_EFFECT_PROMO_GROUP_ASSIGNED', '\n🎁 Promo group assigned: {name}'
+                            ).format(name=promo_group.name)
                         else:
                             logger.warning(
                                 '⚠️ Промогруппа ID не найдена для промокода',
@@ -255,6 +259,9 @@ class PromoCodeService:
         Raises:
             ValueError: Если у пользователя уже есть активная скидка (для DISCOUNT типа)
         """
+        from app.localization.texts import get_texts
+
+        texts = get_texts(getattr(user, 'language', None))
         effects = []
 
         # Обработка DISCOUNT типа (одноразовая скидка)
@@ -287,11 +294,20 @@ class PromoCodeService:
             # Устанавливаем срок действия скидки
             if discount_hours > 0:
                 user.promo_offer_discount_expires_at = datetime.now(UTC) + timedelta(hours=discount_hours)
-                effects.append(f'💸 Получена скидка {discount_percent}% (действует {discount_hours} ч.)')
+                effects.append(
+                    texts.t('PROMOCODE_EFFECT_DISCOUNT_TIMED', '💸 Discount of {percent}% received (valid {hours} h.)').format(
+                        percent=discount_percent, hours=discount_hours
+                    )
+                )
             else:
                 # 0 часов = бессрочно до первой покупки
                 user.promo_offer_discount_expires_at = None
-                effects.append(f'💸 Получена скидка {discount_percent}% до первой покупки')
+                effects.append(
+                    texts.t(
+                        'PROMOCODE_EFFECT_DISCOUNT_UNTIL_FIRST_PURCHASE',
+                        '💸 Discount of {percent}% received, valid until your first purchase',
+                    ).format(percent=discount_percent)
+                )
 
             await db.flush()
 
@@ -304,10 +320,18 @@ class PromoCodeService:
             )
 
         if promocode.type == PromoCodeType.BALANCE.value and promocode.balance_bonus_kopeks > 0:
-            await add_user_balance(db, user, promocode.balance_bonus_kopeks, f'Бонус по промокоду {promocode.code}')
+            await add_user_balance(
+                db,
+                user,
+                promocode.balance_bonus_kopeks,
+                texts.t('PROMOCODE_BONUS_TX_DESCRIPTION', 'Bonus from promo code {code}').format(code=promocode.code),
+            )
 
-            balance_bonus_rubles = promocode.balance_bonus_kopeks / 100
-            effects.append(f'💰 Баланс пополнен на {balance_bonus_rubles}₽')
+            effects.append(
+                texts.t('PROMOCODE_EFFECT_BALANCE_BONUS', '💰 Balance topped up by {amount}').format(
+                    amount=settings.format_price(promocode.balance_bonus_kopeks)
+                )
+            )
 
         if promocode.type == PromoCodeType.SUBSCRIPTION_DAYS.value and promocode.subscription_days > 0:
             if settings.is_multi_tariff_enabled():
@@ -380,7 +404,11 @@ class PromoCodeService:
             tariff_label = ''
             if settings.is_multi_tariff_enabled() and getattr(target_sub, 'tariff', None):
                 tariff_label = f' «{target_sub.tariff.name}»'
-            effects.append(f'⏰ Подписка{tariff_label} продлена на {promocode.subscription_days} дней')
+            effects.append(
+                texts.t('PROMOCODE_EFFECT_SUBSCRIPTION_EXTENDED', '⏰ Subscription{tariff_label} extended by {days} days').format(
+                    tariff_label=tariff_label, days=promocode.subscription_days
+                )
+            )
             logger.info(
                 '✅ Подписка пользователя продлена на дней в RemnaWave',
                 _format_user_log=self._format_user_log(user),
@@ -477,7 +505,9 @@ class PromoCodeService:
                 await self.subscription_service.update_remnawave_user(db, existing_same_tariff_sub)
 
                 effects.append(
-                    f'⏰ Подписка «{trial_tariff.name if trial_tariff else ""}» продлена на {trial_days} дней'
+                    texts.t('PROMOCODE_EFFECT_TRIAL_SUBSCRIPTION_EXTENDED', '⏰ Subscription «{name}» extended by {days} days').format(
+                        name=trial_tariff.name if trial_tariff else '', days=trial_days
+                    )
                 )
                 logger.info(
                     '✅ Триал промокод: продлена существующая подписка',
@@ -515,7 +545,11 @@ class PromoCodeService:
                     await db.commit()
                     raise ValueError('trial_provisioning_failed')
 
-                effects.append(f'🎁 Активирована тестовая подписка на {trial_days} дней')
+                effects.append(
+                    texts.t('PROMOCODE_EFFECT_TRIAL_ACTIVATED', '🎁 Trial subscription activated for {days} days').format(
+                        days=trial_days
+                    )
+                )
                 logger.info(
                     '✅ Создана триал подписка для пользователя на дней',
                     _format_user_log=self._format_user_log(user),
@@ -529,7 +563,7 @@ class PromoCodeService:
                 # the code is not silently burned and stays retryable.
                 raise ValueError('trial_subscription_exists')
 
-        return '\n'.join(effects) if effects else '✅ Промокод активирован'
+        return '\n'.join(effects) if effects else texts.t('PROMOCODE_EFFECT_ACTIVATED_DEFAULT', '✅ Promo code activated')
 
     async def deactivate_discount_promocode(
         self,

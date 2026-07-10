@@ -25,7 +25,7 @@ class BulkActionParams(BaseModel):
     tariff_id: int | None = Field(None, gt=0)
     traffic_gb: int | None = Field(None, ge=1, le=10000)
     amount_kopeks: int | None = Field(None, ge=1, le=2_000_000_000)
-    balance_description: str = Field(default='Массовое начисление баланса', max_length=500)
+    balance_description: str = Field(default='Bulk balance credit', max_length=500)
     promo_group_id: int | None = None
     device_limit: int | None = Field(None, ge=1, le=50)
     delete_from_panel: bool = Field(default=True)

@@ -24,6 +24,7 @@ from app.database.crud.subscription import (
 from app.database.crud.tariff import get_tariff_by_id
 from app.database.crud.transaction import create_transaction
 from app.database.crud.user import _get_or_create_default_promo_group, create_unique_referral_code
+from app.localization.texts import get_texts
 from app.database.models import (
     GuestPurchase,
     GuestPurchaseStatus,
@@ -340,7 +341,7 @@ async def fulfill_purchase(
 
         # Resolve notification params before any commit (avoids lazy-loading after commit)
         notification_tariff_name = tariff.name
-        notification_language = user.language or 'ru'
+        notification_language = user.language or settings.DEFAULT_LANGUAGE
 
         # Verify the tariff still has a price configured for this period.
         # We do NOT re-verify the exact amount because discounts, price changes,
@@ -498,7 +499,9 @@ async def fulfill_purchase(
                     user_id=user.id,
                     type=TransactionType.SUBSCRIPTION_PAYMENT,
                     amount_kopeks=purchase.amount_kopeks,
-                    description=f'Покупка подписки через лендинг ({notification_tariff_name}, {purchase.period_days} дн.)',
+                    description=get_texts(getattr(user, 'language', None)).t(
+                        'GUEST_PURCHASE_TX_DESCRIPTION', 'Subscription purchase via landing page ({tariff}, {days} days)'
+                    ).format(tariff=notification_tariff_name, days=purchase.period_days),
                     payment_method=payment_method_enum,
                     external_id=purchase.payment_id,
                     is_completed=True,
@@ -709,6 +712,7 @@ async def _find_or_create_user(
             email_verified=True,
             email_verified_at=datetime.now(UTC),
             password_hash=hash_password(plain_password),
+            language=settings.DEFAULT_LANGUAGE,
             promo_group_id=resolved_group.id,
             referral_code=referral_code,
         )
@@ -819,6 +823,7 @@ async def _find_or_create_user(
         auth_type='telegram',
         username=username,
         telegram_id=resolved_telegram_id,
+        language=settings.DEFAULT_LANGUAGE,
         promo_group_id=default_group.id,
         referral_code=referral_code,
     )
@@ -883,10 +888,12 @@ async def _send_telegram_gift_notification(
 
         from app.bot_factory import create_bot
 
+        texts = get_texts(getattr(user, 'language', None))
+
         gift_from = ''
         if purchase.contact_value:
             safe_name = html_mod.escape(purchase.contact_value)
-            gift_from = f'\nОт: {safe_name}'
+            gift_from = texts.t('GIFT_FROM_LINE', '\nFrom: {name}').format(name=safe_name)
 
         gift_msg = ''
         if purchase.gift_message:
@@ -894,19 +901,24 @@ async def _send_telegram_gift_notification(
             gift_msg = f'\n\n"{safe_msg}"'
 
         safe_tariff = html_mod.escape(tariff_name) if tariff_name else ''
-        period_text = f'{purchase.period_days} дн.' if purchase.period_days else ''
+        period_text = texts.t('GIFT_PERIOD_DAYS_SHORT', '{days} days').format(days=purchase.period_days) if purchase.period_days else ''
         tariff_text = f'{safe_tariff} — {period_text}' if safe_tariff else period_text
 
-        text = f'🎁 <b>Вам подарили VPN подписку!</b>\n{tariff_text}{gift_from}{gift_msg}'
+        text = texts.t('GIFT_RECEIVED_NOTIFICATION', '🎁 <b>You received a gifted VPN subscription!</b>\n{details}').format(
+            details=f'{tariff_text}{gift_from}{gift_msg}'
+        )
 
         keyboard = None
         if is_pending_activation:
-            text += '\n\nУ вас уже есть активная подписка. Нажмите кнопку ниже, чтобы активировать подарок (текущая подписка будет заменена).'
+            text += texts.t(
+                'GIFT_PENDING_ACTIVATION_HINT',
+                '\n\nYou already have an active subscription. Tap the button below to activate the gift (your current subscription will be replaced).',
+            )
             keyboard = InlineKeyboardMarkup(
                 inline_keyboard=[
                     [
                         InlineKeyboardButton(
-                            text='Активировать подарок',
+                            text=texts.t('GIFT_ACTIVATE_BUTTON', 'Activate gift'),
                             callback_data=f'gift_activate:{purchase.id}',
                         )
                     ]
@@ -940,7 +952,7 @@ async def send_guest_notification(
     *,
     is_pending_activation: bool = False,
     tariff_name: str = '',
-    language: str = 'ru',
+    language: str = settings.DEFAULT_LANGUAGE,
     is_new_account: bool = False,
 ) -> None:
     """Send notification for guest purchase delivery or activation requirement.
@@ -1091,7 +1103,7 @@ async def notify_gift_claim_available(
     *,
     tariff_name: str = '',
     period_days: int | None = None,
-    language: str = 'ru',
+    language: str = settings.DEFAULT_LANGUAGE,
 ) -> None:
     """Best-effort: tell people a paid gift is waiting, with the CLAIM link.
 
@@ -1147,13 +1159,9 @@ async def notify_gift_claim_available(
     # channel the recipient used or whether the buyer kept the success tab open.
     if purchase.contact_type == 'email' and purchase.contact_value:
         try:
-            is_ru = (language or 'ru').startswith('ru')
-            subject = 'Ссылка на ваш подарок' if is_ru else 'Your gift link'
+            subject = 'Your gift link'
             body = (
-                '<p>Спасибо за покупку подарка! Перешлите эту ссылку тому, '
-                'кому предназначен подарок — он активирует его сам:</p>'
-                if is_ru
-                else '<p>Thanks for your gift purchase! Forward this link to the '
+                '<p>Thanks for your gift purchase! Forward this link to the '
                 'person it is for — they activate it themselves:</p>'
             ) + f'<p><a href="{claim_url}">{claim_url}</a></p>'
             await asyncio.to_thread(
@@ -1211,7 +1219,7 @@ async def activate_purchase(db: AsyncSession, purchase_token: str, *, skip_notif
 
     # Resolve notification params before any commit (avoids lazy-loading after commit)
     notification_tariff_name = tariff.name
-    notification_language = user.language or 'ru'
+    notification_language = user.language or settings.DEFAULT_LANGUAGE
 
     try:
         subscription_service = SubscriptionService()
@@ -1346,7 +1354,9 @@ async def activate_purchase(db: AsyncSession, purchase_token: str, *, skip_notif
                     user_id=user.id,
                     type=TransactionType.SUBSCRIPTION_PAYMENT,
                     amount_kopeks=purchase.amount_kopeks,
-                    description=f'Покупка подписки через лендинг ({notification_tariff_name}, {purchase.period_days} дн.)',
+                    description=get_texts(getattr(user, 'language', None)).t(
+                        'GUEST_PURCHASE_TX_DESCRIPTION', 'Subscription purchase via landing page ({tariff}, {days} days)'
+                    ).format(tariff=notification_tariff_name, days=purchase.period_days),
                     payment_method=payment_method_enum,
                     external_id=purchase.payment_id,
                     is_completed=True,

@@ -91,11 +91,12 @@ class UserService:
 
         if has_active_subscription:
             # У пользователя есть активная подписка - обычное сообщение
-            message = (
-                f'✅ <b>Баланс пополнен на {settings.format_price(amount_kopeks)}!</b>\n\n'
-                f'💳 Текущий баланс: {settings.format_price(user.balance_kopeks)}\n\n'
-                f'Спасибо за использование нашего сервиса! 🎉'
-            )
+            message = texts.t(
+                'TOPUP_SUCCESS_MESSAGE',
+                '✅ <b>Balance topped up by {amount}!</b>\n\n'
+                '💳 Current balance: {balance}\n\n'
+                'Thank you for using our service! 🎉',
+            ).format(amount=settings.format_price(amount_kopeks), balance=settings.format_price(user.balance_kopeks))
             extend_callback = 'menu_subscription' if settings.is_multi_tariff_enabled() else 'subscription_extend'
             keyboard = types.InlineKeyboardMarkup(
                 inline_keyboard=[
@@ -109,23 +110,38 @@ class UserService:
             )
         else:
             # НЕТ активной подписки - БОЛЬШОЕ ПРЕДУПРЕЖДЕНИЕ
-            message = (
-                f'✅ <b>Баланс пополнен на {settings.format_price(amount_kopeks)}!</b>\n\n'
-                f'💳 Текущий баланс: {settings.format_price(user.balance_kopeks)}\n\n'
-                f'{"─" * 25}\n\n'
-                f'⚠️ <b>ВАЖНО!</b> ⚠️\n\n'
-                f'🔴 <b>ПОДПИСКА НЕ АКТИВНА!</b>\n\n'
-                f'Пополнение баланса НЕ активирует подписку автоматически!\n\n'
-                f'👇 <b>Выберите действие:</b>'
+            message = texts.t(
+                'TOPUP_SUCCESS_NO_SUBSCRIPTION_WARNING',
+                '✅ <b>Balance topped up by {amount}!</b>\n\n'
+                '💳 Current balance: {balance}\n\n'
+                '{separator}\n\n'
+                '⚠️ <b>IMPORTANT!</b> ⚠️\n\n'
+                '🔴 <b>SUBSCRIPTION NOT ACTIVE!</b>\n\n'
+                'Topping up your balance does NOT activate a subscription automatically!\n\n'
+                '👇 <b>Choose an action:</b>',
+            ).format(
+                amount=settings.format_price(amount_kopeks),
+                balance=settings.format_price(user.balance_kopeks),
+                separator='─' * 25,
             )
             extend_callback = 'menu_subscription' if settings.is_multi_tariff_enabled() else 'subscription_extend'
             keyboard = types.InlineKeyboardMarkup(
                 inline_keyboard=[
-                    [types.InlineKeyboardButton(text='🚀 АКТИВИРОВАТЬ ПОДПИСКУ', callback_data='subscription_buy')],
-                    [types.InlineKeyboardButton(text='💎 ПРОДЛИТЬ ПОДПИСКУ', callback_data=extend_callback)],
                     [
                         types.InlineKeyboardButton(
-                            text='📱 ДОБАВИТЬ УСТРОЙСТВА', callback_data='subscription_add_devices'
+                            text=texts.t('TOPUP_ACTIVATE_SUBSCRIPTION_BUTTON', '🚀 ACTIVATE SUBSCRIPTION'),
+                            callback_data='subscription_buy',
+                        )
+                    ],
+                    [
+                        types.InlineKeyboardButton(
+                            text=texts.t('TOPUP_EXTEND_SUBSCRIPTION_BUTTON', '💎 EXTEND SUBSCRIPTION'),
+                            callback_data=extend_callback,
+                        )
+                    ],
+                    [
+                        types.InlineKeyboardButton(
+                            text=texts.t('TOPUP_ADD_DEVICES_BUTTON', '📱 ADD DEVICES'), callback_data='subscription_add_devices'
                         )
                     ],
                 ]
@@ -146,26 +162,29 @@ class UserService:
         Отправляет уведомление пользователю о пополнении/списании баланса.
         Поддерживает как Telegram, так и email-only пользователей.
         """
+        texts = get_texts(user.language)
         if amount_kopeks > 0:
             # Пополнение
             emoji = '💰'
             amount_text = f'+{settings.format_price(amount_kopeks)}'
-            message = (
-                f'{emoji} <b>Баланс пополнен!</b>\n\n'
-                f'💵 <b>Сумма:</b> {amount_text}\n'
-                f'💳 <b>Текущий баланс:</b> {settings.format_price(user.balance_kopeks)}\n\n'
-                f'Спасибо за использование нашего сервиса! 🎉'
-            )
+            message = texts.t(
+                'BALANCE_TOPUP_NOTIFICATION',
+                '{emoji} <b>Balance topped up!</b>\n\n'
+                '💵 <b>Amount:</b> {amount}\n'
+                '💳 <b>Current balance:</b> {balance}\n\n'
+                'Thank you for using our service! 🎉',
+            ).format(emoji=emoji, amount=amount_text, balance=settings.format_price(user.balance_kopeks))
         else:
             # Списание
             emoji = '💸'
             amount_text = f'-{settings.format_price(abs(amount_kopeks))}'
-            message = (
-                f'{emoji} <b>Средства списаны с баланса</b>\n\n'
-                f'💵 <b>Сумма:</b> {amount_text}\n'
-                f'💳 <b>Текущий баланс:</b> {settings.format_price(user.balance_kopeks)}\n\n'
-                f'Если у вас есть вопросы, обратитесь в поддержку.'
-            )
+            message = texts.t(
+                'BALANCE_DEDUCTION_NOTIFICATION',
+                '{emoji} <b>Funds deducted from balance</b>\n\n'
+                '💵 <b>Amount:</b> {amount}\n'
+                '💳 <b>Current balance:</b> {balance}\n\n'
+                'If you have any questions, contact support.',
+            ).format(emoji=emoji, amount=amount_text, balance=settings.format_price(user.balance_kopeks))
 
         keyboard_rows = []
         subs = getattr(user, 'subscriptions', None) or []
@@ -572,7 +591,7 @@ class UserService:
                 # Получаем имя администратора
                 if not admin_name:
                     admin_user = await get_user_by_id(db, admin_id)
-                    admin_name = admin_user.full_name if admin_user else f'Админ #{admin_id}'
+                    admin_name = admin_user.full_name if admin_user else f'Admin #{admin_id}'
 
                 # Отправляем уведомление (не блокируем операцию если не удалось отправить)
                 await self._send_balance_notification(bot, user, amount_kopeks, admin_name)
@@ -672,7 +691,7 @@ class UserService:
             return False, {'error': 'update_failed'}
 
     async def block_user(
-        self, db: AsyncSession, user_id: int, admin_id: int, reason: str = 'Заблокирован администратором'
+        self, db: AsyncSession, user_id: int, admin_id: int, reason: str = 'Blocked by administrator'
     ) -> bool:
         try:
             user = await get_user_by_id(db, user_id)

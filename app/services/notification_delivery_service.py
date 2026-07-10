@@ -571,7 +571,7 @@ class NotificationDeliveryService:
     ) -> bool:
         """Notify user about account ban."""
         context = {
-            'reason': reason or 'Нарушение правил использования',
+            'reason': reason or 'Violation of usage rules',
         }
 
         return await self.send_notification(

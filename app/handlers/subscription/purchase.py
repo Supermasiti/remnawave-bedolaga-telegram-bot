@@ -1471,12 +1471,18 @@ async def save_cart_and_redirect_to_topup(
     await user_cart_service.save_user_cart(db_user.id, cart_data)
 
     await callback.message.edit_text(
-        f'💰 Недостаточно средств для оформления подписки\n\n'
-        f'Требуется: {texts.format_price(missing_amount, round_kopeks=False)}\n'
-        f'У вас: {texts.format_price(db_user.balance_kopeks, round_kopeks=False)}\n\n'
-        f'🛒 Ваша корзина сохранена!\n'
-        f'После пополнения баланса вы сможете вернуться к оформлению подписки.\n\n'
-        f'Выберите способ пополнения:',
+        texts.t(
+            'CART_SAVED_INSUFFICIENT_BALANCE_MESSAGE',
+            '💰 Insufficient balance to complete the subscription\n\n'
+            'Required: {required}\n'
+            'You have: {balance}\n\n'
+            '🛒 Your cart has been saved!\n'
+            'After topping up your balance you can return to checkout.\n\n'
+            'Choose a top-up method:',
+        ).format(
+            required=texts.format_price(missing_amount, round_kopeks=False),
+            balance=texts.format_price(db_user.balance_kopeks, round_kopeks=False),
+        ),
         reply_markup=get_payment_methods_keyboard_with_cart(
             db_user.language,
             missing_amount,
@@ -1513,7 +1519,7 @@ async def return_to_saved_cart(callback: types.CallbackQuery, state: FSMContext,
     prepared_cart_data = dict(cart_data)
 
     if 'period_days' not in prepared_cart_data:
-        await callback.answer('❌ Корзина повреждена. Оформите подписку заново.', show_alert=True)
+        await callback.answer(texts.t('CART_CORRUPTED_ALERT', '❌ Cart is corrupted. Please start over.'), show_alert=True)
         # Multi-tariff safe: try per-subscription deletion to avoid nuking other carts
         corrupted_sub_id = None
         try:
@@ -1586,11 +1592,16 @@ async def return_to_saved_cart(callback: types.CallbackQuery, state: FSMContext,
             db_user.language,
             missing_amount,
         )
-        insufficient_text = (
-            f'❌ Все еще недостаточно средств\n\n'
-            f'Требуется: {texts.format_price(total_price, round_kopeks=False)}\n'
-            f'У вас: {texts.format_price(db_user.balance_kopeks, round_kopeks=False)}\n'
-            f'Не хватает: {texts.format_price(missing_amount, round_kopeks=False)}'
+        insufficient_text = texts.t(
+            'CART_STILL_NO_BALANCE_MESSAGE',
+            '❌ Still not enough funds\n\n'
+            'Required: {required}\n'
+            'You have: {balance}\n'
+            'Missing: {missing}',
+        ).format(
+            required=texts.format_price(total_price, round_kopeks=False),
+            balance=texts.format_price(db_user.balance_kopeks, round_kopeks=False),
+            missing=texts.format_price(missing_amount, round_kopeks=False),
         )
 
         if _message_needs_update(callback.message, insufficient_text, insufficient_keyboard):
@@ -1599,7 +1610,7 @@ async def return_to_saved_cart(callback: types.CallbackQuery, state: FSMContext,
                 reply_markup=insufficient_keyboard,
             )
         else:
-            await callback.answer('ℹ️ Пополните баланс, чтобы завершить оформление.')
+            await callback.answer(texts.t('TOPUP_TO_FINISH_CHECKOUT_ALERT', 'ℹ️ Top up your balance to complete checkout.'))
         return
 
     countries = await _get_available_countries(db_user.promo_group_id)
@@ -1619,19 +1630,21 @@ async def return_to_saved_cart(callback: types.CallbackQuery, state: FSMContext,
             traffic_value = prepared_cart_data.get('traffic_limit_gb')
         if traffic_value is None:
             traffic_value = settings.get_fixed_traffic_limit()
-        traffic_display = 'Безлимитный' if traffic_value == 0 else f'{traffic_value} ГБ'
+        traffic_display = texts.format_traffic(traffic_value)
     else:
         traffic_value = prepared_cart_data.get('traffic_gb')
         if traffic_value is None:
             traffic_value = prepared_cart_data.get('traffic_limit_gb', 0)
-        traffic_display = 'Безлимитный' if traffic_value == 0 else f'{traffic_value} ГБ'
+        traffic_display = texts.format_traffic(traffic_value)
 
     summary_lines = [
-        '🛒 Восстановленная корзина',
+        texts.t('CART_RESTORED_TITLE', '🛒 Restored cart'),
         '',
-        f'📅 Период: {period_display}',
-        f'📊 Трафик: {traffic_display}',
-        f'🌍 Страны: {", ".join(selected_countries_names)}',
+        texts.t('CART_PERIOD_LINE', '📅 Period: {period}').format(period=period_display),
+        texts.t('CART_TRAFFIC_LINE', '📊 Traffic: {traffic}').format(traffic=traffic_display),
+        texts.t('CART_COUNTRIES_LINE', '🌍 Countries: {countries}').format(
+            countries=', '.join(selected_countries_names)
+        ),
     ]
 
     if settings.is_devices_selection_enabled():
@@ -1639,14 +1652,14 @@ async def return_to_saved_cart(callback: types.CallbackQuery, state: FSMContext,
         if devices_value is None:
             devices_value = prepared_cart_data.get('device_limit')
         if devices_value is not None:
-            summary_lines.append(f'📱 Устройства: {devices_value}')
+            summary_lines.append(texts.t('CART_DEVICES_LINE', '📱 Devices: {devices}').format(devices=devices_value))
 
     summary_lines.extend(
         [
             '',
-            f'💎 Общая стоимость: {texts.format_price(total_price)}',
+            texts.t('CART_TOTAL_COST_LINE', '💎 Total cost: {total}').format(total=texts.format_price(total_price)),
             '',
-            'Подтверждаете покупку?',
+            texts.t('CONFIRM_PURCHASE_QUESTION', 'Confirm purchase?'),
         ]
     )
 
@@ -1661,7 +1674,7 @@ async def return_to_saved_cart(callback: types.CallbackQuery, state: FSMContext,
     if _message_needs_update(callback.message, summary_text, confirm_keyboard):
         await callback.message.edit_text(summary_text, reply_markup=confirm_keyboard, parse_mode='HTML')
 
-    await callback.answer('✅ Корзина восстановлена!')
+    await callback.answer(texts.t('CART_RESTORED_ALERT', '✅ Cart restored!'))
 
 
 async def handle_extend_subscription(
@@ -1811,7 +1824,7 @@ async def handle_extend_subscription(
             continue
 
     if not renewal_prices:
-        await callback.answer('⚠ Нет доступных периодов для продления', show_alert=True)
+        await callback.answer(texts.t('NO_RENEWAL_PERIODS_ALERT', '⚠ No renewal periods available'), show_alert=True)
         return
 
     prices_text = ''
@@ -1857,22 +1870,28 @@ async def handle_extend_subscription(
     )
 
     renewal_lines = [
-        '⏰ Продление подписки',
+        texts.t('RENEWAL_TITLE', '⏰ Renew subscription'),
         '',
-        f'Осталось дней: {subscription.days_left}',
+        texts.t('RENEWAL_DAYS_LEFT_LINE', 'Days left: {days}').format(days=subscription.days_left),
         '',
-        '<b>Ваша текущая конфигурация:</b>',
-        f'🌍 Серверов: {len(subscription.connected_squads or [])}',
-        f'📊 Трафик: {texts.format_traffic(subscription.traffic_limit_gb)}',
+        texts.t('RENEWAL_CURRENT_CONFIG_TITLE', '<b>Your current configuration:</b>'),
+        texts.t('RENEWAL_SERVERS_LINE', '🌍 Servers: {count}').format(
+            count=len(subscription.connected_squads or [])
+        ),
+        texts.t('RENEWAL_TRAFFIC_LINE', '📊 Traffic: {traffic}').format(
+            traffic=texts.format_traffic(subscription.traffic_limit_gb)
+        ),
     ]
 
     if settings.is_devices_selection_enabled():
-        renewal_lines.append(f'📱 Устройств: {subscription.device_limit}')
+        renewal_lines.append(
+            texts.t('RENEWAL_DEVICES_LINE', '📱 Devices: {devices}').format(devices=subscription.device_limit)
+        )
 
     renewal_lines.extend(
         [
             '',
-            '<b>Выберите период продления:</b>',
+            texts.t('RENEWAL_CHOOSE_PERIOD_TITLE', '<b>Choose a renewal period:</b>'),
             prices_text.rstrip(),
             '',
         ]
@@ -1892,7 +1911,9 @@ async def handle_extend_subscription(
     if promo_offer_hint:
         message_text += f'{promo_offer_hint}\n\n'
 
-    message_text += '💡 <i>Цена включает все ваши текущие серверы и настройки</i>'
+    message_text += texts.t(
+        'RENEWAL_PRICE_INCLUDES_HINT', '💡 <i>The price includes all your current servers and settings</i>'
+    )
 
     await callback.message.edit_text(
         message_text,
@@ -1906,11 +1927,11 @@ async def handle_extend_subscription(
 async def confirm_extend_subscription(
     callback: types.CallbackQuery, db_user: User, db: AsyncSession, state: FSMContext = None
 ):
+    texts = get_texts(db_user.language)
     if not callback.data:
-        await callback.answer('⚠ Ошибка данных', show_alert=True)
+        await callback.answer(texts.t('DATA_ERROR_ALERT', '⚠ Data error'), show_alert=True)
         return
     days = int(callback.data.split('_')[2])
-    texts = get_texts(db_user.language)
 
     # Block classic subscription renewal when tariff mode is active
     if settings.is_tariffs_mode():
@@ -1937,13 +1958,16 @@ async def confirm_extend_subscription(
             subscription = await get_subscription_by_id_for_user(db, _fsm_sub_id, db_user.id)
         else:
             # Multi-tariff without FSM state — cannot determine which subscription
-            await callback.answer('Выберите подписку через "Мои подписки"', show_alert=True)
+            await callback.answer(
+                texts.t('SELECT_SUBSCRIPTION_VIA_MY_SUBSCRIPTIONS_ALERT', 'Select a subscription via "My subscriptions"'),
+                show_alert=True,
+            )
             return
     else:
         subscription = db_user.subscription
 
     if not subscription:
-        await callback.answer('⚠ У вас нет активной подписки', show_alert=True)
+        await callback.answer(texts.t('NO_ACTIVE_SUBSCRIPTION_ALERT', '⚠ You have no active subscription'), show_alert=True)
         return
 
     from app.database.crud.user import lock_user_for_pricing
@@ -1991,7 +2015,7 @@ async def confirm_extend_subscription(
 
     except Exception as e:
         logger.error('⚠ ОШИБКА РАСЧЕТА ЦЕНЫ', error=e)
-        await callback.answer('⚠ Ошибка расчета стоимости', show_alert=True)
+        await callback.answer(texts.t('PRICE_CALCULATION_ERROR_ALERT', '⚠ Error calculating price'), show_alert=True)
         return
 
     if price > 0 and db_user.balance_kopeks < price:
@@ -2022,7 +2046,9 @@ async def confirm_extend_subscription(
             'saved_cart': True,
             'missing_amount': missing_kopeks,
             'return_to_cart': True,
-            'description': f'Продление подписки на {days} дней',
+            'description': texts.t('RENEWAL_TX_DESCRIPTION', 'Subscription renewal for {days} days').format(
+                days=days
+            ),
             'consume_promo_offer': bool(promo_offer_discount > 0),
             'device_limit': device_limit,
             'devices': device_limit,
@@ -2046,7 +2072,9 @@ async def confirm_extend_subscription(
         return
 
     old_traffic_gb = subscription.traffic_limit_gb
-    renewal_description = f'Продление подписки на {days} дней ({months_in_period} мес)'
+    renewal_description = texts.t(
+        'RENEWAL_TX_DESCRIPTION_WITH_MONTHS', 'Subscription renewal for {days} days ({months} mo.)'
+    ).format(days=days, months=months_in_period)
 
     try:
         renewal_service = SubscriptionRenewalService()
@@ -2059,12 +2087,14 @@ async def confirm_extend_subscription(
             payment_method=PaymentMethod.BALANCE,
         )
     except SubscriptionRenewalChargeError:
-        await callback.answer('⚠ Ошибка списания средств', show_alert=True)
+        await callback.answer(texts.t('BALANCE_DEDUCTION_ERROR_ALERT', '⚠ Error deducting funds'), show_alert=True)
         return
     except Exception as e:
         logger.error('⚠ КРИТИЧЕСКАЯ ОШИБКА ПРОДЛЕНИЯ', error=e)
         await callback.message.edit_text(
-            '⚠ Произошла ошибка при продлении подписки. Обратитесь в поддержку.',
+            texts.t(
+                'RENEWAL_ERROR_CONTACT_SUPPORT', '⚠ An error occurred while renewing the subscription. Contact support.'
+            ),
             reply_markup=get_back_keyboard(db_user.language),
         )
         await callback.answer()
@@ -2073,20 +2103,29 @@ async def confirm_extend_subscription(
     refreshed_end_date = result.subscription.end_date
     await db.refresh(db_user)
 
-    success_message = (
-        '✅ Подписка успешно продлена!\n\n'
-        f'⏰ Добавлено: {days} дней\n'
-        f'Действует до: {format_local_datetime(refreshed_end_date, "%d.%m.%Y %H:%M")}\n\n'
-        f'💰 Списано: {texts.format_price(price)}'
+    success_message = texts.t(
+        'RENEWAL_SUCCESS_MESSAGE',
+        '✅ Subscription renewed successfully!\n\n'
+        '⏰ Added: {days} days\n'
+        'Valid until: {end_date}\n\n'
+        '💰 Charged: {price}',
+    ).format(
+        days=days,
+        end_date=format_local_datetime(refreshed_end_date, '%d.%m.%Y %H:%M'),
+        price=texts.format_price(price),
     )
 
     # Добавляем уведомление о сбросе трафика
     if settings.is_traffic_fixed() and result.subscription.traffic_limit_gb != old_traffic_gb:
         fixed_limit = settings.get_fixed_traffic_limit()
-        success_message += f'\n\n📊 Трафик сброшен до {fixed_limit} ГБ'
+        success_message += texts.t('RENEWAL_TRAFFIC_RESET_SUFFIX', '\n\n📊 Traffic reset to {limit} GB').format(
+            limit=fixed_limit
+        )
 
     if promo_offer_discount > 0:
-        success_message += f' (включая доп. скидку {offer_pct}%: -{texts.format_price(promo_offer_discount)})'
+        success_message += texts.t(
+            'RENEWAL_PROMO_OFFER_DISCOUNT_SUFFIX', ' (including extra {percent}% discount: -{amount})'
+        ).format(percent=offer_pct, amount=texts.format_price(promo_offer_discount))
 
     await callback.message.edit_text(success_message, reply_markup=get_back_keyboard(db_user.language))
 
@@ -2133,7 +2172,7 @@ async def select_period(callback: types.CallbackQuery, state: FSMContext, db_use
         available_packages = [pkg for pkg in settings.get_traffic_packages() if pkg['enabled']]
 
         if not available_packages:
-            await callback.answer('⚠️ Пакеты трафика не настроены', show_alert=True)
+            await callback.answer(texts.t('TRAFFIC_PACKAGES_NOT_CONFIGURED_ALERT', '⚠️ Traffic packages are not configured'), show_alert=True)
             return
 
         await callback.message.edit_text(
@@ -2238,7 +2277,8 @@ async def select_devices(callback: types.CallbackQuery, state: FSMContext, db_us
 
 async def devices_continue(callback: types.CallbackQuery, state: FSMContext, db_user: User, db: AsyncSession):
     if callback.data != 'devices_continue':
-        await callback.answer('⚠️ Некорректный запрос', show_alert=True)
+        texts = get_texts(db_user.language)
+        await callback.answer(texts.t('INVALID_REQUEST_ALERT', '⚠️ Invalid request'), show_alert=True)
         return
 
     if await present_subscription_summary(callback, state, db_user):
@@ -2248,17 +2288,25 @@ async def devices_continue(callback: types.CallbackQuery, state: FSMContext, db_
 async def confirm_purchase(callback: types.CallbackQuery, state: FSMContext, db_user: User, db: AsyncSession):
     # Проверка ограничения на покупку/продление подписки
     if getattr(db_user, 'restriction_subscription', False):
-        reason = html.escape(getattr(db_user, 'restriction_reason', None) or 'Действие ограничено администратором')
         texts = get_texts(db_user.language)
+        reason = html.escape(
+            getattr(db_user, 'restriction_reason', None)
+            or texts.t('RESTRICTION_DEFAULT_REASON', 'Action restricted by the administrator')
+        )
         support_url = settings.get_support_contact_url()
         keyboard = []
         if support_url:
-            keyboard.append([types.InlineKeyboardButton(text='🆘 Обжаловать', url=support_url)])
+            keyboard.append(
+                [types.InlineKeyboardButton(text=texts.t('APPEAL_BUTTON', '🆘 Appeal'), url=support_url)]
+            )
         keyboard.append([types.InlineKeyboardButton(text=texts.BACK, callback_data='subscription')])
 
         await callback.message.edit_text(
-            f'🚫 <b>Покупка/продление подписки ограничено</b>\n\n{reason}\n\n'
-            'Если вы считаете это ошибкой, вы можете обжаловать решение.',
+            texts.t(
+                'SUBSCRIPTION_RESTRICTED_MESSAGE',
+                '🚫 <b>Subscription purchase/renewal is restricted</b>\n\n{reason}\n\n'
+                'If you believe this is a mistake, you can appeal the decision.',
+            ).format(reason=reason),
             reply_markup=types.InlineKeyboardMarkup(inline_keyboard=keyboard),
         )
         await callback.answer()
@@ -2344,7 +2392,7 @@ async def confirm_purchase(callback: types.CallbackQuery, state: FSMContext, db_
                 price_difference=price_difference / 100,
                 max_allowed_increase=max_allowed_increase / 100,
             )
-            await callback.answer('Цена изменилась. Пожалуйста, начните оформление заново.', show_alert=True)
+            await callback.answer(texts.t('PRICE_CHANGED_RESTART_ALERT', 'Price has changed. Please start checkout again.'), show_alert=True)
             return
         if price_difference > 100:  # допуск 1₽
             logger.warning(
@@ -2458,7 +2506,9 @@ async def confirm_purchase(callback: types.CallbackQuery, state: FSMContext, db_
             db,
             db_user,
             final_price,
-            f'Покупка подписки на {data["period_days"]} дней',
+            texts.t('SUBSCRIPTION_PURCHASE_TX_DESCRIPTION', 'Subscription purchase for {days} days').format(
+                days=data['period_days']
+            ),
             consume_promo_offer=promo_offer_discount_value > 0,
             mark_as_paid_subscription=True,
         )
@@ -2694,7 +2744,9 @@ async def confirm_purchase(callback: types.CallbackQuery, state: FSMContext, db_
             user_id=db_user.id,
             type=TransactionType.SUBSCRIPTION_PAYMENT,
             amount_kopeks=final_price,
-            description=f'Подписка на {period_days} дней ({months_in_period} мес)',
+            description=texts.t('SUBSCRIPTION_TX_DESCRIPTION_WITH_MONTHS', 'Subscription for {days} days ({months} mo.)').format(
+                days=period_days, months=months_in_period
+            ),
         )
 
         try:
@@ -3142,8 +3194,8 @@ async def handle_toggle_daily_subscription_pause(callback: types.CallbackQuery, 
             await callback.answer(
                 texts.t(
                     'INSUFFICIENT_BALANCE_FOR_RESUME',
-                    f'❌ Недостаточно средств для возобновления. Требуется: {settings.format_price(daily_price)}',
-                ),
+                    '❌ Insufficient balance to resume. Required: {amount}',
+                ).format(amount=settings.format_price(daily_price)),
                 show_alert=True,
             )
             return
@@ -3165,8 +3217,8 @@ async def handle_toggle_daily_subscription_pause(callback: types.CallbackQuery, 
                 await callback.answer(
                     texts.t(
                         'INSUFFICIENT_BALANCE_FOR_RESUME',
-                        f'❌ Недостаточно средств для возобновления. Требуется: {settings.format_price(daily_price)}',
-                    ),
+                        '❌ Insufficient balance to resume. Required: {amount}',
+                    ).format(amount=settings.format_price(daily_price)),
                     show_alert=True,
                 )
                 return

@@ -224,7 +224,7 @@ class TicketNotificationCRUD:
             return None
 
         preview = (reply_preview or '').strip()[:100]
-        message = f'Ответ на тикет #{ticket.id}: {preview}...'
+        message = f'Reply to ticket #{ticket.id}: {preview}...'
 
         return await TicketNotificationCRUD.create(
             db=db,

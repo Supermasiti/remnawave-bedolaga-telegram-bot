@@ -150,13 +150,13 @@ async def cancel_withdrawal(
     if not withdrawal:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='Заявка не найдена',
+            detail='Request not found',
         )
 
     if withdrawal.status != WithdrawalRequestStatus.PENDING.value:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Можно отменить только заявку в ожидании',
+            detail='Only a pending request can be cancelled',
         )
 
     withdrawal.status = WithdrawalRequestStatus.CANCELLED.value

@@ -141,7 +141,7 @@ async def get_current_cabinet_user(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail={
                     'code': 'blacklisted',
-                    'message': blacklist_reason or 'Доступ запрещен',
+                    'message': blacklist_reason or 'Access denied',
                 },
             )
 

@@ -296,7 +296,7 @@ async def purchase_traffic(
             'base_price_kopeks': prorated_price,
             'discount_percent': traffic_discount_percent,
             'source': 'cabinet',
-            'description': f'Докупка {request.gb} ГБ трафика',
+            'description': f'Purchase of {request.gb} GB extra traffic',
         }
 
         try:
@@ -314,7 +314,7 @@ async def purchase_traffic(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
             detail={
                 'code': 'insufficient_funds',
-                'message': f'Недостаточно средств. Не хватает {settings.format_price(missing, round_kopeks=False)}',
+                'message': f'Insufficient balance. Missing {settings.format_price(missing, round_kopeks=False)}',
                 'missing_amount': missing,
                 'cart_saved': True,
                 'cart_mode': 'add_traffic',
@@ -323,9 +323,9 @@ async def purchase_traffic(
 
     # Формируем описание
     if traffic_discount_percent > 0:
-        traffic_description = f'Докупка {request.gb} ГБ трафика (скидка {traffic_discount_percent}%)'
+        traffic_description = f'Purchase of {request.gb} GB extra traffic (discount {traffic_discount_percent}%)'
     else:
-        traffic_description = f'Докупка {request.gb} ГБ трафика'
+        traffic_description = f'Purchase of {request.gb} GB extra traffic'
 
     # Списываем баланс
     success = await subtract_user_balance(db, user, final_price, traffic_description)
@@ -458,25 +458,25 @@ async def save_traffic_cart(
     if not subscription:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='У вас нет активной подписки',
+            detail='You have no active subscription',
         )
 
     if subscription.status not in ['active', 'trial']:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Ваша подписка неактивна',
+            detail='Your subscription is not active',
         )
 
     if subscription.is_trial:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Докупка трафика недоступна на пробном периоде',
+            detail='Buying extra traffic is not available on the trial period',
         )
 
     if subscription.traffic_limit_gb == 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='У вас уже безлимитный трафик',
+            detail='You already have unlimited traffic',
         )
 
     # Get traffic price from tariff or settings
@@ -489,27 +489,27 @@ async def save_traffic_cart(
         if not tariff:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail='Тариф не найден',
+                detail='Plan not found',
             )
 
         if not getattr(tariff, 'traffic_topup_enabled', False):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Докупка трафика недоступна на вашем тарифе',
+                detail='Buying extra traffic is not available on your plan',
             )
 
         packages = tariff.get_traffic_topup_packages() if hasattr(tariff, 'get_traffic_topup_packages') else {}
         if request.gb not in packages:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f'Пакет трафика {request.gb} ГБ недоступен',
+                detail=f'Traffic package of {request.gb} GB is not available',
             )
         base_price_kopeks = packages[request.gb]
     else:
         if not settings.is_traffic_topup_enabled():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Докупка трафика отключена',
+                detail='Buying extra traffic is disabled',
             )
 
         packages = settings.get_traffic_topup_packages()
@@ -517,7 +517,7 @@ async def save_traffic_cart(
         if not matching_pkg:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail='Недоступный пакет трафика',
+                detail='Unavailable traffic package',
             )
         base_price_kopeks = matching_pkg['price']
 
@@ -543,7 +543,7 @@ async def save_traffic_cart(
         'base_price_kopeks': base_price_kopeks,
         'discount_percent': traffic_discount_percent,
         'source': 'cabinet',
-        'description': f'Докупка {request.gb} ГБ трафика',
+        'description': f'Purchase of {request.gb} GB extra traffic',
     }
     await user_cart_service.save_user_cart(user.id, cart_data)
     logger.info('Cart saved for traffic purchase (cabinet save-cart) user +', user_id=user.id, gb=request.gb)

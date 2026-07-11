@@ -38,6 +38,14 @@ All commits below were pushed to the `origin` (`Supermasiti/...`) fork on
 
 ## Commits — `remnawave-bedolaga-telegram-bot`
 
+### `86ed34e4` — fix: pin bot to static IPv4 172.18.0.7 on remnawave-network (2026-06-30)
+Unrelated to i18n — infra-only, and the only change in this fork to
+`docker-compose.yml`. The `bot` service used to join `remnawave-network` with
+whatever address Docker happened to assign, which could change on container
+recreation. Pinned it to a static `ipv4_address: 172.18.0.7` so anything that
+references the bot by IP (a firewall rule, a reverse-proxy upstream, an
+allowlist on the RemnaWave panel side) keeps working across rebuilds/redeploys.
+
 ### `c21501fc` — feat: full de-russification for LatAm launch + local currency display (2026-07-09)
 - Removed `ru`/`ua` from selectable bot languages; `es` is now default.
 - Replaced hardcoded Russian text with locale keys across every live

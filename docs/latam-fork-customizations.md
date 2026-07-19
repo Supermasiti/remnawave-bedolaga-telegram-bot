@@ -17,7 +17,7 @@ since only the operator (Russian-speaking) ever sees them.
 | Repo | Role | Origin (push target) | Upstream (pull only) |
 |---|---|---|---|
 | `remnawave-bedolaga-telegram-bot` | Bot backend + cabinet API + Mini App backend | `https://github.com/Supermasiti/remnawave-bedolaga-telegram-bot.git`, branch `main` | `https://github.com/BEDOLAGA-DEV/remnawave-bedolaga-telegram-bot.git` |
-| `bedolaga-cabinet` | Web personal cabinet frontend (`my.monoza.org`), React/Vite | `https://github.com/Supermasiti/bedolaga-cabinet.git`, branch `main` | `https://github.com/BEDOLAGA-DEV/bedolaga-cabinet.git` |
+| `bedolaga-cabinet` | Web personal cabinet frontend (`my.monozavpn.com`, was `my.monoza.org` until 2026-07-19), React/Vite | `https://github.com/Supermasiti/bedolaga-cabinet.git`, branch `main` | `https://github.com/BEDOLAGA-DEV/bedolaga-cabinet.git` |
 
 All commits below were pushed to the `origin` (`Supermasiti/...`) fork on
 `main`, never to `upstream`.
@@ -104,6 +104,46 @@ Spanish rather than the user's actual language. Not a Russian leak, but a
 real i18n completeness gap for Chinese and Farsi users — backfilled to full
 parity with `en.json`.
 
+### `a956c966` — merge: upstream v3.65.1, 150 commits behind (2026-07-19)
+Fork was 150 commits behind `upstream/main`. Merged via a dedicated branch
+(`merge-upstream-3.65.1`, commits `d3e65208`/`e8bf0679`) after a non-destructive
+dry-run to enumerate real conflicts first. Of 33 files touched by both sides,
+only 5 had actual line-level conflicts:
+- `app/cabinet/routes/balance.py`, `app/cabinet/routes/subscription_modules/purchase.py` —
+  trivial, took upstream's new logic (CisPay status mapping, `_persist_failed_refund`
+  audit-log reason) with our English strings kept.
+- `app/services/promocode_service.py` — **not trivial**: upstream added a
+  combined `BALANCE_AND_DAYS` promo-code type and reordered the
+  balance/days-grant blocks to prevent a double-grant on rollback. Our old
+  balance-grant block (positioned before upstream's reorder) was removed
+  entirely — keeping it would have double-credited balance for the new
+  combined type. Upstream's surviving balance-grant block was translated to
+  our `texts.t()` keys instead of its hardcoded `₽`/Russian.
+- `app/localization/locales/ua.json` — modify/delete, resolved as delete
+  (fork doesn't support Ukrainian). Will recur on every future merge.
+- `app/handlers/subscription/tariff_purchase.py` — 187 conflicting hunks, but
+  purely two independent i18n passes on the same lines (our LatAm keys vs.
+  upstream's own `feat(l10n)` commit `0951c708`), not competing logic.
+  Verified via `git log -- <file>` that upstream's 4 real logic commits in
+  this file (extend-tariff `NameError` fix, blocked prorated instant-switch
+  from free tariffs, trial→paid conversion fix) had already auto-merged
+  cleanly; resolved all 187 hunks to our side.
+
+Full conflict-by-conflict methodology: `docs/upstream-merge-notes.md`.
+
+Regression-tested before deploy: `tests/manual/verify_derussification.py` run
+in an isolated throwaway container (not the live `remnawave_bot`) against the
+real DB — 174/174 checks passed, no Cyrillic detected in any of the 5
+languages, including live DB rows. Deployed same day (`docker compose build
+bot && docker compose up -d bot`); Alembic picked up 4 new upstream migrations
+(coupons, recurrent payments, grace access, CisPay tables) cleanly.
+
+New upstream features that landed but are **not yet adapted/tested beyond
+translation**: coupons, recurrent payments, "grace access" on renewal
+(disabled by default), CisPay payment provider, cabinet support WebSocket
+channel. Translated, but not functionally exercised — verify before enabling
+to customers.
+
 ## Commits — `bedolaga-cabinet`
 
 ### `4884b02` — feat(i18n): add Spanish and Portuguese locales for LatAm launch (2026-07-09)
@@ -156,6 +196,36 @@ rows were modified (never anything the operator had customized):
 | `promo_groups` | `name` (default group) | `Базовый юзер` | `Basic user` |
 | `promo_offer_templates` | `name`, `message_text`, `button_text` (3 rows: `test_access`, `extend_discount`, `purchase_discount`) | Russian marketing copy | English equivalents |
 | `wheel_configs` | `name` | `Колесо удачи` | `Wheel of Fortune` |
+
+## Host configuration changes (not tracked in git)
+
+### Domain migration `monoza.org` → `monozavpn.com` (2026-07-19)
+Product moved to a new domain; the brand name ("Monoza VPN") was intentionally
+kept unchanged — only the domain, not what customers see. RemnaWave panel and
+Caddy (`/opt/remnawave/.env`, `/opt/remnawave/caddy/Caddyfile`) had already
+been migrated before this was checked. Found and fixed two stale references in
+`~/bedolaga-bot/.env` (host-only, `.gitignore`d, never pushed anywhere):
+- `CABINET_ALLOWED_ORIGINS` — was `https://my.monoza.org`, is now
+  `https://my.monozavpn.com`. CORS allow-list for the cabinet's API calls to
+  the bot; a stale value here silently breaks the browser cabinet with no
+  server-side error, only a browser console CORS rejection.
+- `CABINET_URL` — was **empty** (`CABINET_URL=`), unrelated to the domain
+  move as such — it looks like it was never set at all, on either domain.
+  Used across 12+ call sites (email verification links, OAuth
+  `redirect_uri`, referral/gift/guest-purchase links) — with it empty, those
+  were broken in production before this fix too. Set to
+  `https://my.monozavpn.com`.
+
+Applied via `docker compose up -d bot` (env vars are read at process start,
+not bind-mounted — a plain `restart` would not have picked this up).
+
+**Open item**: the current Caddyfile has no host-matched block for either
+`my.monoza.org` or `my.monozavpn.com` — `/srv/cabinet` is served on bare
+`:8090` with no domain binding. Public routing for `my.monozavpn.com` is
+presumably handled by the Cloudflare Tunnel (config lives in the Cloudflare
+Zero Trust dashboard, not on this host — see `INFRA_HANDOVER.md`). Not
+verified from this host; confirm the cabinet actually loads at
+`https://my.monozavpn.com` and that the browser console shows no CORS errors.
 
 ## Scope boundaries (intentionally left in Russian)
 

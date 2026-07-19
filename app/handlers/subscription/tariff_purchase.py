@@ -889,6 +889,7 @@ async def handle_custom_days_change(
     state: FSMContext,
 ):
     """Обрабатывает изменение количества дней."""
+    texts = get_texts(db_user.language)
     parts = callback.data.split(':')
     tariff_id = int(parts[1])
     delta = int(parts[2])
@@ -955,6 +956,7 @@ async def handle_custom_traffic_change(
     state: FSMContext,
 ):
     """Обрабатывает изменение количества трафика."""
+    texts = get_texts(db_user.language)
     parts = callback.data.split(':')
     tariff_id = int(parts[1])
     delta = int(parts[2])
@@ -1014,6 +1016,7 @@ async def handle_custom_confirm(
     state: FSMContext,
 ):
     """Подтверждает покупку тарифа с кастомными параметрами."""
+    texts = get_texts(db_user.language)
     tariff_id = int(callback.data.split(':')[1])
 
     tariff = await get_tariff_by_id(db, tariff_id)
@@ -1063,8 +1066,6 @@ async def handle_custom_confirm(
         await callback.answer()
     except Exception:
         pass
-
-    texts = get_texts(db_user.language)
 
     # Save promo offer state before deduction (for restore on failure)
     consume_promo = result.promo_offer_discount > 0
@@ -1194,13 +1195,12 @@ async def handle_custom_confirm(
     try:
         # Обновляем пользователя в Remnawave
         # При покупке тарифа ВСЕГДА сбрасываем трафик в панели
+        if settings.is_multi_tariff_enabled():
+            _should_create = not subscription.remnawave_uuid
+        else:
+            _should_create = not getattr(db_user, 'remnawave_uuid', None)
         try:
             subscription_service = SubscriptionService()
-            if settings.is_multi_tariff_enabled():
-                _should_create = not subscription.remnawave_uuid
-            else:
-                _should_create = not getattr(db_user, 'remnawave_uuid', None)
-
             if _should_create:
                 await subscription_service.create_remnawave_user(
                     db,
@@ -1219,10 +1219,12 @@ async def handle_custom_confirm(
             logger.error('Ошибка обновления Remnawave', error=e)
             from app.services.remnawave_retry_queue import remnawave_retry_queue
 
+            # То же mode-aware решение, что и синк выше: конвертированный из
+            # триала ретраится как 'update', а не плодит дубль панельного юзера.
             remnawave_retry_queue.enqueue(
                 subscription_id=subscription.id,
                 user_id=db_user.id,
-                action='create',
+                action='create' if _should_create else 'update',
             )
 
         # Создаем транзакцию
@@ -1245,7 +1247,8 @@ async def handle_custom_confirm(
                 subscription,
                 None,
                 custom_days,
-                was_trial_conversion=False,
+                # Маркер ставит extend_subscription при конверсии живого триала
+                was_trial_conversion=bool(getattr(subscription, '_converted_from_trial', False)),
                 amount_kopeks=total_price,
                 purchase_type='renewal' if existing_subscription else 'first_purchase',
             )
@@ -1316,6 +1319,7 @@ async def select_tariff_period_with_traffic(
     state: FSMContext,
 ):
     """Обрабатывает выбор периода для тарифа с кастомным трафиком - показывает экран настройки трафика."""
+    texts = get_texts(db_user.language)
     parts = callback.data.split(':')
     tariff_id = int(parts[1])
     period = int(parts[2])
@@ -1385,6 +1389,7 @@ async def select_tariff_period(
     state: FSMContext,
 ):
     """Обрабатывает выбор периода для тарифа."""
+    texts = get_texts(db_user.language)
     parts = callback.data.split(':')
     tariff_id = int(parts[1])
     period = int(parts[2])
@@ -1527,6 +1532,7 @@ async def confirm_tariff_purchase(
     state: FSMContext,
 ):
     """Подтверждает покупку тарифа и создает подписку."""
+    texts = get_texts(db_user.language)
     parts = callback.data.split(':')
     tariff_id = int(parts[1])
     period = int(parts[2])
@@ -1617,8 +1623,6 @@ async def confirm_tariff_purchase(
     except Exception:
         pass
 
-    texts = get_texts(db_user.language)
-
     # Списываем баланс
     consume_promo = result.promo_offer_discount > 0
     # Save promo offer state before deduction (for restore on failure)
@@ -1676,8 +1680,13 @@ async def confirm_tariff_purchase(
                     connected_squads=squads,
                 )
             else:
-                # Guard: enforce MAX_ACTIVE_SUBSCRIPTIONS limit
-                active_count = len(await get_active_subscriptions_by_user_id(db, db_user.id))
+                # Guard: enforce MAX_ACTIVE_SUBSCRIPTIONS limit.
+                # Живой триал не считаем: create_paid_subscription конвертирует
+                # его на месте (строка переиспользуется), количество подписок не
+                # растёт — блокировать такую покупку лимитом нельзя, иначе юзер
+                # на пределе лимита не может превратить триал в платный тариф.
+                _alive_subs = await get_active_subscriptions_by_user_id(db, db_user.id)
+                active_count = len([s for s in _alive_subs if not s.is_trial])
                 if active_count >= settings.get_max_active_subscriptions():
                     from app.database.crud.user import add_user_balance
 
@@ -1851,16 +1860,15 @@ async def confirm_tariff_purchase(
 
     # Обновляем пользователя в Remnawave
     # При покупке тарифа ВСЕГДА сбрасываем трафик в панели
+    # In multi-tariff mode, each subscription has its own panel user.
+    # A new subscription has no remnawave_uuid yet, so always CREATE.
+    # In single-tariff mode, reuse the user-level UUID if available.
+    if settings.is_multi_tariff_enabled():
+        _should_create = not subscription.remnawave_uuid
+    else:
+        _should_create = not getattr(db_user, 'remnawave_uuid', None)
     try:
         subscription_service = SubscriptionService()
-        # In multi-tariff mode, each subscription has its own panel user.
-        # A new subscription has no remnawave_uuid yet, so always CREATE.
-        # In single-tariff mode, reuse the user-level UUID if available.
-        if settings.is_multi_tariff_enabled():
-            _should_create = not subscription.remnawave_uuid
-        else:
-            _should_create = not getattr(db_user, 'remnawave_uuid', None)
-
         if _should_create:
             await subscription_service.create_remnawave_user(
                 db,
@@ -1879,10 +1887,16 @@ async def confirm_tariff_purchase(
         logger.error('Ошибка обновления Remnawave', error=e)
         from app.services.remnawave_retry_queue import remnawave_retry_queue
 
+        # Ретрай повторяет то же mode-aware решение, что и синк выше: у
+        # конвертированного из триала (или реанимированной #3004) подписки уже
+        # есть панельный юзер — его надо ОБНОВИТЬ, а не создать дубль. Хардкод
+        # 'update' по subscription.remnawave_uuid здесь не годится: в
+        # single-tariff вебхук панели чистит user.remnawave_uuid при удалении
+        # юзера, а на подписке остаётся стухший UUID.
         remnawave_retry_queue.enqueue(
             subscription_id=subscription.id,
             user_id=db_user.id,
-            action='create',
+            action='create' if _should_create else 'update',
         )
 
     # Создаем транзакцию
@@ -1906,7 +1920,9 @@ async def confirm_tariff_purchase(
             subscription,
             None,  # Транзакция отсутствует, оплата с баланса
             period,
-            was_trial_conversion=False,
+            # Маркер выставляют extend_subscription/_convert_trial_subscription_to_paid,
+            # когда покупка конвертировала живой триал (та же строка, тот же панельный юзер).
+            was_trial_conversion=bool(getattr(subscription, '_converted_from_trial', False)),
             amount_kopeks=final_price,
             purchase_type='renewal' if existing_subscription else 'first_purchase',
         )
@@ -1973,6 +1989,7 @@ async def confirm_daily_tariff_purchase(
     state: FSMContext,
 ):
     """Подтверждает покупку суточного тарифа."""
+    texts = get_texts(db_user.language)
 
     tariff_id = int(callback.data.split(':')[1])
     tariff = await get_tariff_by_id(db, tariff_id)
@@ -2021,8 +2038,6 @@ async def confirm_daily_tariff_purchase(
         await callback.answer()
     except Exception:
         pass
-
-    texts = get_texts(db_user.language)
 
     try:
         # Списываем первый день сразу
@@ -2700,6 +2715,8 @@ async def confirm_tariff_extend(
     state: FSMContext,
 ):
     """Подтверждает продление по тарифу."""
+    texts = get_texts(db_user.language)
+
     # tariff_ext_confirm:{sub_id}:{tariff_id}:{period}
     parts = callback.data.split(':')
     try:
@@ -2786,8 +2803,6 @@ async def confirm_tariff_extend(
         await callback.answer()
     except Exception:
         pass
-
-    texts = get_texts(db_user.language)
 
     try:
         # Списываем баланс
@@ -3230,6 +3245,7 @@ async def select_tariff_switch(
     state: FSMContext,
 ):
     """Обрабатывает выбор тарифа для переключения."""
+    texts = get_texts(db_user.language)
     tariff_id = int(callback.data.split(':')[1])
     tariff = await get_tariff_by_id(db, tariff_id)
     texts = get_texts(db_user.language)
@@ -3388,6 +3404,7 @@ async def select_tariff_switch_period(
     state: FSMContext,
 ):
     """Обрабатывает выбор периода для переключения тарифа."""
+    texts = get_texts(db_user.language)
 
     parts = callback.data.split(':')
     tariff_id = int(parts[1])
@@ -3512,6 +3529,7 @@ async def confirm_tariff_switch(
     state: FSMContext,
 ):
     """Подтверждает переключение тарифа."""
+    texts = get_texts(db_user.language)
     parts = callback.data.split(':')
     tariff_id = int(parts[1])
     period = int(parts[2])
@@ -3581,8 +3599,6 @@ async def confirm_tariff_switch(
         await callback.answer()
     except Exception:
         pass
-
-    texts = get_texts(db_user.language)
 
     try:
         # Списываем баланс
@@ -3787,6 +3803,7 @@ async def confirm_daily_tariff_switch(
     state: FSMContext,
 ):
     """Подтверждает смену на суточный тариф."""
+    texts = get_texts(db_user.language)
 
     tariff_id = int(callback.data.split(':')[1])
     tariff = await get_tariff_by_id(db, tariff_id)
@@ -3856,8 +3873,6 @@ async def confirm_daily_tariff_switch(
         await callback.answer()
     except Exception:
         pass
-
-    texts = get_texts(db_user.language)
 
     try:
         # Списываем первый день сразу
@@ -4144,6 +4159,7 @@ def format_instant_switch_list_text(
     upgrade_ok = settings.TARIFF_SWITCH_UPGRADE_ENABLED
     downgrade_ok = settings.TARIFF_SWITCH_DOWNGRADE_ENABLED
 
+    texts = get_texts(db_user.language if db_user else 'ru')
     lines = [
         texts.t('INSTANT_SWITCH_TITLE', '📦 <b>Instant plan switch</b>'),
         texts.t('TARIFF_SWITCH_CURRENT_LINE', '📌 Current: <b>{name}</b>').format(name=html.escape(current_tariff.name)),
@@ -4373,6 +4389,7 @@ async def preview_instant_switch(
     state: FSMContext,
 ):
     """Показывает превью мгновенного переключения тарифа."""
+    texts = get_texts(db_user.language)
 
     tariff_id = int(callback.data.split(':')[1])
     new_tariff = await get_tariff_by_id(db, tariff_id)
@@ -4420,8 +4437,6 @@ async def preview_instant_switch(
 
     traffic = format_traffic(new_tariff.traffic_limit_gb, db_user.language)
     current_traffic = format_traffic(current_tariff.traffic_limit_gb, db_user.language)
-
-    texts = get_texts(db_user.language)
 
     # Проверяем, суточный ли новый тариф
     is_new_daily = getattr(new_tariff, 'is_daily', False)
@@ -4612,6 +4627,7 @@ async def confirm_instant_switch(
     state: FSMContext,
 ):
     """Подтверждает мгновенное переключение тарифа."""
+    texts = get_texts(db_user.language)
 
     tariff_id = int(callback.data.split(':')[1])
     new_tariff = await get_tariff_by_id(db, tariff_id)
@@ -4636,6 +4652,13 @@ async def confirm_instant_switch(
     if not current_tariff:
         await callback.answer(texts.t('CURRENT_TARIFF_NOT_FOUND_ALERT', 'Current plan not found'), show_alert=True)
         return
+
+    # Бесплатный (0₽) исходный тариф: prorated-списание запрещено — переключение
+    # идёт только через флоу с выбором периода (полная цена, сброс бесплатных дней).
+    if settings.TARIFF_SWITCH_RESET_FREE_DAYS and current_tariff.is_free:
+        await show_tariff_switch_list(callback, db_user, db, state)
+        return
+
     remaining_days = max(0, (subscription.end_date - datetime.now(UTC)).days) if subscription.end_date else 0
 
     # Use full TariffSwitchResult to access offer_discount_pct for consume_promo_offer flag
@@ -4673,8 +4696,6 @@ async def confirm_instant_switch(
         await callback.answer()
     except Exception:
         pass
-
-    texts = get_texts(db_user.language)
 
     try:
         # Списываем баланс если это upgrade

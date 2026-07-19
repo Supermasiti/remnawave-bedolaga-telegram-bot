@@ -166,6 +166,35 @@ class UserTransactionItem(BaseModel):
     created_at: datetime
 
 
+class UserActivityItem(BaseModel):
+    """Одна запись в таймлайне активности пользователя (бот + кабинет).
+
+    ``type`` — источник записи (transaction, event, promocode, coupon, ticket,
+    wheel_spin, poll, gift_sent, gift_received, referral_earning, cabinet_login,
+    withdrawal); ``subtype`` уточняет его (тип транзакции, event_type события,
+    статус тикета и т.п.). ``title`` — сырой человекочитаемый текст источника
+    (описание транзакции, код промокода, название тикета) — локализованный
+    заголовок строит фронт по type/subtype.
+    """
+
+    type: str
+    subtype: str | None = None
+    source: str | None = None  # 'bot' | 'cabinet' — где произошло действие, если известно
+    title: str | None = None
+    amount_kopeks: int | None = None
+    timestamp: datetime
+    meta: dict[str, Any] | None = None
+
+
+class UserActivityResponse(BaseModel):
+    """Paginated user activity timeline."""
+
+    items: list[UserActivityItem]
+    total: int
+    offset: int = 0
+    limit: int = 50
+
+
 class UserReferralInfo(BaseModel):
     """User referral info."""
 
@@ -367,6 +396,21 @@ class UpdateUserStatusResponse(BaseModel):
     success: bool
     old_status: str
     new_status: str
+    message: str
+
+
+class SendUserMessageRequest(BaseModel):
+    """Request to send a direct Telegram message to a user (parity with the
+    bot's «Отправить сообщение» action in the admin user card)."""
+
+    # 4096 — лимит Telegram на текст сообщения
+    text: str = Field(..., min_length=1, max_length=4096, description='Message text (HTML)')
+
+
+class SendUserMessageResponse(BaseModel):
+    """Response after sending a direct message."""
+
+    success: bool
     message: str
 
 

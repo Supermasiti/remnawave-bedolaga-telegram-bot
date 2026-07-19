@@ -1254,8 +1254,14 @@ def get_subscription_keyboard(
                         )
                     )
                 else:
-                    # Для суточных тарифов переходим на список тарифов, для обычных - мгновенное переключение
-                    tariff_callback = 'tariff_switch' if is_daily_tariff else 'instant_switch'
+                    # Для суточных тарифов переходим на список тарифов, для обычных - мгновенное переключение.
+                    # Бесплатный (0₽) тариф — тоже через список с выбором периода: prorated
+                    # instant-switch посчитал бы доплату за весь остаток бесплатных дней
+                    # и перенёс бы их на платный тариф вопреки TARIFF_SWITCH_RESET_FREE_DAYS.
+                    is_free_tariff = bool(
+                        tariff and getattr(tariff, 'is_free', False) and settings.TARIFF_SWITCH_RESET_FREE_DAYS
+                    )
+                    tariff_callback = 'tariff_switch' if (is_daily_tariff or is_free_tariff) else 'instant_switch'
                     settings_row.append(
                         InlineKeyboardButton(
                             text=texts.t('CHANGE_TARIFF_BUTTON', '📦 Тариф'), callback_data=tariff_callback
@@ -2176,6 +2182,42 @@ def get_payment_methods_keyboard(amount_kopeks: int, language: str = DEFAULT_LAN
                 InlineKeyboardButton(
                     text=texts.t('PAYMENT_LAVA', f'🌋 {lava_name}'),
                     callback_data=_build_callback('lava'),
+                )
+            ]
+        )
+        has_direct_payment_methods = True
+
+    if settings.is_cispay_card_enabled():
+        cispay_card_name = settings.get_cispay_card_display_name()
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text=texts.t('PAYMENT_CISPAY_CARD', f'💳 {cispay_card_name}'),
+                    callback_data=_build_callback('cispay_card'),
+                )
+            ]
+        )
+        has_direct_payment_methods = True
+
+    if settings.is_cispay_sbp_enabled():
+        cispay_sbp_name = settings.get_cispay_sbp_display_name()
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text=texts.t('PAYMENT_CISPAY_SBP', f'📱 {cispay_sbp_name}'),
+                    callback_data=_build_callback('cispay_sbp'),
+                )
+            ]
+        )
+        has_direct_payment_methods = True
+
+    if settings.is_cispay_enabled() and not settings.is_cispay_card_enabled() and not settings.is_cispay_sbp_enabled():
+        cispay_name = settings.get_cispay_display_name()
+        keyboard.append(
+            [
+                InlineKeyboardButton(
+                    text=texts.t('PAYMENT_CISPAY', f'💳 {cispay_name}'),
+                    callback_data=_build_callback('cispay'),
                 )
             ]
         )

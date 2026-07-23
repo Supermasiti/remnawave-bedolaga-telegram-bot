@@ -636,7 +636,7 @@ async def handle_edit_value(message: types.Message, db_user: User, state: FSMCon
 
             await update_promocode(db, promo, balance_bonus_kopeks=value * 100)
             await message.answer(
-                f'✅ Сумма бонуса изменена на {value}₽',
+                f'✅ Сумма бонуса изменена на ${value}',
                 reply_markup=types.InlineKeyboardMarkup(
                     inline_keyboard=[
                         [types.InlineKeyboardButton(text='🎫 К промокоду', callback_data=f'promo_manage_{promo_id}')]

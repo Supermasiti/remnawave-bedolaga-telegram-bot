@@ -23,7 +23,7 @@ def _combo_promocode(**overrides) -> SimpleNamespace:
         id=42,
         code='COMBO50',
         type=PromoCodeType.BALANCE_AND_DAYS.value,
-        balance_bonus_kopeks=50000,  # 500 ₽
+        balance_bonus_kopeks=50000,  # $500
         subscription_days=7,
         tariff_id=None,
         promo_group_id=None,
@@ -73,7 +73,7 @@ async def test_combo_applies_both_days_and_balance(monkeypatch):
     add_balance.assert_awaited_once()
     assert add_balance.await_args.args[2] == 50000  # копейки из промокода
     assert 'продлена на 7' in description
-    assert '500' in description  # 500₽ в тексте эффекта
+    assert '500' in description  # $500 в тексте эффекта
 
 
 async def test_combo_days_failure_prevents_balance_credit(monkeypatch):

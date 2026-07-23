@@ -113,19 +113,19 @@ async def _create_overpay_payment_and_respond(
         response_text = texts.t(
             'OVERPAY_INT_PAYMENT_CREATED',
             '\U0001f30d <b>Оплата через {name}</b>\n\n'
-            'Сумма: <b>{amount}₽</b> (≈ <b>{amount_eur}€</b>)\n\n'
+            'Сумма: <b>${amount}</b> (≈ <b>{amount_eur}€</b>)\n\n'
             'Оплата проходит в евро, баланс будет пополнен в рублях.\n'
             'Нажмите кнопку ниже для оплаты.',
         ).format(name=display_name, amount=f'{amount_rub:.2f}', amount_eur=f'{amount_eur:.2f}')
     else:
         pay_button_text = texts.t(
             'PAY_BUTTON',
-            '\U0001f4b3 Оплатить {amount}₽',
+            '\U0001f4b3 Оплатить ${amount}',
         ).format(amount=f'{amount_rub:.0f}')
         response_text = texts.t(
             'OVERPAY_PAYMENT_CREATED',
             '\U0001f4b3 <b>Оплата через {name}</b>\n\n'
-            'Сумма: <b>{amount}₽</b>\n\n'
+            'Сумма: <b>${amount}</b>\n\n'
             'Нажмите кнопку ниже для оплаты.\n'
             'После успешной оплаты баланс будет пополнен автоматически.',
         ).format(name=display_name, amount=f'{amount_rub:.2f}')
@@ -186,7 +186,7 @@ async def process_overpay_payment_amount(
         await message.answer(
             texts.t(
                 'PAYMENT_AMOUNT_TOO_LOW',
-                'Минимальная сумма пополнения: {min_amount}₽',
+                'Минимальная сумма пополнения: ${min_amount}',
             ).format(min_amount=min_amount // 100),
             reply_markup=get_back_keyboard(db_user.language),
             parse_mode='HTML',
@@ -197,7 +197,7 @@ async def process_overpay_payment_amount(
         await message.answer(
             texts.t(
                 'PAYMENT_AMOUNT_TOO_HIGH',
-                'Максимальная сумма пополнения: {max_amount}₽',
+                'Максимальная сумма пополнения: ${max_amount}',
             ).format(max_amount=max_amount // 100),
             reply_markup=get_back_keyboard(db_user.language),
             parse_mode='HTML',
@@ -224,7 +224,7 @@ async def process_overpay_payment_amount(
             await message.answer(
                 texts.t(
                     'OVERPAY_INT_AMOUNT_TOO_LOW',
-                    'Минимальная сумма для оплаты в евро: {min_eur}€ (≈ {min_rub}₽)',
+                    'Минимальная сумма для оплаты в евро: {min_eur}€ (≈ ${min_rub})',
                 ).format(min_eur=f'{settings.OVERPAY_INT_MIN_EUR:g}', min_rub=min_rub),
                 reply_markup=get_back_keyboard(db_user.language),
                 parse_mode='HTML',
@@ -334,9 +334,9 @@ async def _start_overpay_option_topup_impl(
             'OVERPAY_INT_ENTER_AMOUNT',
             '\U0001f30d <b>Пополнение через {name} (EUR)</b>\n\n'
             'Введите сумму пополнения в рублях.\n'
-            'Оплата проходит в евро по курсу {rate}₽ за 1€, баланс пополняется в рублях.\n\n'
-            'Минимум: {min_amount}₽\n'
-            'Максимум: {max_amount}₽',
+            'Оплата проходит в евро по курсу ${rate} за 1€, баланс пополняется в рублях.\n\n'
+            'Минимум: ${min_amount}\n'
+            'Максимум: ${max_amount}',
         ).format(
             name=display_name,
             rate=f'{settings.OVERPAY_RUB_PER_EUR:.2f}',
@@ -348,8 +348,8 @@ async def _start_overpay_option_topup_impl(
             'OVERPAY_ENTER_AMOUNT',
             '\U0001f4b3 <b>Пополнение через {name}</b>\n\n'
             'Введите сумму пополнения в рублях.\n\n'
-            'Минимум: {min_amount}₽\n'
-            'Максимум: {max_amount}₽',
+            'Минимум: ${min_amount}\n'
+            'Максимум: ${max_amount}',
         ).format(
             name=display_name,
             min_amount=min_amount,

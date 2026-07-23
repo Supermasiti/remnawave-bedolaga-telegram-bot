@@ -376,7 +376,7 @@ async def get_purchase_options(
                 subscription_status = subscription.actual_status
                 subscription_is_expired = subscription_status == 'expired'
 
-            # Free (0₽) source tariff: switching is blocked (free_tariff_cannot_switch,
+            # Free ($0) source tariff: switching is blocked (free_tariff_cannot_switch,
             # TARIFF_SWITCH_RESET_FREE_DAYS) — frontend must offer the purchase flow
             # instead of the prorated switch.
             subscription_on_free_tariff = False

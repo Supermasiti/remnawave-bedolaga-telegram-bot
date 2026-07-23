@@ -218,7 +218,7 @@ class Settings(BaseSettings):
     TARIFF_SWITCH_DOWNGRADE_ENABLED: bool = True
     # Мастер-переключатель сброса бесплатного периода при переходе на платный.
     # При True остаток НЕ переносится ни для триала («бесплатная версия» бота),
-    # ни для 0₽-тарифа — даже если TRIAL_ADD_REMAINING_DAYS_TO_PAID=true (сброс
+    # ни для $0-тарифа — даже если TRIAL_ADD_REMAINING_DAYS_TO_PAID=true (сброс
     # перебивает перенос). Платные подписки переносят дни как обычно. Выключите,
     # чтобы разрешить перенос (тогда для триалов действует TRIAL_ADD_REMAINING_DAYS_TO_PAID).
     TARIFF_SWITCH_RESET_FREE_DAYS: bool = True
@@ -321,7 +321,7 @@ class Settings(BaseSettings):
 
     # Настройки вывода реферального баланса
     REFERRAL_WITHDRAWAL_ENABLED: bool = False  # Включить возможность вывода
-    REFERRAL_WITHDRAWAL_MIN_AMOUNT_KOPEKS: int = 100000  # Мин. сумма вывода (1000₽)
+    REFERRAL_WITHDRAWAL_MIN_AMOUNT_KOPEKS: int = 100000  # Мин. сумма вывода ($1000)
     REFERRAL_WITHDRAWAL_COOLDOWN_DAYS: int = 30  # Частота запросов на вывод
     REFERRAL_WITHDRAWAL_ONLY_REFERRAL_BALANCE: bool = True  # Только реф. баланс (False = реф + свой)
     REFERRAL_WITHDRAWAL_REQUISITES_TEXT: str = ''  # Текст-подсказка для реквизитов при выводе
@@ -329,7 +329,7 @@ class Settings(BaseSettings):
     REFERRAL_PARTNER_SECTION_VISIBLE: bool = True  # Показывать раздел партнёрки в кабинете
 
     # Настройки анализа на подозрительность
-    REFERRAL_WITHDRAWAL_SUSPICIOUS_MIN_DEPOSIT_KOPEKS: int = 50000  # Мин. сумма от 1 реферала (500₽)
+    REFERRAL_WITHDRAWAL_SUSPICIOUS_MIN_DEPOSIT_KOPEKS: int = 50000  # Мин. сумма от 1 реферала ($500)
     REFERRAL_WITHDRAWAL_SUSPICIOUS_MAX_DEPOSITS_PER_MONTH: int = 10  # Макс. пополнений от 1 реферала/мес
     REFERRAL_WITHDRAWAL_SUSPICIOUS_NO_PURCHASES_RATIO: float = 2.0  # Пополнил в X раз больше чем потратил
 
@@ -442,11 +442,11 @@ class Settings(BaseSettings):
     MAINTENANCE_MESSAGE: str = '🔧 Maintenance in progress. The service is temporarily unavailable. Please try again later.'
 
     TELEGRAM_STARS_ENABLED: bool = True
-    # ₽ per 1 ⭐. Matches Telegram's own cash-out rate (~0.95–1.0 ₽/⭐ as of
+    # $ per 1 ⭐. Matches Telegram's own cash-out rate (~0.95–$1.0/⭐ as of
     # 2026-05) so an integer-ruble top-up round-trips losslessly:
-    # rubles_to_stars(150) → 150 ⭐ → stars_to_rubles(150) → 150 ₽.
+    # rubles_to_stars(150) → 150 ⭐ → stars_to_rubles(150) → $150.
     # The previous 1.3 default undervalued stars by ~30% (bot quoted 115 ⭐
-    # for a 150 ₽ top-up, credited only 149.50 ₽ back — a built-in
+    # for a $150 top-up, credited only $149.50 back — a built-in
     # rounding loss visible on every payment).
     TELEGRAM_STARS_RATE_RUB: float = 1.0
     TELEGRAM_STARS_DISPLAY_NAME: str = 'Telegram Stars'
@@ -738,8 +738,8 @@ class Settings(BaseSettings):
     RIOPAY_WEBHOOK_SECRET: str | None = None  # HMAC-SHA512 ключ для вебхуков (по умолчанию = API_TOKEN)
     RIOPAY_DISPLAY_NAME: str = 'RioPay'
     RIOPAY_CURRENCY: str = 'RUB'
-    RIOPAY_MIN_AMOUNT_KOPEKS: int = 10000  # 100₽
-    RIOPAY_MAX_AMOUNT_KOPEKS: int = 100000000  # 1 000 000₽
+    RIOPAY_MIN_AMOUNT_KOPEKS: int = 10000  # $100
+    RIOPAY_MAX_AMOUNT_KOPEKS: int = 100000000  # $1 000 000
     RIOPAY_WEBHOOK_PATH: str = '/riopay-webhook'
     RIOPAY_SUCCESS_URL: str | None = None
     RIOPAY_FAIL_URL: str | None = None
@@ -750,8 +750,8 @@ class Settings(BaseSettings):
     SEVERPAY_TOKEN: str | None = None  # Secret token for HMAC-SHA256
     SEVERPAY_DISPLAY_NAME: str = 'SeverPay'
     SEVERPAY_CURRENCY: str = 'RUB'
-    SEVERPAY_MIN_AMOUNT_KOPEKS: int = 10000  # 100₽
-    SEVERPAY_MAX_AMOUNT_KOPEKS: int = 10000000  # 100 000₽
+    SEVERPAY_MIN_AMOUNT_KOPEKS: int = 10000  # $100
+    SEVERPAY_MAX_AMOUNT_KOPEKS: int = 10000000  # $100 000
     SEVERPAY_WEBHOOK_PATH: str = '/severpay-webhook'
     SEVERPAY_RETURN_URL: str | None = None
     SEVERPAY_LIFETIME: int = 1440  # minutes, 30-4320
@@ -782,8 +782,8 @@ class Settings(BaseSettings):
     PAYPEAR_SECRET_KEY: str | None = None
     PAYPEAR_DISPLAY_NAME: str = 'PayPear'
     PAYPEAR_CURRENCY: str = 'RUB'
-    PAYPEAR_MIN_AMOUNT_KOPEKS: int = 10000  # 100₽
-    PAYPEAR_MAX_AMOUNT_KOPEKS: int = 10000000  # 100 000₽
+    PAYPEAR_MIN_AMOUNT_KOPEKS: int = 10000  # $100
+    PAYPEAR_MAX_AMOUNT_KOPEKS: int = 10000000  # $100 000
     PAYPEAR_WEBHOOK_PATH: str = '/paypear-webhook'
     PAYPEAR_RETURN_URL: str | None = None
     PAYPEAR_PAYMENT_METHOD: str = 'sbp'  # bank_card, sbp, sberpay, tpay
@@ -794,8 +794,8 @@ class Settings(BaseSettings):
     ROLLYPAY_SIGNING_SECRET: str | None = None  # HMAC webhook verification
     ROLLYPAY_DISPLAY_NAME: str = 'RollyPay'
     ROLLYPAY_CURRENCY: str = 'RUB'
-    ROLLYPAY_MIN_AMOUNT_KOPEKS: int = 10000  # 100₽
-    ROLLYPAY_MAX_AMOUNT_KOPEKS: int = 10000000  # 100 000₽
+    ROLLYPAY_MIN_AMOUNT_KOPEKS: int = 10000  # $100
+    ROLLYPAY_MAX_AMOUNT_KOPEKS: int = 10000000  # $100 000
     ROLLYPAY_WEBHOOK_PATH: str = '/rollypay-webhook'
     ROLLYPAY_RETURN_URL: str | None = None
 
@@ -831,8 +831,8 @@ class Settings(BaseSettings):
     AURAPAY_SECRET_KEY: str | None = None  # Secret key #2 for webhook HMAC
     AURAPAY_DISPLAY_NAME: str = 'AuraPay'
     AURAPAY_CURRENCY: str = 'RUB'
-    AURAPAY_MIN_AMOUNT_KOPEKS: int = 10000  # 100₽
-    AURAPAY_MAX_AMOUNT_KOPEKS: int = 10000000  # 100 000₽
+    AURAPAY_MIN_AMOUNT_KOPEKS: int = 10000  # $100
+    AURAPAY_MAX_AMOUNT_KOPEKS: int = 10000000  # $100 000
     AURAPAY_WEBHOOK_PATH: str = '/aurapay-webhook'
     AURAPAY_RETURN_URL: str | None = None
     AURAPAY_PAYMENT_LIFETIME_MINUTES: int = 60
@@ -851,8 +851,8 @@ class Settings(BaseSettings):
     ANTILOPAY_PRODUCT_NAME: str = 'VPN подписка'
     ANTILOPAY_PRODUCT_TYPE: str = 'services'
     ANTILOPAY_CURRENCY: str = 'RUB'
-    ANTILOPAY_MIN_AMOUNT_KOPEKS: int = 10000  # 100₽
-    ANTILOPAY_MAX_AMOUNT_KOPEKS: int = 10000000  # 100 000₽
+    ANTILOPAY_MIN_AMOUNT_KOPEKS: int = 10000  # $100
+    ANTILOPAY_MAX_AMOUNT_KOPEKS: int = 10000000  # $100 000
     ANTILOPAY_WEBHOOK_PATH: str = '/antilopay-webhook'
     ANTILOPAY_RETURN_URL: str | None = None
     ANTILOPAY_PAYMENT_LIFETIME_MINUTES: int = 60
@@ -880,8 +880,8 @@ class Settings(BaseSettings):
     JUPITER_METHOD_DESCRIPTION: str = 'SBP'
     JUPITER_DISPLAY_NAME: str = 'Jupiter'
     JUPITER_CURRENCY: str = 'RUB'
-    JUPITER_MIN_AMOUNT_KOPEKS: int = 10000  # 100₽
-    JUPITER_MAX_AMOUNT_KOPEKS: int = 10000000  # 100 000₽
+    JUPITER_MIN_AMOUNT_KOPEKS: int = 10000  # $100
+    JUPITER_MAX_AMOUNT_KOPEKS: int = 10000000  # $100 000
     JUPITER_WEBHOOK_PATH: str = '/jupiter-webhook'
     JUPITER_RETURN_URL: str | None = None
     JUPITER_PAYMENT_LIFETIME_MINUTES: int = 60
@@ -899,8 +899,8 @@ class Settings(BaseSettings):
     DONUT_METHOD_ID: str | None = None
     DONUT_DISPLAY_NAME: str = 'Donut'
     DONUT_CURRENCY: str = 'RUB'
-    DONUT_MIN_AMOUNT_KOPEKS: int = 10000  # 100₽
-    DONUT_MAX_AMOUNT_KOPEKS: int = 10000000  # 100 000₽
+    DONUT_MIN_AMOUNT_KOPEKS: int = 10000  # $100
+    DONUT_MAX_AMOUNT_KOPEKS: int = 10000000  # $100 000
     DONUT_WEBHOOK_PATH: str = '/donut-webhook'
     DONUT_RETURN_URL: str | None = None
     DONUT_PAYMENT_LIFETIME_MINUTES: int = 60
@@ -919,8 +919,8 @@ class Settings(BaseSettings):
     CISPAY_BASE_URL: str = 'https://api.cispay.app'
     CISPAY_DISPLAY_NAME: str = 'CisPay'
     CISPAY_CURRENCY: str = 'RUB'
-    CISPAY_MIN_AMOUNT_KOPEKS: int = 10000  # 100₽
-    CISPAY_MAX_AMOUNT_KOPEKS: int = 10000000  # 100 000₽
+    CISPAY_MIN_AMOUNT_KOPEKS: int = 10000  # $100
+    CISPAY_MAX_AMOUNT_KOPEKS: int = 10000000  # $100 000
     CISPAY_WEBHOOK_PATH: str = '/cispay-webhook'
     # Счёт cisPay живёт 30 минут, после чего переходит в EXPIRED на стороне провайдера
     CISPAY_PAYMENT_LIFETIME_MINUTES: int = 30
@@ -938,8 +938,8 @@ class Settings(BaseSettings):
     LAVA_WEBHOOK_SECRET: str | None = None  # secret_key_2 — для проверки подписи webhook
     LAVA_DISPLAY_NAME: str = 'Lava'
     LAVA_CURRENCY: str = 'RUB'
-    LAVA_MIN_AMOUNT_KOPEKS: int = 10000  # 100₽
-    LAVA_MAX_AMOUNT_KOPEKS: int = 10000000  # 100 000₽
+    LAVA_MIN_AMOUNT_KOPEKS: int = 10000  # $100
+    LAVA_MAX_AMOUNT_KOPEKS: int = 10000000  # $100 000
     LAVA_WEBHOOK_PATH: str = '/lava-webhook'
     LAVA_RETURN_URL: str | None = None
     LAVA_PAYMENT_LIFETIME_MINUTES: int = 60  # макс 7200 минут (5 дней)
@@ -955,8 +955,8 @@ class Settings(BaseSettings):
     ETOPLATEZHI_SECRET_KEY: str | None = None
     ETOPLATEZHI_DISPLAY_NAME: str = 'Etoplatezhi'
     ETOPLATEZHI_CURRENCY: str = 'RUB'
-    ETOPLATEZHI_MIN_AMOUNT_KOPEKS: int = 10000  # 100₽
-    ETOPLATEZHI_MAX_AMOUNT_KOPEKS: int = 10000000  # 100 000₽
+    ETOPLATEZHI_MIN_AMOUNT_KOPEKS: int = 10000  # $100
+    ETOPLATEZHI_MAX_AMOUNT_KOPEKS: int = 10000000  # $100 000
     ETOPLATEZHI_WEBHOOK_PATH: str = '/etoplatezhi-webhook'
     ETOPLATEZHI_RETURN_URL: str | None = None
     ETOPLATEZHI_PAYMENT_LIFETIME_MINUTES: int = 60
@@ -1942,7 +1942,7 @@ class Settings(BaseSettings):
                          Если None, использует настройку PRICE_ROUNDING_ENABLED.
 
         Returns:
-            Отформатированная строка цены (например, "150 ₽")
+            Отформатированная строка цены (например, "$150")
         """
         # Используем настройку если не передано явно
         should_round = round_kopeks if round_kopeks is not None else self.PRICE_ROUNDING_ENABLED

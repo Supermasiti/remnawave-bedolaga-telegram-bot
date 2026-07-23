@@ -126,7 +126,7 @@ async def create_promo_group(
     await db.refresh(promo_group)
 
     logger.info(
-        "Создана промогруппа '%s' (default=%s) с скидками (servers=%s%%, traffic=%s%%, devices=%s%%, periods=%s) и порогом автоприсвоения %s₽, скидки на доп. услуги: %s",
+        "Создана промогруппа '%s' (default=%s) с скидками (servers=%s%%, traffic=%s%%, devices=%s%%, periods=%s) и порогом автоприсвоения %s$, скидки на доп. услуги: %s",
         promo_group.name,
         promo_group.is_default,
         promo_group.server_discount_percent,

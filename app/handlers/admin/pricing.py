@@ -857,7 +857,7 @@ async def _render_message_by_id(
 
 
 def _parse_price_input(text: str) -> int:
-    normalized = text.replace('₽', '').replace('р', '').replace('RUB', '')
+    normalized = text.replace('$', '').replace('р', '').replace('RUB', '')
     normalized = normalized.replace(' ', '').replace(',', '.').strip()
     if not normalized:
         raise ValueError('empty')

@@ -1,9 +1,9 @@
-"""Regression: «Мгновенная смена тарифа» с бесплатного (0₽) тарифа.
+"""Regression: «Мгновенная смена тарифа» с бесплатного ($0) тарифа.
 
 Prorated instant-switch считает доплату как (ставка нового тарифа − ставка
 текущего) × остаток дней. Для бесплатного тарифа, где у пользователя могут
 копиться сотни дней (наспамленных или подаренных), это даёт абсурдные суммы
-(полная цена нового тарифа за весь остаток, напр. +2580₽ при цене 200₽/мес)
+(полная цена нового тарифа за весь остаток, напр. +$2580 при цене $200/мес)
 и переносит бесплатные дни на платный тариф вопреки
 TARIFF_SWITCH_RESET_FREE_DAYS (см. extend_subscription / test_free_tariff_day_reset).
 
@@ -186,7 +186,7 @@ async def test_instant_preview_redirects_free_source(monkeypatch):
 
 async def test_instant_confirm_refuses_free_source_and_never_charges(monkeypatch):
     """Ядро фикса: подтверждение instant-switch с бесплатного тарифа не должно
-    списывать prorated-доплату (2580₽ за 387 дн. в баге со скриншота)."""
+    списывать prorated-доплату ($2580 за 387 дн. в баге со скриншота)."""
     import app.database.crud.user as user_crud
 
     switch_list = _patch_common(monkeypatch)

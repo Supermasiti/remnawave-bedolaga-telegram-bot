@@ -969,8 +969,8 @@ class MiniAppSubscriptionPurchaseService:
             'breakdown': [{'label': item['label'], 'value': item['value']} for item in breakdown],
             'balance_kopeks': context.balance_kopeks,
             'balanceKopeks': context.balance_kopeks,
-            # round_kopeks=False — без него при FX-rounding нехватке (<1₽) юзер видит
-            # "Баланс 150 ₽, не хватает 0 ₽" и не понимает что мешает покупке.
+            # round_kopeks=False — без него при FX-rounding нехватке (<$1) юзер видит
+            # "Баланс $150, не хватает $0" и не понимает что мешает покупке.
             'balance_label': texts.format_price(context.balance_kopeks, round_kopeks=False),
             'balanceLabel': texts.format_price(context.balance_kopeks, round_kopeks=False),
             'missing_amount_kopeks': missing,

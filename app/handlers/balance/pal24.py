@@ -297,7 +297,7 @@ async def start_pal24_payment(
         'PAL24_TOPUP_PROMPT',
         (
             f'🏦 <b>Оплата через PayPalych ({payment_methods_text})</b>\n\n'
-            'Введите сумму для пополнения от 100 до 1 000 000 ₽.\n'
+            'Введите сумму для пополнения от 100 до $1 000 000.\n'
             f'Оплата проходит через PayPalych ({payment_methods_text}).'
         ),
     )
@@ -354,7 +354,7 @@ async def process_pal24_payment_amount(
     if amount_kopeks < settings.PAL24_MIN_AMOUNT_KOPEKS:
         min_rubles = settings.PAL24_MIN_AMOUNT_KOPEKS / 100
         await message.answer(
-            f'❌ Минимальная сумма для оплаты через PayPalych: {min_rubles:.0f} ₽',
+            f'❌ Минимальная сумма для оплаты через PayPalych: ${min_rubles:.0f}',
             reply_markup=get_back_keyboard(db_user.language),
         )
         return
@@ -362,7 +362,7 @@ async def process_pal24_payment_amount(
     if amount_kopeks > settings.PAL24_MAX_AMOUNT_KOPEKS:
         max_rubles = settings.PAL24_MAX_AMOUNT_KOPEKS / 100
         await message.answer(
-            f'❌ Максимальная сумма для оплаты через PayPalych: {max_rubles:,.0f} ₽'.replace(',', ' '),
+            f'❌ Максимальная сумма для оплаты через PayPalych: ${max_rubles:,.0f}'.replace(',', ' '),
             reply_markup=get_back_keyboard(db_user.language),
         )
         return

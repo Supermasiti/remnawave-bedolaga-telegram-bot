@@ -29,7 +29,6 @@ from app.services.system_settings_service import (
 )
 from app.services.tribute_service import TributeService
 from app.states import BotConfigStates
-from app.utils.currency_converter import currency_converter
 from app.utils.decorators import admin_required, error_handler
 
 

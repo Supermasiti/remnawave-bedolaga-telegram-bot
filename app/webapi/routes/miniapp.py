@@ -91,7 +91,6 @@ from app.services.trial_activation_service import (
     rollback_trial_subscription_activation,
 )
 from app.services.tribute_service import TributeService
-from app.utils.currency_converter import currency_converter
 from app.utils.pricing_utils import (
     apply_percentage_discount,
     calculate_prorated_price,
@@ -6323,7 +6322,7 @@ async def _build_tariff_model(
     if (
         current_tariff
         and current_tariff.id != tariff.id
-        # Для бесплатного (0₽) источника prorated-стоимость не показываем:
+        # Для бесплатного ($0) источника prorated-стоимость не показываем:
         # переключение с него заблокировано (free_tariff_cannot_switch),
         # пользователь идёт через обычную покупку по ценам периодов.
         and not (settings.TARIFF_SWITCH_RESET_FREE_DAYS and current_tariff.is_free)
@@ -6816,7 +6815,7 @@ async def preview_tariff_switch_endpoint(
         )
 
     if settings.TARIFF_SWITCH_RESET_FREE_DAYS and current_tariff is not None and current_tariff.is_free:
-        # A free (0₽) tariff has no paid value to prorate from — the prorated switch
+        # A free ($0) tariff has no paid value to prorate from — the prorated switch
         # would quote the full new-tariff rate for the whole (often huge) free
         # remainder AND carry those free days onto a paid tariff, violating
         # TARIFF_SWITCH_RESET_FREE_DAYS. Route to the purchase flow instead.
@@ -6866,8 +6865,8 @@ async def preview_tariff_switch_endpoint(
         upgrade_cost_label=settings.format_price(upgrade_cost) if upgrade_cost > 0 else 'Free',
         balance_kopeks=balance,
         # Когда показываем missing_amount_label с копейками (round_kopeks=False),
-        # balance_label тоже должен быть с копейками — иначе пары "Баланс 150 ₽,
-        # не хватает 0.40 ₽" выглядит противоречиво ("150 ₽ это > 150 ₽? зачем не хватает?").
+        # balance_label тоже должен быть с копейками — иначе пары "Баланс $150,
+        # не хватает $0.40" выглядит противоречиво ("$150 это > $150? зачем не хватает?").
         balance_label=settings.format_price(balance, round_kopeks=False),
         has_enough_balance=has_enough,
         missing_amount_kopeks=missing,
@@ -6946,7 +6945,7 @@ async def switch_tariff_endpoint(
         )
 
     if settings.TARIFF_SWITCH_RESET_FREE_DAYS and current_tariff is not None and current_tariff.is_free:
-        # Same guard as in preview: free (0₽) source tariffs must go through the
+        # Same guard as in preview: free ($0) source tariffs must go through the
         # purchase flow — prorated switching would charge for and carry the whole
         # free remainder (TARIFF_SWITCH_RESET_FREE_DAYS).
         raise HTTPException(

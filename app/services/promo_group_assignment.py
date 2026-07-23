@@ -36,7 +36,7 @@ async def _notify_admins_about_auto_assignment(
         reason = (
             f'Автоназначение за траты {settings.format_price(total_spent_kopeks)}'
             if hasattr(settings, 'format_price')
-            else f'Автоназначение за траты {total_spent_kopeks / 100:.2f}₽'
+            else f'Автоназначение за траты ${total_spent_kopeks / 100:.2f}'
         )
         await notification_service.send_user_promo_group_change_notification(
             db,

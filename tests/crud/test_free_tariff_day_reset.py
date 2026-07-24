@@ -1,4 +1,4 @@
-"""Fix (#1): switching from a free (0₽) tariff to a paid one must NOT carry over the
+"""Fix (#1): switching from a free ($0) tariff to a paid one must NOT carry over the
 days the user spammed on the free tier. Paid→paid switches still preserve days.
 
 The decision lives in extend_subscription via two pure-ish helpers:

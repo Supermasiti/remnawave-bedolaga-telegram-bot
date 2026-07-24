@@ -205,7 +205,7 @@ def format_tariffs_list_text(
                 from_label = texts.t('FROM_PRICE_PREFIX', 'from')
                 price_text = f'{from_label} {format_price_kopeks(min_price, compact=True)}{discount_icon}'
 
-        # Компактный формат: Название — 250 ГБ / 10 📱 от 179₽🔥
+        # Компактный формат: Название — 250 ГБ / 10 📱 от $179🔥
         purchased_mark = ' ✅' if tariff.id in purchased_tariff_ids else ''
         lines.append(
             f'<b>{html.escape(tariff.name)}</b>{purchased_mark} — {traffic} / {tariff.device_limit} 📱 {price_text}'
@@ -4653,7 +4653,7 @@ async def confirm_instant_switch(
         await callback.answer(texts.t('CURRENT_TARIFF_NOT_FOUND_ALERT', 'Current plan not found'), show_alert=True)
         return
 
-    # Бесплатный (0₽) исходный тариф: prorated-списание запрещено — переключение
+    # Бесплатный ($0) исходный тариф: prorated-списание запрещено — переключение
     # идёт только через флоу с выбором периода (полная цена, сброс бесплатных дней).
     if settings.TARIFF_SWITCH_RESET_FREE_DAYS and current_tariff.is_free:
         await show_tariff_switch_list(callback, db_user, db, state)

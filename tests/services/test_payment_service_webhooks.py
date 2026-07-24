@@ -254,7 +254,7 @@ async def test_process_mulenpay_callback_success(monkeypatch: pytest.MonkeyPatch
         return user
 
     monkeypatch.setattr(payment_service_module, 'get_user_by_id', fake_get_user)
-    monkeypatch.setattr(type(settings), 'format_price', lambda self, amount: f'{amount / 100:.2f}₽', raising=False)
+    monkeypatch.setattr(type(settings), 'format_price', lambda self, amount: f'${amount / 100:.2f}', raising=False)
 
     async def fake_lock_user(db, locked_user):
         return locked_user
@@ -413,8 +413,7 @@ async def test_process_cryptobot_webhook_success(monkeypatch: pytest.MonkeyPatch
             return None
 
     monkeypatch.setattr(cryptobot_module, 'AsyncSessionLocal', DummyAsyncSession)
-    monkeypatch.setattr(payment_service_module.currency_converter, 'usd_to_rub', AsyncMock(return_value=140.0))
-    monkeypatch.setattr(type(settings), 'format_price', lambda self, amount: f'{amount / 100:.2f}₽', raising=False)
+    monkeypatch.setattr(type(settings), 'format_price', lambda self, amount: f'${amount / 100:.2f}', raising=False)
     service.build_topup_success_keyboard = AsyncMock(return_value=None)
 
     payload = {
@@ -539,7 +538,7 @@ async def test_process_heleket_webhook_success(monkeypatch: pytest.MonkeyPatch) 
     monkeypatch.setattr('app.database.crud.user.lock_user_for_update', AsyncMock(side_effect=lambda db, u: u))
     monkeypatch.setattr('app.database.crud.transaction.emit_transaction_side_effects', AsyncMock())
 
-    monkeypatch.setattr(type(settings), 'format_price', lambda self, amount: f'{amount / 100:.2f}₽', raising=False)
+    monkeypatch.setattr(type(settings), 'format_price', lambda self, amount: f'${amount / 100:.2f}', raising=False)
 
     referral_stub = SimpleNamespace(process_referral_topup=AsyncMock())
     monkeypatch.setitem(sys.modules, 'app.services.referral_service', referral_stub)
@@ -643,7 +642,7 @@ async def test_process_yookassa_webhook_success(monkeypatch: pytest.MonkeyPatch)
         return user
 
     monkeypatch.setattr(payment_service_module, 'get_user_by_id', fake_get_user)
-    monkeypatch.setattr(type(settings), 'format_price', lambda self, amount: f'{amount / 100:.2f}₽', raising=False)
+    monkeypatch.setattr(type(settings), 'format_price', lambda self, amount: f'${amount / 100:.2f}', raising=False)
 
     async def fake_lock_user(db, locked_user):
         return locked_user
@@ -756,7 +755,7 @@ async def test_process_yookassa_webhook_uses_remote_status(monkeypatch: pytest.M
         return user
 
     monkeypatch.setattr(payment_service_module, 'get_user_by_id', fake_get_user)
-    monkeypatch.setattr(type(settings), 'format_price', lambda self, amount: f'{amount / 100:.2f}₽', raising=False)
+    monkeypatch.setattr(type(settings), 'format_price', lambda self, amount: f'${amount / 100:.2f}', raising=False)
 
     async def fake_lock_user(db, locked_user):
         return locked_user
@@ -969,7 +968,7 @@ async def test_process_yookassa_webhook_restores_missing_payment(
         return user
 
     monkeypatch.setattr(payment_service_module, 'get_user_by_id', fake_get_user)
-    monkeypatch.setattr(type(settings), 'format_price', lambda self, amount: f'{amount / 100:.2f}₽', raising=False)
+    monkeypatch.setattr(type(settings), 'format_price', lambda self, amount: f'${amount / 100:.2f}', raising=False)
 
     # The restore path resolves the user via direct `from app.database.crud.user import ...`,
     # so patch those helpers (lookup + row lock) on the real module without replacing it
@@ -1194,7 +1193,7 @@ async def test_process_yookassa_webhook_skip_ip_credits_when_confirmed(monkeypat
         return user
 
     monkeypatch.setattr(payment_service_module, 'get_user_by_id', fake_get_user)
-    monkeypatch.setattr(type(settings), 'format_price', lambda self, amount: f'{amount / 100:.2f}₽', raising=False)
+    monkeypatch.setattr(type(settings), 'format_price', lambda self, amount: f'${amount / 100:.2f}', raising=False)
 
     async def fake_lock_user(db, locked_user):
         return locked_user
@@ -1301,7 +1300,7 @@ async def test_process_yookassa_webhook_default_mode_failopen_preserved(monkeypa
         return user
 
     monkeypatch.setattr(payment_service_module, 'get_user_by_id', fake_get_user)
-    monkeypatch.setattr(type(settings), 'format_price', lambda self, amount: f'{amount / 100:.2f}₽', raising=False)
+    monkeypatch.setattr(type(settings), 'format_price', lambda self, amount: f'${amount / 100:.2f}', raising=False)
 
     async def fake_lock_user(db, locked_user):
         return locked_user
@@ -1426,7 +1425,7 @@ async def test_process_pal24_callback_success(monkeypatch: pytest.MonkeyPatch) -
         return user
 
     monkeypatch.setattr(payment_service_module, 'get_user_by_id', fake_get_user)
-    monkeypatch.setattr(type(settings), 'format_price', lambda self, amount: f'{amount / 100:.2f}₽', raising=False)
+    monkeypatch.setattr(type(settings), 'format_price', lambda self, amount: f'${amount / 100:.2f}', raising=False)
 
     monkeypatch.setattr('app.database.crud.user.lock_user_for_update', AsyncMock(return_value=user))
     monkeypatch.setattr('app.database.crud.transaction.emit_transaction_side_effects', AsyncMock())
@@ -1590,7 +1589,7 @@ async def test_get_pal24_payment_status_auto_finalize(monkeypatch: pytest.Monkey
         return user
 
     monkeypatch.setattr(payment_service_module, 'get_user_by_id', fake_get_user)
-    monkeypatch.setattr(type(settings), 'format_price', lambda self, amount: f'{amount / 100:.2f}₽', raising=False)
+    monkeypatch.setattr(type(settings), 'format_price', lambda self, amount: f'${amount / 100:.2f}', raising=False)
 
     referral_stub = SimpleNamespace(
         process_referral_topup=AsyncMock(),

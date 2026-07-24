@@ -639,7 +639,10 @@ async def handle_successful_payment(message: types.Message, db: AsyncSession, st
         if success:
             rubles_amount = TelegramStarsService.calculate_rubles_from_stars(payment.total_amount)
             amount_kopeks = int((rubles_amount * Decimal(100)).to_integral_value(rounding=ROUND_HALF_UP))
-            amount_text = settings.format_price(amount_kopeks).replace(' ₽', '')
+            # format_price() already emits the configured currency symbol; the old
+            # `.replace(' $', '')` was a leftover from the rouble-based fork and is
+            # a no-op now that CURRENCY_SYMBOL is '$'.
+            amount_text = settings.format_price(amount_kopeks)
 
             keyboard = await payment_service.build_topup_success_keyboard(user)
 
@@ -650,7 +653,7 @@ async def handle_successful_payment(message: types.Message, db: AsyncSession, st
                     'STARS_PAYMENT_SUCCESS',
                     '🎉 <b>Платеж успешно обработан!</b>\n\n'
                     '⭐ Потрачено звезд: {stars_spent}\n'
-                    '💰 Зачислено на баланс: {amount} ₽\n'
+                    '💰 Зачислено на баланс: {amount}\n'
                     '🆔 ID транзакции: {transaction_id}...\n\n'
                     'Спасибо за пополнение! 🚀',
                 ).format(

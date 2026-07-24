@@ -2414,16 +2414,16 @@ async def process_balance_edit(message: types.Message, db_user: User, state: FSM
         amount_kopeks = int(amount_rubles * 100)
 
         if abs(amount_kopeks) > 10000000:
-            await message.answer('❌ Слишком большая сумма (максимум 100,000 ₽)')
+            await message.answer('❌ Слишком большая сумма (максимум $100,000)')
             return
 
         user_service = UserService()
 
         description = f'Изменение баланса администратором {db_user.full_name}'
         if amount_kopeks > 0:
-            description = f'Пополнение администратором: +{int(amount_rubles)} ₽'
+            description = f'Пополнение администратором: +${int(amount_rubles)}'
         else:
-            description = f'Списание администратором: {int(amount_rubles)} ₽'
+            description = f'Списание администратором: ${int(amount_rubles)}'
 
         success = await user_service.update_user_balance(
             db, user_id, amount_kopeks, description, db_user.id, bot=message.bot, admin_name=db_user.full_name
@@ -4925,7 +4925,7 @@ async def admin_buy_subscription_confirm(callback: types.CallbackQuery, db_user:
     if target_user.balance_kopeks < price_kopeks:
         missing_kopeks = price_kopeks - target_user.balance_kopeks
         # Без округления — иначе при не хватке <50 копеек все три суммы покажутся
-        # одинаковыми и админ увидит «не хватает 0 ₽».
+        # одинаковыми и админ увидит «не хватает $0».
         await callback.message.edit_text(
             f'❌ Недостаточно средств на балансе пользователя\n\n'
             f'💰 Баланс пользователя: {settings.format_price(target_user.balance_kopeks, round_kopeks=False)}\n'

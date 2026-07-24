@@ -166,7 +166,7 @@ class Pal24PaymentMixin:
         )
 
         logger.info(
-            'Создан Pal24 счет для пользователя (₽)',
+            'Создан Pal24 счет для пользователя ($)',
             bill_id=bill_id,
             user_id=user_id,
             amount_kopeks=amount_kopeks / 100,

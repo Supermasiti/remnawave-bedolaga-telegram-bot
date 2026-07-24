@@ -798,7 +798,7 @@ async def execute_change_devices(
         await callback.message.edit_text(success_text, reply_markup=get_back_keyboard(db_user.language))
 
         logger.info(
-            '✅ Пользователь изменил количество устройств с на доплата: ₽',
+            '✅ Пользователь изменил количество устройств с на доплата: $',
             telegram_id=db_user.telegram_id,
             current_devices=current_devices,
             new_devices_count=new_devices_count,
@@ -1577,7 +1577,7 @@ async def confirm_add_devices(callback: types.CallbackQuery, db_user: User, db: 
         period_label = format_period(charged_days, db_user.language)
 
     logger.info(
-        'Добавление устройств: ₽/мес × = ₽ (скидка ₽)',
+        'Добавление устройств: $/мес × = $ (скидка $)',
         devices_count=devices_count,
         discounted_per_month=discounted_per_month / 100,
         period_label=period_label,
@@ -1727,7 +1727,7 @@ async def confirm_add_devices(callback: types.CallbackQuery, db_user: User, db: 
         await callback.message.edit_text(success_text, reply_markup=get_back_keyboard(db_user.language))
 
         logger.info(
-            '✅ Пользователь добавил устройств за ₽',
+            '✅ Пользователь добавил устройств за $',
             telegram_id=db_user.telegram_id,
             devices_count=devices_count,
             price=price / 100,

@@ -948,7 +948,7 @@ async def debug_contest_transactions(
         lines.append(f'✅ <b>Транзакции в периоде</b> (первые {len(txs_in)}):')
         for tx in txs_in[:5]:  # Показываем максимум 5
             lines.append(
-                f'  • {tx["created_at"][:10]} | {tx["type"]} | {tx["amount_kopeks"] // 100}₽ | user={tx["user_id"]}'
+                f'  • {tx["created_at"][:10]} | {tx["type"]} | ${tx["amount_kopeks"] // 100} | user={tx["user_id"]}'
             )
         if len(txs_in) > 5:
             lines.append(f'  ... и ещё {len(txs_in) - 5}')
@@ -963,7 +963,7 @@ async def debug_contest_transactions(
         lines.append(f'❌ <b>Транзакции вне периода</b> (первые {len(txs_out)}):')
         for tx in txs_out[:5]:
             lines.append(
-                f'  • {tx["created_at"][:10]} | {tx["type"]} | {tx["amount_kopeks"] // 100}₽ | user={tx["user_id"]}'
+                f'  • {tx["created_at"][:10]} | {tx["type"]} | ${tx["amount_kopeks"] // 100} | user={tx["user_id"]}'
             )
         if len(txs_out) > 5:
             lines.append(f'  ... и ещё {len(txs_out) - 5}')

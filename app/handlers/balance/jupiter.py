@@ -92,7 +92,7 @@ async def _create_jupiter_payment_and_respond(
     payment_url = result.get('payment_url')
     display_name = settings.get_jupiter_display_name()
 
-    pay_button_text = texts.t('PAY_BUTTON', '\U0001f4b3 Оплатить {amount}₽').format(
+    pay_button_text = texts.t('PAY_BUTTON', '\U0001f4b3 Оплатить ${amount}').format(
         amount=f'{amount_rub:.0f}',
     )
 
@@ -113,7 +113,7 @@ async def _create_jupiter_payment_and_respond(
         response_text = texts.t(
             'JUPITER_PAYMENT_CREATED',
             '\U0001f4b3 <b>Оплата через {name}</b>\n\n'
-            'Сумма: <b>{amount}₽</b>\n\n'
+            'Сумма: <b>${amount}</b>\n\n'
             'Нажмите кнопку ниже, чтобы открыть QR-код СБП и оплатить.\n'
             'Баланс будет пополнен автоматически после подтверждения платежа.',
         ).format(name=display_name, amount=f'{amount_rub:.2f}')
@@ -121,7 +121,7 @@ async def _create_jupiter_payment_and_respond(
         response_text = texts.t(
             'JUPITER_PAYMENT_PROCESSING',
             '\U0001f4b3 <b>Платёж создан через {name}</b>\n\n'
-            'Сумма: <b>{amount}₽</b>\n\n'
+            'Сумма: <b>${amount}</b>\n\n'
             'Платёж в обработке. Реквизиты будут отправлены отдельным сообщением.',
         ).format(name=display_name, amount=f'{amount_rub:.2f}')
 
@@ -162,7 +162,7 @@ async def process_jupiter_payment_amount(
         await message.answer(
             texts.t(
                 'PAYMENT_AMOUNT_TOO_LOW',
-                'Минимальная сумма пополнения: {min_amount}₽',
+                'Минимальная сумма пополнения: ${min_amount}',
             ).format(min_amount=min_amount // 100),
             reply_markup=get_back_keyboard(db_user.language),
             parse_mode='HTML',
@@ -173,7 +173,7 @@ async def process_jupiter_payment_amount(
         await message.answer(
             texts.t(
                 'PAYMENT_AMOUNT_TOO_HIGH',
-                'Максимальная сумма пополнения: {max_amount}₽',
+                'Максимальная сумма пополнения: ${max_amount}',
             ).format(max_amount=max_amount // 100),
             reply_markup=get_back_keyboard(db_user.language),
             parse_mode='HTML',
@@ -233,8 +233,8 @@ async def _start_jupiter_topup_impl(
             'JUPITER_ENTER_AMOUNT',
             '\U0001f4b3 <b>Пополнение через {name}</b>\n\n'
             'Введите сумму пополнения в рублях.\n\n'
-            'Минимум: {min_amount}₽\n'
-            'Максимум: {max_amount}₽',
+            'Минимум: ${min_amount}\n'
+            'Максимум: ${max_amount}',
         ).format(
             name=display_name,
             min_amount=min_amount,

@@ -32,7 +32,7 @@ class TestBuildDynamicValues:
     def test_traffic_keys_also_generated(self, mock_settings: MagicMock) -> None:
         """Должны генерироваться ключи трафика и другие динамические значения."""
         # Настройка моков для traffic цен
-        mock_settings.format_price = lambda x: f'{x // 100} ₽'
+        mock_settings.format_price = lambda x: f'${x // 100}'
         mock_settings.PRICE_TRAFFIC_5GB = 10000
         mock_settings.PRICE_TRAFFIC_10GB = 20000
         mock_settings.PRICE_TRAFFIC_25GB = 30000

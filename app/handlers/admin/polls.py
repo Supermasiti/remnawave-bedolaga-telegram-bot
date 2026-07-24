@@ -39,7 +39,7 @@ def _safe_format_price(amount_kopeks: int) -> str:
         return settings.format_price(amount_kopeks)
     except Exception as error:  # pragma: no cover - defensive logging
         logger.error('Не удалось отформатировать сумму', amount_kopeks=amount_kopeks, error=error)
-        return f'{amount_kopeks / 100:.2f} ₽'
+        return f'${amount_kopeks / 100:.2f}'
 
 
 async def _safe_delete_message(message: types.Message) -> None:

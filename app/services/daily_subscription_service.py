@@ -404,8 +404,8 @@ class DailySubscriptionService:
 
         # Use unified notification delivery service
         context = {
-            'required_amount': f'{required_rubles:.2f} ₽',
-            'current_balance': f'{balance_rubles:.2f} ₽',
+            'required_amount': f'${required_rubles:.2f}',
+            'current_balance': f'${balance_rubles:.2f}',
         }
 
         try:

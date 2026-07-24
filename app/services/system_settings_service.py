@@ -659,7 +659,7 @@ class BotConfigurationService:
         'SIMPLE_SUBSCRIPTION_PERIOD_DAYS': {
             'description': 'Период подписки, который предлагается при быстрой покупке.',
             'format': 'Выберите один из доступных периодов.',
-            'example': '30 дн. — 990 ₽',
+            'example': '30 дн. — $990',
             'warning': 'Не забудьте настроить цену периода в блоке «Стоимость тарифов».',
         },
         'SIMPLE_SUBSCRIPTION_DEVICE_LIMIT': {

@@ -32,7 +32,7 @@ async def create_subscription_conversion(
     await db.refresh(conversion)
 
     logger.info(
-        '✅ Создана запись о конверсии для пользователя дн. → дн. за ₽',
+        '✅ Создана запись о конверсии для пользователя дн. → дн. за $',
         user_id=user_id,
         trial_duration_days=trial_duration_days,
         first_paid_period_days=first_paid_period_days,

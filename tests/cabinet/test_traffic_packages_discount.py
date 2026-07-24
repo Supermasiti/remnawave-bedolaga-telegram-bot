@@ -163,7 +163,7 @@ async def test_traffic_packages_apply_discount_in_tariff_mode(monkeypatch):
 
 @pytest.mark.asyncio
 async def test_traffic_packages_floor_displayed_price_at_one_ruble(monkeypatch):
-    """An extreme discount never displays below 1₽ — matching POST's max(100,...) floor."""
+    """An extreme discount never displays below $1 — matching POST's max(100,...) floor."""
     settings_cls = type(traffic_route.settings)
     monkeypatch.setattr(settings_cls, 'is_tariffs_mode', lambda self: False)
     monkeypatch.setattr(settings_cls, 'is_traffic_topup_enabled', lambda self: True)
@@ -185,7 +185,7 @@ async def test_traffic_packages_floor_displayed_price_at_one_ruble(monkeypatch):
     pkg = result[0]
     assert pkg.discount_percent == 99
     assert pkg.base_price_kopeks == 5000
-    assert pkg.price_kopeks == 100  # floored to 1₽, not 0.50₽
+    assert pkg.price_kopeks == 100  # floored to $1, not $0.50
     assert pkg.discount_kopeks == 4900  # base − floored price
 
 

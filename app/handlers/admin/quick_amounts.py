@@ -34,8 +34,8 @@ def _format_rubles(amount_kopeks: int) -> str:
 
 def _format_amounts_line(quick_amounts: list[int] | None) -> str:
     if quick_amounts:
-        return ', '.join(f'{_format_rubles(amount)} ₽' for amount in quick_amounts)
-    defaults = ', '.join(f'{_format_rubles(amount)} ₽' for amount in DEFAULT_QUICK_AMOUNTS)
+        return ', '.join(f'${_format_rubles(amount)}' for amount in quick_amounts)
+    defaults = ', '.join(f'${_format_rubles(amount)}' for amount in DEFAULT_QUICK_AMOUNTS)
     return f'{defaults} (по умолчанию)'
 
 
@@ -168,7 +168,7 @@ async def process_quick_amounts(message: Message, state: FSMContext, **kwargs) -
     except (ValueError, OverflowError):
         await message.answer(
             f'❌ Неверный формат. Отправьте до {MAX_QUICK_AMOUNTS} положительных сумм в рублях через запятую '
-            f'(не более {MAX_QUICK_AMOUNT_KOPEKS // 100} ₽ каждая), '
+            f'(не более ${MAX_QUICK_AMOUNT_KOPEKS // 100} каждая), '
             'например: <code>100, 300, 500, 1000</code>'
         )
         return

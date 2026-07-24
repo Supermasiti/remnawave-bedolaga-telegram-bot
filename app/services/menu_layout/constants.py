@@ -695,7 +695,7 @@ AVAILABLE_CALLBACKS: list[dict[str, Any]] = [
 
 # Динамические плейсхолдеры для текста кнопок
 DYNAMIC_PLACEHOLDERS: list[dict[str, str]] = [
-    {'placeholder': '{balance}', 'description': 'Баланс пользователя', 'example': '1 500 ₽', 'category': 'user'},
+    {'placeholder': '{balance}', 'description': 'Баланс пользователя', 'example': '$1 500', 'category': 'user'},
     {'placeholder': '{username}', 'description': 'Имя пользователя', 'example': 'John', 'category': 'user'},
     {
         'placeholder': '{subscription_days}',
@@ -719,7 +719,7 @@ DYNAMIC_PLACEHOLDERS: list[dict[str, str]] = [
     {
         'placeholder': '{referral_earnings}',
         'description': 'Заработок с рефералов',
-        'example': '500 ₽',
+        'example': '$500',
         'category': 'referral',
     },
 ]

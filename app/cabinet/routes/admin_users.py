@@ -1159,7 +1159,7 @@ async def update_user_balance(
         success=True,
         old_balance_kopeks=old_balance,
         new_balance_kopeks=user.balance_kopeks,
-        message=f'Balance updated: {old_balance / 100:.2f}₽ -> {user.balance_kopeks / 100:.2f}₽',
+        message=f'Balance updated: ${old_balance / 100:.2f} -> ${user.balance_kopeks / 100:.2f}',
     )
 
 

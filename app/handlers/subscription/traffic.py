@@ -462,7 +462,7 @@ async def refresh_traffic_config():
         for pkg in packages:
             if pkg['enabled']:
                 gb_text = '♾️ Безлимит' if pkg['gb'] == 0 else f'{pkg["gb"]} ГБ'
-                logger.info('📦 ₽', gb_text=gb_text, pkg=pkg['price'] / 100)
+                logger.info('📦 $', gb_text=gb_text, pkg=pkg['price'] / 100)
 
         return True
 
@@ -1114,7 +1114,7 @@ async def execute_switch_traffic(
         await callback.message.edit_text(success_text, reply_markup=get_back_keyboard(db_user.language))
 
         logger.info(
-            '✅ Пользователь переключил трафик с на доплата: ₽',
+            '✅ Пользователь переключил трафик с на доплата: $',
             telegram_id=db_user.telegram_id,
             current_traffic=current_traffic,
             new_traffic_gb=new_traffic_gb,

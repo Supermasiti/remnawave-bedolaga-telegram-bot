@@ -641,7 +641,7 @@ async def start_withdrawal_request(callback: types.CallbackQuery, db_user: User,
         inline_keyboard=[
             [
                 types.InlineKeyboardButton(
-                    text=texts.t('REFERRAL_WITHDRAWAL_ALL', f'Вывести всё ({available / 100:.0f}₽)'),
+                    text=texts.t('REFERRAL_WITHDRAWAL_ALL', f'Вывести всё (${available / 100:.0f})'),
                     callback_data=f'referral_withdrawal_amount_{available}',
                 )
             ],
@@ -665,7 +665,7 @@ async def process_withdrawal_amount(message: types.Message, db_user: User, db: A
 
     try:
         # Парсим сумму (в рублях)
-        amount_text = message.text.strip().replace(',', '.').replace('₽', '').replace(' ', '')
+        amount_text = message.text.strip().replace(',', '.').replace('$', '').replace(' ', '')
         amount_rubles = float(amount_text)
         amount_kopeks = int(amount_rubles * 100)
 
@@ -825,7 +825,7 @@ async def confirm_withdrawal_request(callback: types.CallbackQuery, db_user: Use
 
 👤 Пользователь: {safe_name}
 🆔 ID: <code>{user_id_display}</code>
-💰 Сумма: <b>{amount_kopeks / 100:.0f}₽</b>
+💰 Сумма: <b>${amount_kopeks / 100:.0f}</b>
 
 💳 Реквизиты:
 <code>{safe_details}</code>

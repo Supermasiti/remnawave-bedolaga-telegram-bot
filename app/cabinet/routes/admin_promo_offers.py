@@ -411,7 +411,7 @@ def _build_default_promo_message(
         lines.append(f'🔥 Скидка <b>{discount_percent}%</b> на подписку')
     if bonus_amount_kopeks > 0:
         bonus_rub = bonus_amount_kopeks / 100
-        lines.append(f'💰 Бонус <b>{bonus_rub:.0f}₽</b> на баланс')
+        lines.append(f'💰 Бонус <b>${bonus_rub:.0f}</b> на баланс')
 
     lines.append(f'\n⏰ Предложение действует <b>{valid_hours} ч.</b>')
     lines.append('\nНажмите кнопку ниже, чтобы активировать!')

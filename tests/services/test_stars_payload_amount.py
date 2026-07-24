@@ -7,8 +7,8 @@ the originally-requested ``amount_kopeks`` encoded in the Telegram
 invoice payload. At rate=1.0 with integer rubles the back-conversion
 happens to be lossless, but:
 
-  * Non-integer ruble inputs (e.g. 50.50 ₽) → ``round(50.50/1.0) = 50``
-    stars → credit 50.00 ₽. User loses 0.50 ₽ per top-up.
+  * Non-integer ruble inputs (e.g. $50.50) → ``round(50.50/1.0) = 50``
+    stars → credit $50.00. User loses $0.50 per top-up.
   * Operator-set non-1.0 rates re-introduce the original 1.3-era class
     of bug.
 
@@ -48,7 +48,7 @@ plausible = TelegramStarsMixin._is_payload_amount_plausible
         ('balance_123_15000_a1b2c3', 15000),
         # Cabinet path: app/cabinet/routes/balance.py:269
         ('balance_topup_123_15000_1735689600', 15000),
-        # Fractional ruble survives because kopeks is the unit (50.50 ₽ = 5050).
+        # Fractional ruble survives because kopeks is the unit ($50.50 = 5050).
         ('balance_topup_5050', 5050),
         ('balance_456_5050_abcdef', 5050),
     ],
@@ -88,7 +88,7 @@ def test_plausibility_accepts_lossless_round_trip() -> None:
 
 
 def test_plausibility_accepts_sub_ruble_drift() -> None:
-    """50.50 ₽ requested → 50 ⭐ × 1.0 = 50.00 ₽ reconstructed → 50 kopeks drift, well within tolerance."""
+    """$50.50 requested → 50 ⭐ × 1.0 = $50.00 reconstructed → 50 kopeks drift, well within tolerance."""
     assert plausible(payload_kopeks=5050, reconstructed_kopeks=5000) is True
 
 
@@ -128,15 +128,15 @@ def test_plausibility_uses_minimum_100_kopek_floor_for_tiny_amounts() -> None:
 
 
 def test_negative_control_old_rate_was_lossy(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Regression cover: the pre-fix flow under rate=1.3 lost 0.50 ₽ on a 150 ₽ top-up.
+    """Regression cover: the pre-fix flow under rate=1.3 lost $0.50 on a $150 top-up.
 
     At rate=1.3:
       rubles_to_stars(150) = round(150 / 1.3) = 115 stars
-      stars × 1.3 = 149.50 ₽ ≠ 150 ₽
+      stars × 1.3 = $149.50 ≠ $150
 
     The plausibility bound also accepts the legitimate 50-kopek drift,
-    so the payload-amount path would have credited the full 150 ₽
-    instead of 149.50 ₽. This is the exact scenario from the
+    so the payload-amount path would have credited the full $150
+    instead of $149.50. This is the exact scenario from the
     2026-05-16 user report.
     """
     from app.config import settings
@@ -148,8 +148,8 @@ def test_negative_control_old_rate_was_lossy(monkeypatch: pytest.MonkeyPatch) ->
     reconstructed_kopeks = round(reconstructed_rubles * 100)
 
     # Confirm the old bug WAS present at this rate.
-    assert quoted_stars == 115, 'sanity check: 150 ₽ / 1.3 ₽/⭐ = 115 ⭐'
-    assert reconstructed_rubles == 149.5, 'sanity check: 115 × 1.3 = 149.50 ₽ (the loss)'
+    assert quoted_stars == 115, 'sanity check: $150 / $1.3/⭐ = 115 ⭐'
+    assert reconstructed_rubles == 149.5, 'sanity check: 115 × 1.3 = $149.50 (the loss)'
 
     # Now confirm the new logic would recover the original amount:
     payload = 'balance_topup_15000'
@@ -172,8 +172,8 @@ def test_negative_control_at_new_rate_is_lossless_for_integer_rubles(monkeypatch
         reconstructed_kopeks = round(settings.stars_to_rubles(quoted_stars) * 100)
 
         assert reconstructed_kopeks == kopeks, (
-            f'rate=1.0 must round-trip integer rubles losslessly; {rubles} ₽ → '
-            f'{quoted_stars} ⭐ → {reconstructed_kopeks / 100} ₽'
+            f'rate=1.0 must round-trip integer rubles losslessly; ${rubles} → '
+            f'{quoted_stars} ⭐ → ${reconstructed_kopeks / 100}'
         )
         # Payload parse + plausibility hold.
         assert parse(f'balance_topup_{kopeks}') == kopeks

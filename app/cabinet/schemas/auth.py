@@ -134,7 +134,11 @@ class EmailRegisterStandaloneRequest(BaseModel):
     email: EmailStr = Field(..., description='Email address')
     password: str = Field(..., min_length=8, max_length=128, description='Password (min 8 chars)')
     first_name: str | None = Field(None, max_length=64, description='First name')
-    language: str = Field('ru', max_length=5, pattern=r'^[a-z]{2}$', description='Preferred language (ISO 639-1)')
+    # The cabinet sends `language` only when the UI knows it, so this default is
+    # what an unlabelled signup actually gets. It used to be 'ru', which made
+    # every such account Russian — wrong interface, wrong emails — in a product
+    # whose DEFAULT_LANGUAGE is Spanish and whose AVAILABLE_LANGUAGES omit ru.
+    language: str = Field('en', max_length=5, pattern=r'^[a-z]{2}$', description='Preferred language (ISO 639-1)')
     referral_code: str | None = Field(
         None, max_length=32, pattern=r'^[a-zA-Z0-9_-]+$', description='Referral code of inviter'
     )

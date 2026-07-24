@@ -333,6 +333,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': f'Баланс пополнен на {amount}',
             'en': f'Balance topped up by {amount}',
+            'es': f'Saldo recargado en {amount}',
+            'pt': f'Saldo recarregado em {amount}',
             'zh': f'余额已充值 {amount}',
             'ua': f'Баланс поповнено на {amount}',
         }
@@ -354,6 +356,24 @@ class EmailNotificationTemplates:
                     <p>Current balance: <strong>{balance}</strong></p>
                 </div>
                 <p>Thank you for using our service!</p>
+                {self._get_cabinet_button(language)}
+            """,
+            'es': f"""
+                <h2>¡Saldo recargado!</h2>
+                <div class="highlight success">
+                    <p>Importe recargado: <span class="amount">+{amount}</span></p>
+                    <p>Saldo actual: <strong>{balance}</strong></p>
+                </div>
+                <p>¡Gracias por confiar en nosotros!</p>
+                {self._get_cabinet_button(language)}
+            """,
+            'pt': f"""
+                <h2>Saldo recarregado!</h2>
+                <div class="highlight success">
+                    <p>Valor recarregado: <span class="amount">+{amount}</span></p>
+                    <p>Saldo atual: <strong>{balance}</strong></p>
+                </div>
+                <p>Obrigado por usar nosso serviço!</p>
                 {self._get_cabinet_button(language)}
             """,
             'zh': f"""
@@ -446,12 +466,16 @@ class EmailNotificationTemplates:
         tariff_suffix_en = f' "{tariff_name}"' if tariff_name else ''
         tariff_line_ru = f'<p>Тариф: <strong>{tariff_name}</strong></p>' if tariff_name else ''
         tariff_line_en = f'<p>Plan: <strong>{tariff_name}</strong></p>' if tariff_name else ''
+        tariff_line_es = f'<p>Plan: <strong>{tariff_name}</strong></p>' if tariff_name else ''
+        tariff_line_pt = f'<p>Plano: <strong>{tariff_name}</strong></p>' if tariff_name else ''
         tariff_line_zh = f'<p>套餐: <strong>{tariff_name}</strong></p>' if tariff_name else ''
         tariff_line_ua = f'<p>Тариф: <strong>{tariff_name}</strong></p>' if tariff_name else ''
 
         subjects = {
             'ru': f'Подписка{tariff_suffix_ru} истекает через {days_left} дн.',
             'en': f'Subscription{tariff_suffix_en} expires in {days_left} day(s)',
+            'es': f'Tu suscripción{tariff_suffix_en} vence en {days_left} día(s)',
+            'pt': f'Sua assinatura{tariff_suffix_en} vence em {days_left} dia(s)',
             'zh': f'订阅将在 {days_left} 天后到期',
             'ua': f'Підписка{tariff_suffix_ru} закінчується через {days_left} дн.',
         }
@@ -475,6 +499,26 @@ class EmailNotificationTemplates:
                     <p>Expiration date: <strong>{expires_at}</strong></p>
                 </div>
                 <p>Renew your subscription to maintain access to our service.</p>
+                {self._get_cabinet_button(language)}
+            """,
+            'es': f"""
+                <h2>Tu suscripción está por vencer</h2>
+                <div class="highlight warning">
+                    {tariff_line_es}
+                    <p>Tu suscripción vence en <strong>{days_left}</strong> día(s).</p>
+                    <p>Fecha de vencimiento: <strong>{expires_at}</strong></p>
+                </div>
+                <p>Renuévala para no perder el acceso al servicio.</p>
+                {self._get_cabinet_button(language)}
+            """,
+            'pt': f"""
+                <h2>Sua assinatura está acabando</h2>
+                <div class="highlight warning">
+                    {tariff_line_pt}
+                    <p>Sua assinatura vence em <strong>{days_left}</strong> dia(s).</p>
+                    <p>Data de vencimento: <strong>{expires_at}</strong></p>
+                </div>
+                <p>Renove para não perder o acesso ao serviço.</p>
                 {self._get_cabinet_button(language)}
             """,
             'zh': f"""
@@ -511,12 +555,16 @@ class EmailNotificationTemplates:
         tariff_suffix_en = f' "{tariff_name}"' if tariff_name else ''
         tariff_line_ru = f'<p>Тариф: <strong>{tariff_name}</strong></p>' if tariff_name else ''
         tariff_line_en = f'<p>Plan: <strong>{tariff_name}</strong></p>' if tariff_name else ''
+        tariff_line_es = f'<p>Plan: <strong>{tariff_name}</strong></p>' if tariff_name else ''
+        tariff_line_pt = f'<p>Plano: <strong>{tariff_name}</strong></p>' if tariff_name else ''
         tariff_line_zh = f'<p>套餐: <strong>{tariff_name}</strong></p>' if tariff_name else ''
         tariff_line_ua = f'<p>Тариф: <strong>{tariff_name}</strong></p>' if tariff_name else ''
 
         subjects = {
             'ru': f'Подписка{tariff_suffix_ru} истекла',
             'en': f'Subscription{tariff_suffix_en} Expired',
+            'es': f'Tu suscripción{tariff_suffix_en} ha vencido',
+            'pt': f'Sua assinatura{tariff_suffix_en} venceu',
             'zh': '订阅已到期',
             'ua': f'Підписка{tariff_suffix_ru} закінчилась',
         }
@@ -538,6 +586,24 @@ class EmailNotificationTemplates:
                     <p>Your subscription has expired. VPN access has been disabled.</p>
                 </div>
                 <p>Purchase a new subscription to continue using our service.</p>
+                {self._get_cabinet_button(language)}
+            """,
+            'es': f"""
+                <h2>Suscripción vencida</h2>
+                <div class="highlight danger">
+                    {tariff_line_es}
+                    <p>Tu suscripción venció y el acceso VPN quedó desactivado.</p>
+                </div>
+                <p>Contrata una nueva suscripción para seguir usando el servicio.</p>
+                {self._get_cabinet_button(language)}
+            """,
+            'pt': f"""
+                <h2>Assinatura vencida</h2>
+                <div class="highlight danger">
+                    {tariff_line_pt}
+                    <p>Sua assinatura venceu e o acesso VPN foi desativado.</p>
+                </div>
+                <p>Contrate uma nova assinatura para continuar usando o serviço.</p>
                 {self._get_cabinet_button(language)}
             """,
             'zh': f"""
@@ -929,10 +995,14 @@ class EmailNotificationTemplates:
         tariff_suffix_en = f' "{tariff_name}"' if tariff_name else ''
         tariff_line_ru = f'<p>Тариф: <strong>{tariff_name}</strong></p>' if tariff_name else ''
         tariff_line_en = f'<p>Plan: <strong>{tariff_name}</strong></p>' if tariff_name else ''
+        tariff_line_es = f'<p>Plan: <strong>{tariff_name}</strong></p>' if tariff_name else ''
+        tariff_line_pt = f'<p>Plano: <strong>{tariff_name}</strong></p>' if tariff_name else ''
 
         subjects = {
             'ru': f'Подписка{tariff_suffix_ru} активирована',
             'en': f'Subscription{tariff_suffix_en} Activated',
+            'es': f'Suscripción{tariff_suffix_en} activada',
+            'pt': f'Assinatura{tariff_suffix_en} ativada',
             'zh': '订阅已激活',
             'ua': f'Підписку{tariff_suffix_ru} активовано',
         }
@@ -956,6 +1026,26 @@ class EmailNotificationTemplates:
                     <p>Valid until: <strong>{expires_at}</strong></p>
                 </div>
                 <p>You can now use the VPN service.</p>
+                {self._get_cabinet_button(language)}
+            """,
+            'es': f"""
+                <h2>¡Suscripción activada!</h2>
+                <div class="highlight success">
+                    {tariff_line_es}
+                    <p>Tu suscripción VPN se activó correctamente.</p>
+                    <p>Válida hasta: <strong>{expires_at}</strong></p>
+                </div>
+                <p>Ya puedes usar el servicio.</p>
+                {self._get_cabinet_button(language)}
+            """,
+            'pt': f"""
+                <h2>Assinatura ativada!</h2>
+                <div class="highlight success">
+                    {tariff_line_pt}
+                    <p>Sua assinatura VPN foi ativada com sucesso.</p>
+                    <p>Válida até: <strong>{expires_at}</strong></p>
+                </div>
+                <p>Você já pode usar o serviço.</p>
                 {self._get_cabinet_button(language)}
             """,
         }

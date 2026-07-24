@@ -409,6 +409,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': 'Изменение баланса',
             'en': 'Balance Changed',
+            'es': 'Saldo actualizado',
+            'pt': 'Saldo atualizado',
             'zh': '余额变动',
             'ua': 'Зміна балансу',
         }
@@ -430,6 +432,8 @@ class EmailNotificationTemplates:
                 </div>
                 {self._get_cabinet_button(language)}
             """,
+            'es': f"""<h2>Saldo actualizado</h2><div class="highlight"><p>Importe: <strong>{amount}</strong></p><p>Saldo actual: <strong>{balance}</strong></p></div>{self._get_cabinet_button(language)}""",
+            'pt': f"""<h2>Saldo atualizado</h2><div class="highlight"><p>Valor: <strong>{amount}</strong></p><p>Saldo atual: <strong>{balance}</strong></p></div>{self._get_cabinet_button(language)}""",
             'zh': f"""
                 <h2>余额变动</h2>
                 <div class="highlight">
@@ -639,10 +643,14 @@ class EmailNotificationTemplates:
         tariff_suffix_en = f' "{tariff_name}"' if tariff_name else ''
         tariff_line_ru = f'<p>Тариф: <strong>{tariff_name}</strong></p>' if tariff_name else ''
         tariff_line_en = f'<p>Plan: <strong>{tariff_name}</strong></p>' if tariff_name else ''
+        tariff_line_es = f'<p>Plan: <strong>{tariff_name}</strong></p>' if tariff_name else ''
+        tariff_line_pt = f'<p>Plano: <strong>{tariff_name}</strong></p>' if tariff_name else ''
 
         subjects = {
             'ru': f'Подписка{tariff_suffix_ru} продлена',
             'en': f'Subscription{tariff_suffix_en} Renewed',
+            'es': f'Suscripción{tariff_suffix_en} renovada',
+            'pt': f'Assinatura{tariff_suffix_en} renovada',
             'zh': '订阅已续订',
             'ua': f'Підписку{tariff_suffix_ru} продовжено',
         }
@@ -668,6 +676,8 @@ class EmailNotificationTemplates:
                 <p>Thank you for using our service!</p>
                 {self._get_cabinet_button(language)}
             """,
+            'es': f"""<h2>¡Suscripción renovada!</h2><div class="highlight success">{tariff_line_es}<p>Tu suscripción se renovó correctamente.</p><p>Nueva fecha de vencimiento: <strong>{new_expires_at}</strong></p></div><p>¡Gracias por confiar en nosotros!</p>{self._get_cabinet_button(language)}""",
+            'pt': f"""<h2>Assinatura renovada!</h2><div class="highlight success">{tariff_line_pt}<p>Sua assinatura foi renovada com sucesso.</p><p>Nova data de vencimento: <strong>{new_expires_at}</strong></p></div><p>Obrigado por usar nosso serviço!</p>{self._get_cabinet_button(language)}""",
         }
 
         return {
@@ -933,12 +943,16 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': 'Подписка закончилась',
             'en': 'Your subscription has ended',
+            'es': 'Tu suscripción terminó',
+            'pt': 'Sua assinatura terminou',
             'zh': '订阅已结束',
             'ua': 'Підписка закінчилася',
         }
         bodies = {
             'ru': f'<h2>Подписка закончилась</h2><div class="highlight danger"><p>Ваша VPN-подписка истекла{f" ({end_date})" if end_date else ""} — доступ отключён.</p><p>Продлите подписку, чтобы вернуться в сервис.</p></div>{self._get_cabinet_button(language)}',
             'en': f'<h2>Your subscription has ended</h2><div class="highlight danger"><p>Your VPN subscription has expired — access is off.</p><p>Renew it to get back online.</p></div>{self._get_cabinet_button(language)}',
+            'es': f"""<h2>Tu suscripción terminó</h2><div class="highlight danger"><p>Tu suscripción VPN venció — el acceso está desactivado.</p><p>Renuévala para volver a conectarte.</p></div>{self._get_cabinet_button(language)}""",
+            'pt': f"""<h2>Sua assinatura terminou</h2><div class="highlight danger"><p>Sua assinatura VPN venceu — o acesso está desativado.</p><p>Renove para voltar a se conectar.</p></div>{self._get_cabinet_button(language)}""",
             'zh': f'<h2>订阅已结束</h2><div class="highlight danger"><p>您的 VPN 订阅已到期{f"（{end_date}）" if end_date else ""}，访问已关闭。</p><p>请续订以恢复使用。</p></div>{self._get_cabinet_button(language)}',
             'ua': f'<h2>Підписка закінчилася</h2><div class="highlight danger"><p>Ваша VPN-підписка закінчилася{f" ({end_date})" if end_date else ""} — доступ вимкнено.</p><p>Продовжте підписку, щоб повернутися до сервісу.</p></div>{self._get_cabinet_button(language)}',
         }
@@ -954,12 +968,16 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': f'Скидка {percent}% на продление',
             'en': f'{percent}% off your renewal',
+            'es': f'{percent}% de descuento en tu renovación',
+            'pt': f'{percent}% de desconto na sua renovação',
             'zh': f'续订享 {percent}% 折扣',
             'ua': f'Знижка {percent}% на продовження',
         }
         bodies = {
             'ru': f'<h2>Скидка {percent}% на продление</h2><div class="highlight"><p>Возвращайтесь со скидкой <strong>{percent}%</strong>{f" — действует до {expires_at}" if expires_at else ""}.</p><p>Скидка уже привязана к вашему аккаунту и суммируется с промогруппой — просто продлите подписку в кабинете.</p></div>{self._get_cabinet_button(language)}',
             'en': f'<h2>{percent}% off your renewal</h2><div class="highlight"><p>Come back with a <strong>{percent}%</strong> discount{f", valid until {expires_at}" if expires_at else ""}.</p><p>The discount is already applied to your account and stacks with your promo group — just renew in the dashboard.</p></div>{self._get_cabinet_button(language)}',
+            'es': f"""<h2>{percent}% de descuento en tu renovación</h2><div class="highlight"><p>Vuelve con un <strong>{percent}%</strong> de descuento.</p><p>El descuento ya está aplicado a tu cuenta — solo renueva desde tu panel.</p></div>{self._get_cabinet_button(language)}""",
+            'pt': f"""<h2>{percent}% de desconto na sua renovação</h2><div class="highlight"><p>Volte com <strong>{percent}%</strong> de desconto.</p><p>O desconto já está na sua conta — basta renovar no seu painel.</p></div>{self._get_cabinet_button(language)}""",
             'zh': f'<h2>续订享 {percent}% 折扣</h2><div class="highlight"><p>回来享受 <strong>{percent}%</strong> 折扣{f"（有效期至 {expires_at}）" if expires_at else ""}。</p><p>折扣已绑定到您的账户，并与促销组叠加 — 只需在个人中心续订即可。</p></div>{self._get_cabinet_button(language)}',
             'ua': f'<h2>Знижка {percent}% на продовження</h2><div class="highlight"><p>Повертайтеся зі знижкою <strong>{percent}%</strong>{f" — діє до {expires_at}" if expires_at else ""}.</p><p>Знижка вже прив’язана до вашого акаунта й сумується з промогрупою — просто продовжте підписку в кабінеті.</p></div>{self._get_cabinet_button(language)}',
         }
@@ -973,12 +991,16 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': 'Пробная подписка скоро закончится',
             'en': 'Your trial is ending soon',
+            'es': 'Tu prueba está por terminar',
+            'pt': 'Seu teste está acabando',
             'zh': '试用即将结束',
             'ua': 'Пробна підписка скоро закінчиться',
         }
         bodies = {
             'ru': f'<h2>Пробная подписка скоро закончится</h2><div class="highlight warning"><p>Ваша тестовая подписка скоро истекает.</p><p>Оформите подписку, чтобы не остаться без VPN — конфиг и устройства сохранятся.</p></div>{self._get_cabinet_button(language)}',
             'en': f'<h2>Your trial is ending soon</h2><div class="highlight warning"><p>Your trial subscription is about to expire.</p><p>Subscribe to keep your VPN — your config and devices stay.</p></div>{self._get_cabinet_button(language)}',
+            'es': f"""<h2>Tu prueba está por terminar</h2><div class="highlight warning"><p>Tu suscripción de prueba está por vencer.</p><p>Contrata un plan para no quedarte sin VPN — tu configuración y dispositivos se conservan.</p></div>{self._get_cabinet_button(language)}""",
+            'pt': f"""<h2>Seu teste está acabando</h2><div class="highlight warning"><p>Sua assinatura de teste está prestes a vencer.</p><p>Contrate um plano para não ficar sem VPN — sua configuração e dispositivos são mantidos.</p></div>{self._get_cabinet_button(language)}""",
             'zh': f'<h2>试用即将结束</h2><div class="highlight warning"><p>您的试用订阅即将到期。</p><p>订阅以继续使用 VPN — 配置和设备将保留。</p></div>{self._get_cabinet_button(language)}',
             'ua': f'<h2>Пробна підписка скоро закінчиться</h2><div class="highlight warning"><p>Ваша тестова підписка скоро закінчується.</p><p>Оформіть підписку, щоб не залишитися без VPN — конфіг і пристрої збережуться.</p></div>{self._get_cabinet_button(language)}',
         }
@@ -1067,6 +1089,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': 'Автопродление выполнено',
             'en': 'Auto-renewal Successful',
+            'es': 'Renovación automática realizada',
+            'pt': 'Renovação automática concluída',
             'zh': '自动续订成功',
             'ua': 'Автопродовження виконано',
         }
@@ -1090,6 +1114,8 @@ class EmailNotificationTemplates:
                 </div>
                 {self._get_cabinet_button(language)}
             """,
+            'es': f"""<h2>Renovación automática realizada</h2><div class="highlight success"><p>Tu suscripción se renovó automáticamente.</p><p>Cobrado del saldo: <strong>{amount}</strong></p><p>Nueva fecha de vencimiento: <strong>{new_expires_at}</strong></p></div>{self._get_cabinet_button(language)}""",
+            'pt': f"""<h2>Renovação automática concluída</h2><div class="highlight success"><p>Sua assinatura foi renovada automaticamente.</p><p>Cobrado do saldo: <strong>{amount}</strong></p><p>Nova data de vencimento: <strong>{new_expires_at}</strong></p></div>{self._get_cabinet_button(language)}""",
         }
 
         return {
@@ -1104,6 +1130,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': 'Ошибка автопродления',
             'en': 'Auto-renewal Failed',
+            'es': 'Falló la renovación automática',
+            'pt': 'Falha na renovação automática',
             'zh': '自动续订失败',
             'ua': 'Помилка автопродовження',
         }
@@ -1127,6 +1155,8 @@ class EmailNotificationTemplates:
                 <p>Please top up your balance and renew manually.</p>
                 {self._get_cabinet_button(language)}
             """,
+            'es': f"""<h2>Falló la renovación automática</h2><div class="highlight danger"><p>No se pudo renovar tu suscripción automáticamente.</p>{f'<p>Motivo: {reason}</p>' if reason else ''}</div><p>Recarga tu saldo y renueva manualmente.</p>{self._get_cabinet_button(language)}""",
+            'pt': f"""<h2>Falha na renovação automática</h2><div class="highlight danger"><p>Não foi possível renovar sua assinatura automaticamente.</p>{f'<p>Motivo: {reason}</p>' if reason else ''}</div><p>Recarregue seu saldo e renove manualmente.</p>{self._get_cabinet_button(language)}""",
         }
 
         return {
@@ -1142,6 +1172,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': 'Недостаточно средств для автопродления',
             'en': 'Insufficient Funds for Auto-renewal',
+            'es': 'Saldo insuficiente para la renovación automática',
+            'pt': 'Saldo insuficiente para a renovação automática',
             'zh': '余额不足无法自动续订',
             'ua': 'Недостатньо коштів для автопродовження',
         }
@@ -1167,6 +1199,8 @@ class EmailNotificationTemplates:
                 <p>Top up your balance for automatic renewal.</p>
                 {self._get_cabinet_button(language)}
             """,
+            'es': f"""<h2>Saldo insuficiente</h2><div class="highlight warning"><p>No hay saldo suficiente para renovar tu suscripción automáticamente.</p>{f'<p>Necesario: <strong>{required}</strong></p>' if required else ''}{f'<p>Saldo: <strong>{balance}</strong></p>' if balance else ''}</div><p>Recarga tu saldo para que la renovación automática funcione.</p>{self._get_cabinet_button(language)}""",
+            'pt': f"""<h2>Saldo insuficiente</h2><div class="highlight warning"><p>Não há saldo suficiente para renovar sua assinatura automaticamente.</p>{f'<p>Necessário: <strong>{required}</strong></p>' if required else ''}{f'<p>Saldo: <strong>{balance}</strong></p>' if balance else ''}</div><p>Recarregue seu saldo para que a renovação automática funcione.</p>{self._get_cabinet_button(language)}""",
         }
 
         return {
@@ -1186,6 +1220,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': f'Списание за подписку: {amount}',
             'en': f'Subscription charge: {amount}',
+            'es': f'Cargo de suscripción: {amount}',
+            'pt': f'Cobrança da assinatura: {amount}',
             'zh': f'订阅扣费: {amount}',
             'ua': f'Списання за підписку: {amount}',
         }
@@ -1207,6 +1243,8 @@ class EmailNotificationTemplates:
                 </div>
                 {self._get_cabinet_button(language)}
             """,
+            'es': f"""<h2>Cargo diario</h2><div class="highlight"><p>Cobrado de tu saldo: <strong>{amount}</strong></p><p>Saldo restante: <strong>{balance}</strong></p></div>{self._get_cabinet_button(language)}""",
+            'pt': f"""<h2>Cobrança diária</h2><div class="highlight"><p>Cobrado do seu saldo: <strong>{amount}</strong></p><p>Saldo restante: <strong>{balance}</strong></p></div>{self._get_cabinet_button(language)}""",
         }
 
         return {
@@ -1219,6 +1257,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': 'Недостаточно средств для продления',
             'en': 'Insufficient Funds',
+            'es': 'Saldo insuficiente',
+            'pt': 'Saldo insuficiente',
             'zh': '余额不足',
             'ua': 'Недостатньо коштів',
         }
@@ -1242,6 +1282,8 @@ class EmailNotificationTemplates:
                 <p>Please top up your balance to continue using the service.</p>
                 {self._get_cabinet_button(language)}
             """,
+            'es': f"""<h2>Saldo insuficiente</h2><div class="highlight danger"><p>No hay saldo suficiente para mantener tu suscripción.</p><p>Tu suscripción quedará suspendida.</p></div><p>Recarga tu saldo para seguir usando el servicio.</p>{self._get_cabinet_button(language)}""",
+            'pt': f"""<h2>Saldo insuficiente</h2><div class="highlight danger"><p>Não há saldo suficiente para manter sua assinatura.</p><p>Sua assinatura será suspensa.</p></div><p>Recarregue seu saldo para continuar usando o serviço.</p>{self._get_cabinet_button(language)}""",
         }
 
         return {
@@ -1254,6 +1296,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': 'Трафик обновлён',
             'en': 'Traffic Reset',
+            'es': 'Tráfico reiniciado',
+            'pt': 'Tráfego reiniciado',
             'zh': '流量已重置',
             'ua': 'Трафік оновлено',
         }
@@ -1273,6 +1317,8 @@ class EmailNotificationTemplates:
                 </div>
                 {self._get_cabinet_button(language)}
             """,
+            'es': f"""<h2>Tráfico reiniciado</h2><div class="highlight success"><p>Tu tráfico se reinició. Puedes seguir usando la VPN.</p></div>{self._get_cabinet_button(language)}""",
+            'pt': f"""<h2>Tráfego reiniciado</h2><div class="highlight success"><p>Seu tráfego foi reiniciado. Você pode continuar usando a VPN.</p></div>{self._get_cabinet_button(language)}""",
         }
 
         return {
@@ -1291,6 +1337,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': 'Аккаунт заблокирован',
             'en': 'Account Suspended',
+            'es': 'Cuenta suspendida',
+            'pt': 'Conta suspensa',
             'zh': '账户已被封禁',
             'ua': 'Обліковий запис заблоковано',
         }
@@ -1312,6 +1360,8 @@ class EmailNotificationTemplates:
                 </div>
                 <p>If you believe this is an error, please contact support.</p>
             """,
+            'es': f"""<h2>Cuenta suspendida</h2><div class="highlight danger"><p>Tu cuenta fue suspendida.</p>{f'<p>Motivo: {reason}</p>' if reason else ''}</div><p>Si crees que es un error, contacta con soporte.</p>""",
+            'pt': f"""<h2>Conta suspensa</h2><div class="highlight danger"><p>Sua conta foi suspensa.</p>{f'<p>Motivo: {reason}</p>' if reason else ''}</div><p>Se você acha que é um erro, fale com o suporte.</p>""",
         }
 
         return {
@@ -1324,6 +1374,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': 'Аккаунт разблокирован',
             'en': 'Account Reactivated',
+            'es': 'Cuenta reactivada',
+            'pt': 'Conta reativada',
             'zh': '账户已解封',
             'ua': 'Обліковий запис розблоковано',
         }
@@ -1345,6 +1397,8 @@ class EmailNotificationTemplates:
                 </div>
                 {self._get_cabinet_button(language)}
             """,
+            'es': f"""<h2>Cuenta reactivada</h2><div class="highlight success"><p>Tu cuenta fue reactivada.</p><p>Ya puedes usar el servicio de nuevo.</p></div>{self._get_cabinet_button(language)}""",
+            'pt': f"""<h2>Conta reativada</h2><div class="highlight success"><p>Sua conta foi reativada.</p><p>Você já pode usar o serviço novamente.</p></div>{self._get_cabinet_button(language)}""",
         }
 
         return {
@@ -1359,6 +1413,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': 'Предупреждение',
             'en': 'Warning',
+            'es': 'Aviso',
+            'pt': 'Aviso',
             'zh': '警告',
             'ua': 'Попередження',
         }
@@ -1376,6 +1432,8 @@ class EmailNotificationTemplates:
                     {f'<p>{message}</p>' if message else '<p>You have received a warning from the administration.</p>'}
                 </div>
             """,
+            'es': f"""<h2>Aviso</h2><div class="highlight warning">{f'<p>{message}</p>' if message else '<p>Has recibido un aviso de la administración.</p>'}</div>""",
+            'pt': f"""<h2>Aviso</h2><div class="highlight warning">{f'<p>{message}</p>' if message else '<p>Você recebeu um aviso da administração.</p>'}</div>""",
         }
 
         return {
@@ -1395,6 +1453,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': f'Реферальный бонус: +{bonus}',
             'en': f'Referral bonus: +{bonus}',
+            'es': f'Bono de referido: +{bonus}',
+            'pt': f'Bônus de indicação: +{bonus}',
             'zh': f'推荐奖励: +{bonus}',
             'ua': f'Реферальний бонус: +{bonus}',
         }
@@ -1418,6 +1478,8 @@ class EmailNotificationTemplates:
                 <p>Keep inviting friends and earn more!</p>
                 {self._get_cabinet_button(language)}
             """,
+            'es': f"""<h2>¡Bono de referido!</h2><div class="highlight success"><p>Recibiste un bono de referido: <span class="amount">+{bonus}</span></p>{f'<p>Gracias a: {referral_name}</p>' if referral_name else ''}</div><p>¡Sigue invitando amigos y gana más!</p>{self._get_cabinet_button(language)}""",
+            'pt': f"""<h2>Bônus de indicação!</h2><div class="highlight success"><p>Você recebeu um bônus de indicação: <span class="amount">+{bonus}</span></p>{f'<p>Graças a: {referral_name}</p>' if referral_name else ''}</div><p>Continue convidando amigos e ganhe mais!</p>{self._get_cabinet_button(language)}""",
         }
 
         return {
@@ -1441,6 +1503,8 @@ class EmailNotificationTemplates:
             subjects = {
                 'ru': f'🎁 Персональное предложение: скидка {discount_percent}%',
                 'en': f'🎁 Personal offer: {discount_percent}% off',
+                'es': f'🎁 Oferta personal: {discount_percent}% de descuento',
+                'pt': f'🎁 Oferta pessoal: {discount_percent}% de desconto',
                 'zh': f'🎁 专属优惠：{discount_percent}% 折扣',
                 'ua': f'🎁 Персональна пропозиція: знижка {discount_percent}%',
             }
@@ -1448,6 +1512,8 @@ class EmailNotificationTemplates:
             subjects = {
                 'ru': '🎁 Персональное предложение',
                 'en': '🎁 Personal offer',
+                'es': '🎁 Oferta personal',
+                'pt': '🎁 Oferta pessoal',
                 'zh': '🎁 专属优惠',
                 'ua': '🎁 Персональна пропозиція',
             }
@@ -1455,6 +1521,8 @@ class EmailNotificationTemplates:
         valid_lines = {
             'ru': f'<p>⏰ Предложение действует <b>{valid_hours} ч.</b></p>' if valid_hours else '',
             'en': f'<p>⏰ The offer is valid for <b>{valid_hours} h.</b></p>' if valid_hours else '',
+            'es': f'<p>⏰ La oferta es válida por <b>{valid_hours} h.</b></p>' if valid_hours else '',
+            'pt': f'<p>⏰ A oferta é válida por <b>{valid_hours} h.</b></p>' if valid_hours else '',
             'zh': f'<p>⏰ 优惠有效期 <b>{valid_hours} 小时</b></p>' if valid_hours else '',
             'ua': f'<p>⏰ Пропозиція діє <b>{valid_hours} год.</b></p>' if valid_hours else '',
         }
@@ -1478,6 +1546,8 @@ class EmailNotificationTemplates:
                 <p>You can activate the offer in your account.</p>
                 {self._get_cabinet_button(language)}
             """,
+            'es': f"""<h2>Oferta personal</h2><div class="highlight"><p>{message_html}</p></div>{valid_lines['es']}<p>Puedes activar la oferta en tu cuenta.</p>{self._get_cabinet_button(language)}""",
+            'pt': f"""<h2>Oferta pessoal</h2><div class="highlight"><p>{message_html}</p></div>{valid_lines['pt']}<p>Você pode ativar a oferta na sua conta.</p>{self._get_cabinet_button(language)}""",
             'zh': f"""
                 <h2>专属优惠</h2>
                 <div class="highlight">
@@ -1510,6 +1580,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': 'Новый реферал зарегистрирован',
             'en': 'New Referral Registered',
+            'es': 'Nuevo referido registrado',
+            'pt': 'Nova indicação registrada',
             'zh': '新推荐用户已注册',
             'ua': 'Новий реферал зареєстрований',
         }
@@ -1531,6 +1603,8 @@ class EmailNotificationTemplates:
                 <p>You will receive bonuses from their top-ups!</p>
                 {self._get_cabinet_button(language)}
             """,
+            'es': f"""<h2>¡Nuevo referido!</h2><div class="highlight success"><p>Un nuevo usuario se registró con tu enlace{f': <strong>{referral_name}</strong>' if referral_name else ''}.</p></div><p>¡Recibirás bonos por sus recargas!</p>{self._get_cabinet_button(language)}""",
+            'pt': f"""<h2>Nova indicação!</h2><div class="highlight success"><p>Um novo usuário se cadastrou com seu link{f': <strong>{referral_name}</strong>' if referral_name else ''}.</p></div><p>Você receberá bônus pelas recargas dele!</p>{self._get_cabinet_button(language)}""",
         }
 
         return {
@@ -1550,6 +1624,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': 'Заявка на партнёрство одобрена',
             'en': 'Partner Application Approved',
+            'es': 'Solicitud de socio aprobada',
+            'pt': 'Solicitação de parceiro aprovada',
             'zh': '合作伙伴申请已批准',
             'ua': 'Заявка на партнерство схвалена',
         }
@@ -1575,6 +1651,8 @@ class EmailNotificationTemplates:
                 <p>You can now invite users and earn rewards!</p>
                 {self._get_cabinet_button(language)}
             """,
+            'es': f"""<h2>¡Solicitud de socio aprobada!</h2><div class="highlight success"><p>Tu solicitud de socio fue aprobada.</p><p>Tu comisión: <strong>{commission}%</strong></p>{f'<p>Comentario: {comment}</p>' if comment else ''}</div><p>Ya puedes invitar usuarios y ganar recompensas.</p>{self._get_cabinet_button(language)}""",
+            'pt': f"""<h2>Solicitação de parceiro aprovada!</h2><div class="highlight success"><p>Sua solicitação de parceiro foi aprovada.</p><p>Sua comissão: <strong>{commission}%</strong></p>{f'<p>Comentário: {comment}</p>' if comment else ''}</div><p>Você já pode convidar usuários e ganhar recompensas.</p>{self._get_cabinet_button(language)}""",
             'zh': f"""
                 <h2>合作伙伴申请已批准！</h2>
                 <div class="highlight success">
@@ -1609,6 +1687,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': 'Заявка на партнёрство отклонена',
             'en': 'Partner Application Rejected',
+            'es': 'Solicitud de socio rechazada',
+            'pt': 'Solicitação de parceiro recusada',
             'zh': '合作伙伴申请被拒绝',
             'ua': 'Заявка на партнерство відхилена',
         }
@@ -1632,6 +1712,8 @@ class EmailNotificationTemplates:
                 <p>You can submit a new application later.</p>
                 {self._get_cabinet_button(language)}
             """,
+            'es': f"""<h2>Solicitud de socio rechazada</h2><div class="highlight danger"><p>Lamentablemente, tu solicitud de socio fue rechazada.</p>{f'<p>Motivo: {comment}</p>' if comment else ''}</div><p>Puedes enviar una nueva solicitud más adelante.</p>{self._get_cabinet_button(language)}""",
+            'pt': f"""<h2>Solicitação de parceiro recusada</h2><div class="highlight danger"><p>Infelizmente, sua solicitação de parceiro foi recusada.</p>{f'<p>Motivo: {comment}</p>' if comment else ''}</div><p>Você pode enviar uma nova solicitação mais tarde.</p>{self._get_cabinet_button(language)}""",
             'zh': f"""
                 <h2>合作伙伴申请被拒绝</h2>
                 <div class="highlight danger">
@@ -1669,6 +1751,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': f'Запрос на вывод {amount} одобрен',
             'en': f'Withdrawal request for {amount} approved',
+            'es': f'Solicitud de retiro de {amount} aprobada',
+            'pt': f'Solicitação de saque de {amount} aprovada',
             'zh': f'提现请求 {amount} 已批准',
             'ua': f'Запит на виведення {amount} схвалено',
         }
@@ -1694,6 +1778,8 @@ class EmailNotificationTemplates:
                 <p>Funds will be transferred shortly.</p>
                 {self._get_cabinet_button(language)}
             """,
+            'es': f"""<h2>¡Solicitud de retiro aprobada!</h2><div class="highlight success"><p>Tu solicitud de retiro fue aprobada.</p><p>Importe: <span class="amount">{amount}</span></p>{f'<p>Comentario: {comment}</p>' if comment else ''}</div><p>Los fondos se transferirán en breve.</p>{self._get_cabinet_button(language)}""",
+            'pt': f"""<h2>Solicitação de saque aprovada!</h2><div class="highlight success"><p>Sua solicitação de saque foi aprovada.</p><p>Valor: <span class="amount">{amount}</span></p>{f'<p>Comentário: {comment}</p>' if comment else ''}</div><p>Os fundos serão transferidos em breve.</p>{self._get_cabinet_button(language)}""",
             'zh': f"""
                 <h2>提现请求已批准！</h2>
                 <div class="highlight success">
@@ -1729,6 +1815,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': f'Запрос на вывод {amount} отклонён',
             'en': f'Withdrawal request for {amount} rejected',
+            'es': f'Solicitud de retiro de {amount} rechazada',
+            'pt': f'Solicitação de saque de {amount} recusada',
             'zh': f'提现请求 {amount} 被拒绝',
             'ua': f'Запит на виведення {amount} відхилено',
         }
@@ -1754,6 +1842,8 @@ class EmailNotificationTemplates:
                 <p>Funds have been returned to your balance.</p>
                 {self._get_cabinet_button(language)}
             """,
+            'es': f"""<h2>Solicitud de retiro rechazada</h2><div class="highlight danger"><p>Tu solicitud de retiro fue rechazada.</p><p>Importe: <strong>{amount}</strong></p>{f'<p>Motivo: {comment}</p>' if comment else ''}</div><p>Los fondos volvieron a tu saldo.</p>{self._get_cabinet_button(language)}""",
+            'pt': f"""<h2>Solicitação de saque recusada</h2><div class="highlight danger"><p>Sua solicitação de saque foi recusada.</p><p>Valor: <strong>{amount}</strong></p>{f'<p>Motivo: {comment}</p>' if comment else ''}</div><p>Os fundos voltaram para o seu saldo.</p>{self._get_cabinet_button(language)}""",
             'zh': f"""
                 <h2>提现请求被拒绝</h2>
                 <div class="highlight danger">
@@ -1793,6 +1883,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': f'Платёж получен: {amount}',
             'en': f'Payment received: {amount}',
+            'es': f'Pago recibido: {amount}',
+            'pt': f'Pagamento recebido: {amount}',
             'zh': f'收到付款: {amount}',
             'ua': f'Платіж отримано: {amount}',
         }
@@ -1816,6 +1908,8 @@ class EmailNotificationTemplates:
                 <p>Thank you for your payment!</p>
                 {self._get_cabinet_button(language)}
             """,
+            'es': f"""<h2>Pago procesado correctamente</h2><div class="highlight success"><p>Importe: <span class="amount">+{amount}</span></p>{f'<p>Método de pago: {payment_method}</p>' if payment_method else ''}</div><p>¡Gracias por tu pago!</p>{self._get_cabinet_button(language)}""",
+            'pt': f"""<h2>Pagamento processado com sucesso</h2><div class="highlight success"><p>Valor: <span class="amount">+{amount}</span></p>{f'<p>Forma de pagamento: {payment_method}</p>' if payment_method else ''}</div><p>Obrigado pelo seu pagamento!</p>{self._get_cabinet_button(language)}""",
         }
 
         return {
@@ -2058,6 +2152,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': 'Код подтверждения для смены email',
             'en': 'Email change verification code',
+            'es': 'Código para cambiar tu correo',
+            'pt': 'Código para alterar seu e-mail',
             'zh': '邮箱更换验证码',
             'ua': 'Код підтвердження для зміни email',
             'fa': 'کد تایید تغییر ایمیل',
@@ -2092,6 +2188,8 @@ class EmailNotificationTemplates:
                 <p>This code will expire in {expire_minutes} minutes.</p>
                 <p style="color: #8A8A93;">If you didn't request an email change, you can safely ignore this email.</p>
             """,
+            'es': f"""<h2>{greeting.get('es')}</h2><p>Solicitaste cambiar tu correo electrónico. Usa este código para confirmarlo:</p>{code_box}<p>El código caduca en {expire_minutes} minutos.</p><p style="color: #8A8A93;">Si no solicitaste el cambio, puedes ignorar este mensaje.</p>""",
+            'pt': f"""<h2>{greeting.get('pt')}</h2><p>Você pediu para alterar seu e-mail. Use este código para confirmar:</p>{code_box}<p>O código expira em {expire_minutes} minutos.</p><p style="color: #8A8A93;">Se você não pediu a alteração, pode ignorar este e-mail.</p>""",
             'zh': f"""
                 <h2>{greeting.get('zh')}</h2>
                 <p>您请求更换邮箱地址。请使用以下验证码确认：</p>
@@ -2135,6 +2233,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': 'Ваша VPN подписка готова',
             'en': 'Your VPN subscription is ready',
+            'es': 'Tu suscripción VPN está lista',
+            'pt': 'Sua assinatura VPN está pronta',
             'zh': '您的VPN订阅已准备就绪',
             'ua': 'Ваша VPN підписка готова',
             'fa': 'اشتراک VPN شما آماده است',
@@ -2221,6 +2321,8 @@ class EmailNotificationTemplates:
                 <p>Your subscription has been activated in your cabinet.</p>
                 <p style="text-align: center;"><a href="{cabinet_url}" class="button">Go to Cabinet</a></p>
             """,
+            'es': f"""<h2>¡Tu suscripción VPN está lista!</h2><div class="highlight success"><p>Plan: <strong>{tariff_name}</strong></p><p>Periodo: <strong>{period_days} días</strong></p></div>{creds_block_en}<p>Tu suscripción está activa en tu cuenta.</p><p style="text-align: center;"><a href="{cabinet_url}" class="button">Ir a mi cuenta</a></p>""",
+            'pt': f"""<h2>Sua assinatura VPN está pronta!</h2><div class="highlight success"><p>Plano: <strong>{tariff_name}</strong></p><p>Período: <strong>{period_days} dias</strong></p></div>{creds_block_en}<p>Sua assinatura está ativa na sua conta.</p><p style="text-align: center;"><a href="{cabinet_url}" class="button">Ir para minha conta</a></p>""",
             'zh': f"""
                 <h2>您的VPN订阅已准备就绪！</h2>
                 <div class="highlight success">
@@ -2282,6 +2384,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': 'Требуется активация подписки',
             'en': 'Subscription activation required',
+            'es': 'Falta activar tu suscripción',
+            'pt': 'Falta ativar sua assinatura',
             'zh': '需要激活订阅',
             'ua': 'Потрібна активація підписки',
             'fa': 'فعال‌سازی اشتراک لازم است',
@@ -2308,6 +2412,8 @@ class EmailNotificationTemplates:
                 <p class="warning">You already have an active subscription. Activating will replace your current one.</p>
                 <p style="text-align: center;"><a href="{success_page_url}" class="button">Activate subscription</a></p>
             """,
+            'es': f"""<h2>Falta activar tu suscripción</h2>{gift_block_en}<div class="highlight"><p>Plan: <strong>{tariff_name}</strong></p><p>Periodo: <strong>{period_days} días</strong></p></div><p class="warning">Ya tienes una suscripción activa. Al activar esta, reemplazarás la actual.</p><p style="text-align: center;"><a href="{success_page_url}" class="button">Activar</a></p>""",
+            'pt': f"""<h2>Falta ativar sua assinatura</h2>{gift_block_en}<div class="highlight"><p>Plano: <strong>{tariff_name}</strong></p><p>Período: <strong>{period_days} dias</strong></p></div><p class="warning">Você já tem uma assinatura ativa. Ao ativar esta, substituirá a atual.</p><p style="text-align: center;"><a href="{success_page_url}" class="button">Ativar</a></p>""",
             'zh': f"""
                 <h2>需要激活订阅</h2>
                 {gift_block_zh}
@@ -2417,6 +2523,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': 'Вам подарили VPN подписку!',
             'en': "You've been gifted a VPN subscription!",
+            'es': '¡Te regalaron una suscripción VPN!',
+            'pt': 'Você ganhou uma assinatura VPN!',
             'zh': '您收到了VPN订阅礼物！',
             'ua': 'Вам подарували VPN підписку!',
             'fa': 'یک اشتراک VPN به شما هدیه داده شده است!',
@@ -2445,6 +2553,8 @@ class EmailNotificationTemplates:
                 {cred_block['en']}
                 <p style="text-align: center;"><a href="{cabinet_url}" class="button">Go to Cabinet</a></p>
             """,
+            'es': f"""<div class="highlight"><p><strong>Tus datos de acceso:</strong></p><p>Correo: <code>{cabinet_email}</code></p><p>Contraseña: <code>{escaped_pw}</code></p></div><p style="text-align: center;"><a href="{cabinet_url}" class="button">Ir a mi cuenta</a></p>""",
+            'pt': f"""<div class="highlight"><p><strong>Seus dados de acesso:</strong></p><p>E-mail: <code>{cabinet_email}</code></p><p>Senha: <code>{escaped_pw}</code></p></div><p style="text-align: center;"><a href="{cabinet_url}" class="button">Ir para minha conta</a></p>""",
             'zh': f"""
                 <h2>您收到了VPN订阅礼物！</h2>
                 {gift_block_zh}
@@ -2496,6 +2606,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': 'Данные для входа в личный кабинет',
             'en': 'Your cabinet login credentials',
+            'es': 'Tus datos de acceso',
+            'pt': 'Seus dados de acesso',
             'zh': '您的个人中心登录信息',
             'ua': 'Дані для входу в особистий кабінет',
             'fa': 'اطلاعات ورود به پنل کاربری',
@@ -2528,6 +2640,8 @@ class EmailNotificationTemplates:
                 <p>Save these credentials. You can change your password in cabinet settings.</p>
                 <p style="text-align: center;"><a href="{cabinet_url}" class="button">Go to Cabinet</a></p>
             """,
+            'es': f"""<h2>Tus datos de acceso</h2><div class="highlight success"><p>Plan: <strong>{tariff_name}</strong></p><p>Periodo: <strong>{period_days} días</strong></p></div><div class="highlight"><p><strong>Correo:</strong> <code>{cabinet_email}</code></p><p><strong>Contraseña:</strong> <code>{cabinet_password}</code></p></div><p style="text-align: center;"><a href="{cabinet_url}" class="button">Ir a mi cuenta</a></p>""",
+            'pt': f"""<h2>Seus dados de acesso</h2><div class="highlight success"><p>Plano: <strong>{tariff_name}</strong></p><p>Período: <strong>{period_days} dias</strong></p></div><div class="highlight"><p><strong>E-mail:</strong> <code>{cabinet_email}</code></p><p><strong>Senha:</strong> <code>{cabinet_password}</code></p></div><p style="text-align: center;"><a href="{cabinet_url}" class="button">Ir para minha conta</a></p>""",
             'zh': f"""
                 <h2>您的个人中心登录信息</h2>
                 <div class="highlight success">

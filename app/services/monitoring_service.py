@@ -2546,18 +2546,20 @@ class MonitoringService:
                 try:
                     language = getattr(user, 'language', 'ru') or 'ru'
                     texts = get_texts(language)
-                    threshold_rub = threshold / 100
-                    balance_rub = balance / 100
                     message = texts.get(
                         'LOW_BALANCE_ALERT',
                         '⚠️ <b>Низкий баланс</b>\n\n'
-                        'Ваш баланс: {balance} ₽\n'
-                        'Порог уведомления: {threshold} ₽\n\n'
+                        'Ваш баланс: {balance}\n'
+                        'Порог уведомления: {threshold}\n\n'
                         'Пополните баланс, чтобы автопродление подписки прошло успешно.',
                     )
+                    # format_price() renders the amount with the configured currency
+                    # symbol, so the templates must not append one themselves. The
+                    # previous `f'{balance/100:.0f}'` also dropped the cents, which
+                    # matters at $2.99 price points.
                     message = message.format(
-                        balance=f'{balance_rub:.0f}',
-                        threshold=f'{threshold_rub:.0f}',
+                        balance=settings.format_price(balance),
+                        threshold=settings.format_price(threshold),
                     )
 
                     # Build inline keyboard with cabinet top-up button

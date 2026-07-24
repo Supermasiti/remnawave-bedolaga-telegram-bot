@@ -77,7 +77,7 @@ async def get_traffic_packages(
         """Build a package response with the promo-group traffic discount applied.
 
         Mirrors POST /subscription/traffic: same _apply_addon_discount path and
-        the same 1₽ minimum-charge floor, so the price shown equals the price
+        the same $1 minimum-charge floor, so the price shown equals the price
         charged.
         """
         discount = _apply_addon_discount(user, 'traffic', base_price_kopeks, period_hint_days)

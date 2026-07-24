@@ -625,7 +625,7 @@ async def load_period_prices_from_db(db: AsyncSession) -> None:
             logger.info(
                 "Загружены периоды из тарифа '%s': %s",
                 tariff.name,
-                {f'{d}д': f'{p // 100}₽' for d, p in period_prices.items()},
+                {f'{d}д': f'${p // 100}' for d, p in period_prices.items()},
             )
         else:
             logger.warning('Тариф не имеет активных периодов (все цены = 0)', tariff_name=tariff.name)

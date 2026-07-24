@@ -321,7 +321,7 @@ async def show_pending_withdrawal_requests(callback: types.CallbackQuery, db_use
         )
 
         text += f'<b>#{req.id}</b> — {user_name} (ID{user_tg_id})\n'
-        text += f'💰 {req.amount_kopeks / 100:.0f}₽ | {risk_emoji} Риск: {req.risk_score}/100\n'
+        text += f'💰 ${req.amount_kopeks / 100:.0f} | {risk_emoji} Риск: {req.risk_score}/100\n'
         text += f'📅 {req.created_at.strftime("%d.%m.%Y %H:%M")}\n\n'
 
     keyboard_rows = []
@@ -329,7 +329,7 @@ async def show_pending_withdrawal_requests(callback: types.CallbackQuery, db_use
         keyboard_rows.append(
             [
                 types.InlineKeyboardButton(
-                    text=f'#{req.id} — {req.amount_kopeks / 100:.0f}₽', callback_data=f'admin_withdrawal_view_{req.id}'
+                    text=f'#{req.id} — ${req.amount_kopeks / 100:.0f}', callback_data=f'admin_withdrawal_view_{req.id}'
                 )
             ]
         )
@@ -378,7 +378,7 @@ async def view_withdrawal_request(callback: types.CallbackQuery, db_user: User, 
 
 👤 Пользователь: {user_name}
 🆔 ID: <code>{user_tg_id}</code>
-💰 Сумма: <b>{request.amount_kopeks / 100:.0f}₽</b>
+💰 Сумма: <b>${request.amount_kopeks / 100:.0f}</b>
 📊 Статус: {status_text}
 
 💳 <b>Реквизиты:</b>
@@ -563,8 +563,8 @@ async def start_test_referral_earning(
 <code>telegram_id сумма_в_рублях</code>
 
 Примеры:
-• <code>123456789 500</code> — начислит 500₽ пользователю 123456789
-• <code>987654321 1000</code> — начислит 1000₽ пользователю 987654321
+• <code>123456789 500</code> — начислит $500 пользователю 123456789
+• <code>987654321 1000</code> — начислит $1000 пользователю 987654321
 
 ⚠️ Это создаст реальную запись ReferralEarning, как будто пользователь заработал с реферала.
 """
@@ -604,8 +604,8 @@ async def process_test_referral_earning(message: types.Message, db_user: User, d
             await message.answer('❌ Сумма должна быть положительной')
             return
 
-        if amount_kopeks > 10000000:  # Лимит 100 000₽
-            await message.answer('❌ Максимальная сумма тестового начисления: 100 000₽')
+        if amount_kopeks > 10000000:  # Лимит $100 000
+            await message.answer('❌ Максимальная сумма тестового начисления: $100 000')
             return
 
     except ValueError:
@@ -642,8 +642,8 @@ async def process_test_referral_earning(message: types.Message, db_user: User, d
         f'✅ <b>Тестовое начисление создано!</b>\n\n'
         f'👤 Пользователь: {html.escape(target_user.full_name) if target_user.full_name else "Без имени"}\n'
         f'🆔 ID: <code>{target_telegram_id}</code>\n'
-        f'💰 Сумма: <b>{amount_rubles:.0f}₽</b>\n'
-        f'💳 Новый баланс: <b>{target_user.balance_kopeks / 100:.0f}₽</b>\n\n'
+        f'💰 Сумма: <b>${amount_rubles:.0f}</b>\n'
+        f'💳 Новый баланс: <b>${target_user.balance_kopeks / 100:.0f}</b>\n\n'
         f'Начисление добавлено как реферальный доход.',
         reply_markup=types.InlineKeyboardMarkup(
             inline_keyboard=[
@@ -654,7 +654,7 @@ async def process_test_referral_earning(message: types.Message, db_user: User, d
     )
 
     logger.info(
-        'Тестовое начисление: админ начислил ₽ пользователю',
+        'Тестовое начисление: админ начислил $ пользователю',
         telegram_id=db_user.telegram_id,
         amount_rubles=amount_rubles,
         target_telegram_id=target_telegram_id,
@@ -1069,9 +1069,9 @@ async def check_missing_bonuses(callback: types.CallbackQuery, db_user: User, db
         if report.missing_bonuses:
             text += f"""
 💰 <b>Требуется начислить:</b>
-• Рефералам: {report.total_missing_to_referrals / 100:.0f}₽
-• Рефереерам: {report.total_missing_to_referrers / 100:.0f}₽
-• <b>Итого: {(report.total_missing_to_referrals + report.total_missing_to_referrers) / 100:.0f}₽</b>
+• Рефералам: ${report.total_missing_to_referrals / 100:.0f}
+• Рефереерам: ${report.total_missing_to_referrers / 100:.0f}
+• <b>Итого: ${(report.total_missing_to_referrals + report.total_missing_to_referrers) / 100:.0f}</b>
 
 👤 <b>Список ({len(report.missing_bonuses)} чел.):</b>
 """
@@ -1084,8 +1084,8 @@ async def check_missing_bonuses(callback: types.CallbackQuery, db_user: User, db
                 )
                 text += f'\n{i}. <b>{referral_name}</b>'
                 text += f'\n   └ Пригласил: {referrer_name}'
-                text += f'\n   └ Пополнение: {mb.first_topup_amount_kopeks / 100:.0f}₽'
-                text += f'\n   └ Бонусы: {mb.referral_bonus_amount / 100:.0f}₽ + {mb.referrer_bonus_amount / 100:.0f}₽'
+                text += f'\n   └ Пополнение: ${mb.first_topup_amount_kopeks / 100:.0f}'
+                text += f'\n   └ Бонусы: ${mb.referral_bonus_amount / 100:.0f} + ${mb.referrer_bonus_amount / 100:.0f}'
 
             if len(report.missing_bonuses) > 15:
                 text += f'\n\n<i>... и ещё {len(report.missing_bonuses) - 15} чел.</i>'
@@ -1147,9 +1147,9 @@ async def apply_missing_bonuses(callback: types.CallbackQuery, db_user: User, db
 
 📊 <b>Результат:</b>
 • Обработано: {fix_report.users_fixed} пользователей
-• Начислено рефералам: {fix_report.bonuses_to_referrals / 100:.0f}₽
-• Начислено рефереерам: {fix_report.bonuses_to_referrers / 100:.0f}₽
-• <b>Итого: {(fix_report.bonuses_to_referrals + fix_report.bonuses_to_referrers) / 100:.0f}₽</b>
+• Начислено рефералам: ${fix_report.bonuses_to_referrals / 100:.0f}
+• Начислено рефереерам: ${fix_report.bonuses_to_referrers / 100:.0f}
+• <b>Итого: ${(fix_report.bonuses_to_referrals + fix_report.bonuses_to_referrers) / 100:.0f}</b>
 """
 
         if fix_report.errors > 0:

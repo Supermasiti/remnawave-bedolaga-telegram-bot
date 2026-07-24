@@ -57,7 +57,7 @@ async def start_mulenpay_payment(
         'MULENPAY_TOPUP_PROMPT',
         (
             '💳 <b>Оплата через {mulenpay_name_html}</b>\n\n'
-            'Введите сумму для пополнения от 100 до 100 000 ₽.\n'
+            'Введите сумму для пополнения от 100 до $100 000.\n'
             'Оплата происходит через защищенную платформу {mulenpay_name}.'
         ),
     )

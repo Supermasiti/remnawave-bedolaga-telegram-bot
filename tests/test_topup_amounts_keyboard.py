@@ -35,8 +35,8 @@ def test_resolve_maps_overpay_variants_to_overpay():
 
 
 def test_format_quick_amount():
-    assert format_quick_amount(10000) == '100 ₽'
-    assert format_quick_amount(12550) == '125.50 ₽'
+    assert format_quick_amount(10000) == '$100'
+    assert format_quick_amount(12550) == '$125.50'
 
 
 async def test_keyboard_builds_amount_buttons_within_limits(monkeypatch: pytest.MonkeyPatch):
@@ -56,7 +56,7 @@ async def test_keyboard_builds_amount_buttons_within_limits(monkeypatch: pytest.
 
     callbacks = [button.callback_data for row in keyboard.inline_keyboard for button in row]
     assert callbacks == ['topup_amount|stars|30000', 'topup_amount|stars|50000', 'back_to_menu']
-    assert keyboard.inline_keyboard[0][0].text == '300 ₽'
+    assert keyboard.inline_keyboard[0][0].text == '$300'
 
 
 async def test_keyboard_chunks_amounts_two_per_row(monkeypatch: pytest.MonkeyPatch):

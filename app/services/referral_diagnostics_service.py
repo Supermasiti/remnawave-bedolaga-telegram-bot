@@ -781,7 +781,7 @@ class ReferralDiagnosticsService:
                                 )
                                 user.has_made_first_topup = True
                                 logger.info(
-                                    '💰 Начислен бонус рефералу ₽',
+                                    '💰 Начислен бонус рефералу $',
                                     telegram_id=user.telegram_id,
                                     REFERRAL_FIRST_TOPUP_BONUS_KOPEKS=settings.REFERRAL_FIRST_TOPUP_BONUS_KOPEKS / 100,
                                 )
@@ -819,7 +819,7 @@ class ReferralDiagnosticsService:
                                 )
 
                                 logger.info(
-                                    '💰 Начислен бонус рефереру ₽',
+                                    '💰 Начислен бонус рефереру $',
                                     telegram_id=referrer.telegram_id or referrer.id,
                                     inviter_bonus=inviter_bonus / 100,
                                 )
@@ -840,7 +840,7 @@ class ReferralDiagnosticsService:
         if apply:
             await db.commit()
             logger.info(
-                '✅ Исправлено рефералов: начислено бонусов: ₽ + ₽',
+                '✅ Исправлено рефералов: начислено бонусов: $ + $',
                 users_fixed=report.users_fixed,
                 bonuses_to_referrals=report.bonuses_to_referrals / 100,
                 bonuses_to_referrers=report.bonuses_to_referrers / 100,
@@ -1026,7 +1026,7 @@ class ReferralDiagnosticsService:
                         )
                         referral.has_made_first_topup = True
                         logger.info(
-                            '💰 Начислен бонус рефералу ₽',
+                            '💰 Начислен бонус рефералу $',
                             telegram_id=referral.telegram_id,
                             referral_bonus_amount=missing.referral_bonus_amount / 100,
                         )
@@ -1057,7 +1057,7 @@ class ReferralDiagnosticsService:
                             campaign_id=campaign_id,
                         )
                         logger.info(
-                            '💰 Начислен бонус рефереру ₽',
+                            '💰 Начислен бонус рефереру $',
                             telegram_id=referrer.telegram_id,
                             referrer_bonus_amount=missing.referrer_bonus_amount / 100,
                         )
@@ -1077,7 +1077,7 @@ class ReferralDiagnosticsService:
         if apply:
             await db.commit()
             logger.info(
-                '✅ Начислено бонусов: ₽ рефералам + ₽ рефереерам',
+                '✅ Начислено бонусов: $ рефералам + $ рефереерам',
                 bonuses_to_referrals=report.bonuses_to_referrals / 100,
                 bonuses_to_referrers=report.bonuses_to_referrers / 100,
             )

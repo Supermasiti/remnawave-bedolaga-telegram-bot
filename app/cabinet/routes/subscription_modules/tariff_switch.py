@@ -106,7 +106,7 @@ async def preview_tariff_switch(
         )
 
     if settings.TARIFF_SWITCH_RESET_FREE_DAYS and current_tariff is not None and current_tariff.is_free:
-        # A free (0₽) tariff has no paid value to prorate from — the prorated switch
+        # A free ($0) tariff has no paid value to prorate from — the prorated switch
         # would quote the full new-tariff rate for the whole (often huge) free
         # remainder AND carry those free days onto a paid tariff, violating
         # TARIFF_SWITCH_RESET_FREE_DAYS. Route to the purchase flow instead
@@ -177,8 +177,8 @@ async def preview_tariff_switch(
         'upgrade_cost_kopeks': upgrade_cost,
         'upgrade_cost_label': settings.format_price(upgrade_cost) if upgrade_cost > 0 else 'Free',
         'balance_kopeks': balance,
-        # Когда есть нехватка <1₽ (FX-rounding), показ копеек обязателен — без него
-        # юзер видит "Баланс 150 ₽, не хватает 0 ₽" и думает что баг.
+        # Когда есть нехватка <$1 (FX-rounding), показ копеек обязателен — без него
+        # юзер видит "Баланс $150, не хватает $0" и думает что баг.
         'balance_label': settings.format_price(balance, round_kopeks=False),
         'has_enough_balance': has_enough,
         'missing_amount_kopeks': missing,
@@ -288,7 +288,7 @@ async def switch_tariff(
         )
 
     if settings.TARIFF_SWITCH_RESET_FREE_DAYS and current_tariff is not None and current_tariff.is_free:
-        # Same guard as in preview: free (0₽) source tariffs must go through the
+        # Same guard as in preview: free ($0) source tariffs must go through the
         # purchase flow — prorated switching would charge for and carry the whole
         # free remainder (TARIFF_SWITCH_RESET_FREE_DAYS).
         raise HTTPException(

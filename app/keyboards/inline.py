@@ -1255,7 +1255,7 @@ def get_subscription_keyboard(
                     )
                 else:
                     # Для суточных тарифов переходим на список тарифов, для обычных - мгновенное переключение.
-                    # Бесплатный (0₽) тариф — тоже через список с выбором периода: prorated
+                    # Бесплатный ($0) тариф — тоже через список с выбором периода: prorated
                     # instant-switch посчитал бы доплату за весь остаток бесплатных дней
                     # и перенёс бы их на платный тариф вопреки TARIFF_SWITCH_RESET_FREE_DAYS.
                     is_free_tariff = bool(
@@ -2936,7 +2936,7 @@ def get_manage_countries_keyboard(
     apply_label = texts.t('APPLY_CHANGES_BUTTON', '✅ Apply changes')
     if total_cost > 0:
         apply_text = f'{apply_label} (${total_cost // 100})'
-        logger.info('🔍 Общая стоимость новых серверов: ₽', total_cost=total_cost / 100)
+        logger.info('🔍 Общая стоимость новых серверов: $', total_cost=total_cost / 100)
     else:
         apply_text = apply_label
 

@@ -461,7 +461,7 @@ async def handle_successful_topup_with_cart(user_id: int, amount_kopeks: int, bo
                 )
             else:
                 missing = max(total_price - user.balance_kopeks, 0)
-                # Без округления, иначе при не хватке <50 копеек покажется «0 ₽».
+                # Без округления, иначе при не хватке <50 копеек покажется «$0».
                 success_text = texts.BALANCE_TOPPED_UP_CART_INSUFFICIENT.format(
                     amount=texts.format_price(amount_kopeks),
                     balance=texts.format_price(user.balance_kopeks),
@@ -573,7 +573,7 @@ async def process_topup_amount(message: types.Message, db_user: User, state: FSM
             if amount_kopeks < settings.YOOKASSA_MIN_AMOUNT_KOPEKS:
                 min_rubles = settings.YOOKASSA_MIN_AMOUNT_KOPEKS / 100
                 await message.answer(
-                    f'❌ Минимальная сумма для оплаты через YooKassa: {min_rubles:.0f} ₽',
+                    f'❌ Минимальная сумма для оплаты через YooKassa: ${min_rubles:.0f}',
                     reply_markup=get_back_keyboard(db_user.language, callback_data='balance_topup'),
                 )
                 return
@@ -581,7 +581,7 @@ async def process_topup_amount(message: types.Message, db_user: User, state: FSM
             if amount_kopeks > settings.YOOKASSA_MAX_AMOUNT_KOPEKS:
                 max_rubles = settings.YOOKASSA_MAX_AMOUNT_KOPEKS / 100
                 await message.answer(
-                    f'❌ Максимальная сумма для оплаты через YooKassa: {max_rubles:,.0f} ₽'.replace(',', ' '),
+                    f'❌ Максимальная сумма для оплаты через YooKassa: ${max_rubles:,.0f}'.replace(',', ' '),
                     reply_markup=get_back_keyboard(db_user.language, callback_data='balance_topup'),
                 )
                 return

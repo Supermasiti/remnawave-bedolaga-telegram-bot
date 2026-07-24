@@ -925,9 +925,9 @@ async def monitoring_statistics_callback(callback: CallbackQuery):
 • Сервис: {'🟢 Работает' if running else '🔴 Остановлен'}
 • В очереди: {queue_len} чек(ов)"""
                 if queue_len > 0:
-                    nalogo_section += f'\n• На сумму: {total_amount:,.2f} ₽'
+                    nalogo_section += f'\n• На сумму: ${total_amount:,.2f}'
                 if pending_count > 0:
-                    nalogo_section += f'\n⚠️ <b>Требуют проверки: {pending_count} ({pending_amount:,.2f} ₽)</b>'
+                    nalogo_section += f'\n⚠️ <b>Требуют проверки: {pending_count} (${pending_amount:,.2f})</b>'
                 text += nalogo_section
 
             from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
@@ -1047,7 +1047,7 @@ async def nalogo_force_process_callback(callback: CallbackQuery):
 • Сервис: {'🟢 Работает' if running else '🔴 Остановлен'}
 • В очереди: {queue_len} чек(ов)"""
                 if queue_len > 0:
-                    nalogo_section += f'\n• На сумму: {total_amount:,.2f} ₽'
+                    nalogo_section += f'\n• На сумму: ${total_amount:,.2f}'
                 stats_text += nalogo_section
 
             buttons = []
@@ -1103,7 +1103,7 @@ async def nalogo_pending_callback(callback: CallbackQuery):
             created_at = receipt.get('created_at', '')[:16].replace('T', ' ')
             error = receipt.get('error', '')[:50]
 
-            text += f'<b>{i}. {amount:,.2f} ₽</b>\n'
+            text += f'<b>{i}. ${amount:,.2f}</b>\n'
             text += f'   📅 {created_at}\n'
             text += f'   🆔 <code>{payment_id[:20]}...</code>\n'
             if error:
@@ -1378,9 +1378,9 @@ async def _do_reconcile_logs(callback: CallbackQuery):
             return
 
         # Паттерны для парсинга логов
-        # Успешный платёж: "Успешно обработан платеж YooKassa 30e3c6fc-000f-5001-9000-1a9c8b242396: пользователь 1046 пополнил баланс на 200.0₽"
+        # Успешный платёж: "Успешно обработан платеж YooKassa 30e3c6fc-000f-5001-9000-1a9c8b242396: пользователь 1046 пополнил баланс на $200.0"
         payment_pattern = re.compile(
-            r'(\d{4}-\d{2}-\d{2}) \d{2}:\d{2}:\d{2}.*Успешно обработан платеж YooKassa ([a-f0-9-]+).*на ([\d.]+)₽'
+            r'(\d{4}-\d{2}-\d{2}) \d{2}:\d{2}:\d{2}.*Успешно обработан платеж YooKassa ([a-f0-9-]+).*на ([\d.]+)$'
         )
         # Чек создан: "Чек NaloGO создан для платежа 30e3c6fc-000f-5001-9000-1a9c8b242396: 243udsqtik"
         receipt_pattern = re.compile(
@@ -1443,14 +1443,14 @@ async def _do_reconcile_logs(callback: CallbackQuery):
         if missing_count == 0:
             text += '✅ <b>Все платежи имеют чеки!</b>'
         else:
-            text += f'⚠️ <b>Без чеков:</b> {missing_count} платежей на {missing_amount:,.2f} ₽\n\n'
+            text += f'⚠️ <b>Без чеков:</b> {missing_count} платежей на ${missing_amount:,.2f}\n\n'
 
             # Показываем по датам (последние)
             sorted_dates = sorted(by_date.keys(), reverse=True)
             for date_str in sorted_dates[:7]:
                 date_payments = by_date[date_str]
                 date_amount = sum(p['amount'] for p in date_payments)
-                text += f'• <b>{date_str}:</b> {len(date_payments)} шт. на {date_amount:,.2f} ₽\n'
+                text += f'• <b>{date_str}:</b> {len(date_payments)} шт. на ${date_amount:,.2f}\n'
 
             if len(sorted_dates) > 7:
                 text += f'\n<i>...и ещё {len(sorted_dates) - 7} дней</i>'
@@ -1505,7 +1505,7 @@ async def receipts_reconcile_logs_details_callback(callback: CallbackQuery):
             return
 
         payment_pattern = re.compile(
-            r'(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2}).*Успешно обработан платеж YooKassa ([a-f0-9-]+).*пользователь (\d+).*на ([\d.]+)₽'
+            r'(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2}).*Успешно обработан платеж YooKassa ([a-f0-9-]+).*пользователь (\d+).*на ([\d.]+)$'
         )
         receipt_pattern = re.compile(r'Чек NaloGO создан для платежа ([a-f0-9-]+)')
 
@@ -1546,7 +1546,7 @@ async def receipts_reconcile_logs_details_callback(callback: CallbackQuery):
             for p in missing[:20]:
                 text += (
                     f'• <b>{p["date"]} {p["time"]}</b>\n'
-                    f'  User: {p["user_id"]} | {p["amount"]:.0f}₽\n'
+                    f'  User: {p["user_id"]} | ${p["amount"]:.0f}\n'
                     f'  <code>{p["payment_id"][:18]}...</code>\n\n'
                 )
 

@@ -1001,7 +1001,7 @@ def should_carry_trial_remaining_days() -> bool:
     периода: пока он включён, остаток триала НЕ переносится ни на одном пути
     покупки, даже если ``TRIAL_ADD_REMAINING_DAYS_TO_PAID=true`` (иначе флаг сброса
     оставался мёртвым для триалов — «бесплатная версия» бота это именно триал, а
-    не 0₽-тариф). Перенос возможен только когда сброс ВЫКЛЮЧЕН и явно включён
+    не $0-тариф). Перенос возможен только когда сброс ВЫКЛЮЧЕН и явно включён
     ``TRIAL_ADD_REMAINING_DAYS_TO_PAID``.
     """
     return bool(settings.TRIAL_ADD_REMAINING_DAYS_TO_PAID and not settings.TARIFF_SWITCH_RESET_FREE_DAYS)
@@ -1012,7 +1012,7 @@ def _should_carry_remaining_days(*, is_trial: bool, source_is_free: bool) -> boo
 
     - Триал: по ``should_carry_trial_remaining_days`` (TARIFF_SWITCH_RESET_FREE_DAYS
       перебивает TRIAL_ADD_REMAINING_DAYS_TO_PAID).
-    - Бесплатный 0₽ тариф (``source_is_free`` уже учитывает TARIFF_SWITCH_RESET_FREE_DAYS):
+    - Бесплатный $0 тариф (``source_is_free`` уже учитывает TARIFF_SWITCH_RESET_FREE_DAYS):
       не переносим — наспамленные дни нельзя бесплатно унести на платный тариф.
     - Обычная платная подписка: переносим как раньше.
     """
@@ -1024,7 +1024,7 @@ def _should_carry_remaining_days(*, is_trial: bool, source_is_free: bool) -> boo
 
 
 async def _is_free_source_tariff(db: AsyncSession, tariff_id: int) -> bool:
-    """True, если исходный тариф полностью бесплатный (0₽).
+    """True, если исходный тариф полностью бесплатный ($0).
 
     Любая ошибка → False (переносим дни как раньше), чтобы смена тарифа никогда
     не падала из-за этой проверки.
@@ -1108,7 +1108,7 @@ async def extend_subscription(
     elif is_tariff_change:
         # При СМЕНЕ тарифа сохраняем оставшееся время активной подписки.
         # НЕ переносим дни, если исходная подписка — триал (без
-        # TRIAL_ADD_REMAINING_DAYS_TO_PAID) ИЛИ бесплатный 0₽ тариф
+        # TRIAL_ADD_REMAINING_DAYS_TO_PAID) ИЛИ бесплатный $0 тариф
         # (TARIFF_SWITCH_RESET_FREE_DAYS) — иначе наспамленные на бесплатке дни
         # бесплатно уносятся на платный тариф.
         remaining_seconds = 0

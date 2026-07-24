@@ -7,7 +7,7 @@ operator had marked `is_active=False` in admin ("ТЕСТОВЫЙ" / `Неакт
 After the user topped up their balance, the bot's
 `try_auto_extend_expired_after_topup` ran, picked the expired subscription,
 loaded the (inactive) tariff, computed `period_days = tariff.get_shortest_period()`,
-and silently charged 300₽ for a 1-day extension on a tariff the operator
+and silently charged $300 for a 1-day extension on a tariff the operator
 explicitly deactivated.
 
 Same gap existed in cart-driven `_prepare_auto_extend_context` — it validated

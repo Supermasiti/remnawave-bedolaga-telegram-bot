@@ -303,7 +303,7 @@ class NalogoQueueService:
                     f'<b>⚠️ Проблема с отправкой чеков NaloGO</b>\n\n'
                     f'Сервис nalog.ru временно недоступен.\n\n'
                     f'📋 <b>В очереди:</b> {remaining} чек(ов)\n'
-                    f'💰 <b>На сумму:</b> {total_queued_amount:,.2f} ₽\n\n'
+                    f'💰 <b>На сумму:</b> ${total_queued_amount:,.2f}\n\n'
                     f'Чеки будут отправлены автоматически когда сервис восстановится.'
                 )
                 await self._send_admin_notification(message)
@@ -315,7 +315,7 @@ class NalogoQueueService:
                 f'<b>✅ Очередь чеков NaloGO разгружена</b>\n\n'
                 f'Все отложенные чеки успешно отправлены!\n\n'
                 f'📋 <b>Отправлено:</b> {processed} чек(ов)\n'
-                f'💰 <b>На сумму:</b> {total_processed_amount:,.2f} ₽'
+                f'💰 <b>На сумму:</b> ${total_processed_amount:,.2f}'
             )
             await self._send_admin_notification(message, skip_cooldown=True)
 

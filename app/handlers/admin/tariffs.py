@@ -557,7 +557,7 @@ async def toggle_daily_tariff(
         # Включаем суточный режим (с ценой по умолчанию)
         tariff = await update_tariff(db, tariff, is_daily=True, daily_price_kopeks=5000)  # 50 руб по умолчанию
         await callback.answer(
-            'Суточный режим включен. Цена: 50 ₽/день\nНастройте цену через кнопку «💰 Суточная цена»', show_alert=True
+            'Суточный режим включен. Цена: $50/день\nНастройте цену через кнопку «💰 Суточная цена»', show_alert=True
         )
 
     subs_count = await get_tariff_subscriptions_count(db, tariff_id)
@@ -932,7 +932,7 @@ async def select_tariff_type_daily(
         f'Уровень: <b>{data["tariff_tier"]}</b>\n'
         f'Тип: <b>🔄 Суточный</b>\n\n'
         'Шаг 6/6: Введите суточную цену в рублях\n\n'
-        'Пример: <i>50</i> (50 ₽/день), <i>99.90</i> (99.90 ₽/день)',
+        'Пример: <i>50</i> ($50/день), <i>99.90</i> ($99.90/день)',
         reply_markup=InlineKeyboardMarkup(
             inline_keyboard=[[InlineKeyboardButton(text=texts.CANCEL, callback_data='admin_tariffs')]]
         ),
@@ -1448,7 +1448,7 @@ async def start_edit_tariff_device_price(
         f'Текущая цена: <b>{current_price}</b>\n\n'
         'Введите цену в копейках за одно устройство в месяц.\n\n'
         '• <code>0</code> или <code>-</code> — докупка устройств недоступна\n'
-        '• Например: <code>5000</code> = 50₽/мес за устройство',
+        '• Например: <code>5000</code> = $50/мес за устройство',
         reply_markup=InlineKeyboardMarkup(
             inline_keyboard=[[InlineKeyboardButton(text=texts.CANCEL, callback_data=f'admin_tariff_view:{tariff_id}')]]
         ),
@@ -1940,7 +1940,7 @@ async def start_edit_traffic_topup_packages(
         'Введите пакеты в формате:\n'
         f'<code>{current_packages}</code>\n\n'
         '(ГБ:цена_в_копейках, через запятую)\n'
-        'Например: <code>5:5000, 10:9000</code> = 5ГБ за 50₽, 10ГБ за 90₽',
+        'Например: <code>5:5000, 10:9000</code> = 5ГБ за $50, 10ГБ за $90',
         reply_markup=InlineKeyboardMarkup(
             inline_keyboard=[
                 [InlineKeyboardButton(text=texts.CANCEL, callback_data=f'admin_tariff_edit_traffic_topup:{tariff_id}')]

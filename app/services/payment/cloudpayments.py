@@ -112,7 +112,7 @@ class CloudPaymentsPaymentMixin:
             return None
 
         logger.info(
-            'Создан CloudPayments платёж: invoice amount=₽, user',
+            'Создан CloudPayments платёж: invoice amount=$, user',
             invoice_id=invoice_id,
             amount_kopeks=amount_kopeks / 100,
             user_id=user_id,
@@ -327,7 +327,7 @@ class CloudPaymentsPaymentMixin:
 
         user_id_display = user.telegram_id or user.email or f'#{user.id}'
         logger.info(
-            'CloudPayments платёж успешно обработан: invoice amount=₽, user',
+            'CloudPayments платёж успешно обработан: invoice amount=$, user',
             invoice_id=invoice_id,
             amount_kopeks=amount_kopeks / 100,
             user_id_display=user_id_display,
@@ -481,9 +481,9 @@ class CloudPaymentsPaymentMixin:
         message = texts.t(
             'PAYMENT_SUCCESS_CLOUDPAYMENTS',
             '✅ <b>Оплата получена!</b>\n\n'
-            '💰 Сумма: {amount}₽\n'
+            '💰 Сумма: ${amount}\n'
             '💳 Способ: CloudPayments\n'
-            '💵 Баланс: {balance}₽\n\n'
+            '💵 Баланс: ${balance}\n\n'
             'Спасибо за пополнение!',
         ).format(
             amount=f'{amount_rub:.2f}',

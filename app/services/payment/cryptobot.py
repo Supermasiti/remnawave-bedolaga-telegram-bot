@@ -23,7 +23,6 @@ from app.services.subscription_renewal_service import (
     decode_payment_payload,
     parse_payment_metadata,
 )
-from app.utils.currency_converter import currency_converter
 from app.utils.payment_logger import payment_logger as logger
 from app.utils.user_utils import format_referrer_info
 

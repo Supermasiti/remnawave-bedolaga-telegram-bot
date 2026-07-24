@@ -141,7 +141,7 @@ async def test_create_stars_invoice_calculates_stars(monkeypatch: pytest.MonkeyP
     monkeypatch.setattr(
         type(settings),
         'format_price',
-        lambda self, amount: f'{amount / 100:.0f}₽',
+        lambda self, amount: f'${amount / 100:.0f}',
         raising=False,
     )
 
@@ -158,7 +158,7 @@ async def test_create_stars_invoice_calculates_stars(monkeypatch: pytest.MonkeyP
     assert call['payload'] == 'custom_payload'
     prices = call['prices']
     assert len(prices) == 1
-    assert prices[0].amount == 2  # 14000 коп. → 140 ₽ → 2 звезды при курсе 70
+    assert prices[0].amount == 2  # 14000 коп. → $140 → 2 звезды при курсе 70
     assert '≈2 ⭐' in call['description']
 
 
@@ -172,7 +172,7 @@ async def test_create_stars_invoice_enforces_minimum_star(monkeypatch: pytest.Mo
     monkeypatch.setattr(type(settings), 'format_price', lambda self, amount: amount, raising=False)
 
     await service.create_stars_invoice(
-        amount_kopeks=50,  # 0.5 ₽ при курсе 500 => <1 звезды
+        amount_kopeks=50,  # $0.5 при курсе 500 => <1 звезды
         description='Микроплатёж',
     )
 
@@ -334,7 +334,7 @@ async def test_process_stars_payment_simple_subscription_success(
     monkeypatch.setattr(
         type(settings),
         'format_price',
-        lambda self, amount: f'{amount / 100:.0f}₽',
+        lambda self, amount: f'${amount / 100:.0f}',
         raising=False,
     )
     monkeypatch.setattr(

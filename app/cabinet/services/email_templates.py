@@ -134,109 +134,164 @@ class EmailNotificationTemplates:
         return self._get_base_template(content, language)
 
     def _get_base_template(self, content: str, language: str = 'ru') -> str:
-        """Wrap content in base HTML template."""
+        """Wrap content in the branded HTML shell.
+
+        Mail clients are hostile in ways browsers are not, so the shell is
+        built defensively:
+
+        * **Tables, not divs.** Outlook renders through Word, which ignores
+          most modern box layout. A 600px centred table is the one construct
+          every client agrees on.
+        * **Inline styles on the shell.** Gmail drops <style> when it clips a
+          long message, and several clients strip <head> entirely. Anything
+          the layout depends on is therefore also inlined; the <style> block
+          only has to survive for the class-based markup (.highlight/.button/
+          .amount) that the individual templates emit.
+        * **color-scheme: dark.** Declaring the palette stops Gmail and
+          Outlook.com from "helpfully" inverting an already-dark email into
+          unreadable mud.
+
+        Palette is Monoza's: near-black canvas, acid-lime accent — the same
+        identity as the cabinet and the landing page.
+        """
         footer_texts = {
-            'ru': 'Это автоматическое сообщение. Пожалуйста, не отвечайте на это письмо.',
             'en': 'This is an automated message. Please do not reply to this email.',
+            'es': 'Este es un mensaje automático. Por favor, no respondas a este correo.',
+            'pt': 'Esta é uma mensagem automática. Por favor, não responda a este e-mail.',
+            'ru': 'Это автоматическое сообщение. Пожалуйста, не отвечайте на это письмо.',
+            'tr': 'Bu otomatik bir mesajdır. Lütfen bu e-postayı yanıtlamayın.',
             'zh': '这是一封自动发送的邮件，请勿回复。',
             'ua': 'Це автоматичне повідомлення. Будь ласка, не відповідайте на цей лист.',
             'fa': 'این یک پیام خودکار است. لطفاً به این ایمیل پاسخ ندهید.',
         }
-        footer_text = footer_texts.get(language, footer_texts['ru'])
+        # Fall back to English, not Russian: the customer base is Spanish- and
+        # Portuguese-speaking, and an unknown language code used to mean a
+        # Russian footer landed in a Venezuelan inbox.
+        footer_text = footer_texts.get(language, footer_texts['en'])
+        direction = 'rtl' if language == 'fa' else 'ltr'
 
         return f"""
 <!DOCTYPE html>
-<html>
+<html dir="{direction}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <meta name="supported-color-schemes" content="dark">
     <style>
+        :root {{
+            color-scheme: dark;
+            supported-color-schemes: dark;
+        }}
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
             line-height: 1.6;
-            color: #333;
-            background-color: #f5f5f5;
+            color: #EDEDEF;
+            background-color: #08080A;
             margin: 0;
             padding: 0;
+            -webkit-font-smoothing: antialiased;
         }}
+        a {{ color: #CCFF2E; }}
         .container {{
             max-width: 600px;
             margin: 0 auto;
-            padding: 20px;
-            background-color: #ffffff;
+            background-color: #141417;
+            border-radius: 16px;
+            overflow: hidden;
         }}
         .header {{
             text-align: center;
-            padding: 20px 0;
-            border-bottom: 2px solid #007bff;
+            padding: 32px 24px 24px 24px;
+            border-bottom: 1px solid #26262B;
         }}
         .header h1 {{
-            color: #007bff;
+            color: #CCFF2E;
             margin: 0;
-            font-size: 24px;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
         }}
         .content {{
-            padding: 30px 20px;
+            padding: 32px 28px;
+            color: #EDEDEF;
+            font-size: 16px;
         }}
+        .content p {{ color: #EDEDEF; }}
+        .content h2, .content h3 {{ color: #FFFFFF; letter-spacing: -0.01em; }}
         .highlight {{
-            background-color: #f8f9fa;
-            border-left: 4px solid #007bff;
-            padding: 15px;
-            margin: 20px 0;
+            background-color: #1C1C21;
+            border-left: 3px solid #CCFF2E;
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin: 22px 0;
+            color: #D6D6DB;
         }}
-        .success {{
-            border-left-color: #28a745;
-        }}
-        .warning {{
-            border-left-color: #ffc107;
-        }}
-        .danger {{
-            border-left-color: #dc3545;
-        }}
+        .success {{ border-left-color: #CCFF2E; }}
+        .warning {{ border-left-color: #FFC94A; }}
+        .danger  {{ border-left-color: #FF5C5C; }}
         .button {{
             display: inline-block;
-            padding: 12px 24px;
-            background-color: #007bff;
-            color: white !important;
+            padding: 14px 30px;
+            background-color: #CCFF2E;
+            color: #08080A !important;
             text-decoration: none;
-            border-radius: 5px;
-            margin: 20px 0;
-            font-weight: bold;
-        }}
-        .button:hover {{
-            background-color: #0056b3;
+            border-radius: 10px;
+            margin: 22px 0;
+            font-weight: 700;
+            font-size: 16px;
+            mso-padding-alt: 14px 30px;
         }}
         .footer {{
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
+            padding: 24px;
+            border-top: 1px solid #26262B;
             font-size: 12px;
-            color: #666;
+            color: #8A8A93;
             text-align: center;
         }}
+        .footer p {{ color: #8A8A93; margin: 4px 0; }}
         .amount {{
-            font-size: 24px;
-            font-weight: bold;
-            color: #28a745;
+            font-size: 26px;
+            font-weight: 700;
+            color: #CCFF2E;
         }}
-        .amount.negative {{
-            color: #dc3545;
+        .amount.negative {{ color: #FF5C5C; }}
+        @media only screen and (max-width: 620px) {{
+            .container {{ border-radius: 0 !important; }}
+            .content {{ padding: 24px 18px !important; }}
         }}
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>{self.service_name}</h1>
-        </div>
-        <div class="content">
-            {content}
-        </div>
-        <div class="footer">
-            <p>&copy; {self.service_name}</p>
-            <p>{footer_text}</p>
-        </div>
-    </div>
+<body style="margin:0; padding:0; background-color:#08080A; color:#EDEDEF;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="background-color:#08080A; margin:0; padding:0;">
+        <tr>
+            <td align="center" style="padding:32px 12px;">
+                <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"
+                       class="container"
+                       style="max-width:600px; width:100%; background-color:#141417; border-radius:16px;">
+                    <tr>
+                        <td class="header" align="center"
+                            style="padding:32px 24px 24px 24px; border-bottom:1px solid #26262B;">
+                            <h1 style="margin:0; color:#CCFF2E; font-size:26px; font-weight:700;">{self.service_name}</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="content" style="padding:32px 28px; color:#EDEDEF; font-size:16px;">
+                            {content}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="footer" align="center"
+                            style="padding:24px; border-top:1px solid #26262B; font-size:12px; color:#8A8A93;">
+                            <p style="margin:4px 0; color:#8A8A93;">&copy; {self.service_name}</p>
+                            <p style="margin:4px 0; color:#8A8A93;">{footer_text}</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
 """
@@ -247,15 +302,24 @@ class EmailNotificationTemplates:
             return ''
 
         texts = {
-            'ru': 'Открыть личный кабинет',
             'en': 'Open Dashboard',
+            'es': 'Abrir mi cuenta',
+            'pt': 'Abrir minha conta',
+            'ru': 'Открыть личный кабинет',
+            'tr': 'Panelime git',
             'zh': '打开控制面板',
             'ua': 'Відкрити особистий кабінет',
             'fa': 'باز کردن پنل کاربری',
         }
         text = texts.get(language, texts['en'])
 
-        return f'<p style="text-align: center;"><a href="{self.cabinet_url}" class="button">{text}</a></p>'
+        return (
+            f'<p style="text-align: center;">'
+            f'<a href="{self.cabinet_url}" class="button" '
+            f'style="display:inline-block; padding:14px 30px; background-color:#CCFF2E; '
+            f'color:#08080A; text-decoration:none; border-radius:10px; font-weight:700; font-size:16px;">'
+            f'{text}</a></p>'
+        )
 
     # ============================================================================
     # Balance Templates
@@ -269,6 +333,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': f'Баланс пополнен на {amount}',
             'en': f'Balance topped up by {amount}',
+            'es': f'Saldo recargado en {amount}',
+            'pt': f'Saldo recarregado em {amount}',
             'zh': f'余额已充值 {amount}',
             'ua': f'Баланс поповнено на {amount}',
         }
@@ -292,6 +358,24 @@ class EmailNotificationTemplates:
                 <p>Thank you for using our service!</p>
                 {self._get_cabinet_button(language)}
             """,
+            'es': f"""
+                <h2>¡Saldo recargado!</h2>
+                <div class="highlight success">
+                    <p>Importe recargado: <span class="amount">+{amount}</span></p>
+                    <p>Saldo actual: <strong>{balance}</strong></p>
+                </div>
+                <p>¡Gracias por confiar en nosotros!</p>
+                {self._get_cabinet_button(language)}
+            """,
+            'pt': f"""
+                <h2>Saldo recarregado!</h2>
+                <div class="highlight success">
+                    <p>Valor recarregado: <span class="amount">+{amount}</span></p>
+                    <p>Saldo atual: <strong>{balance}</strong></p>
+                </div>
+                <p>Obrigado por usar nosso serviço!</p>
+                {self._get_cabinet_button(language)}
+            """,
             'zh': f"""
                 <h2>充值成功！</h2>
                 <div class="highlight success">
@@ -313,8 +397,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     def _balance_change_template(self, language: str, context: dict[str, Any]) -> dict[str, str]:
@@ -365,8 +449,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     # ============================================================================
@@ -382,12 +466,16 @@ class EmailNotificationTemplates:
         tariff_suffix_en = f' "{tariff_name}"' if tariff_name else ''
         tariff_line_ru = f'<p>Тариф: <strong>{tariff_name}</strong></p>' if tariff_name else ''
         tariff_line_en = f'<p>Plan: <strong>{tariff_name}</strong></p>' if tariff_name else ''
+        tariff_line_es = f'<p>Plan: <strong>{tariff_name}</strong></p>' if tariff_name else ''
+        tariff_line_pt = f'<p>Plano: <strong>{tariff_name}</strong></p>' if tariff_name else ''
         tariff_line_zh = f'<p>套餐: <strong>{tariff_name}</strong></p>' if tariff_name else ''
         tariff_line_ua = f'<p>Тариф: <strong>{tariff_name}</strong></p>' if tariff_name else ''
 
         subjects = {
             'ru': f'Подписка{tariff_suffix_ru} истекает через {days_left} дн.',
             'en': f'Subscription{tariff_suffix_en} expires in {days_left} day(s)',
+            'es': f'Tu suscripción{tariff_suffix_en} vence en {days_left} día(s)',
+            'pt': f'Sua assinatura{tariff_suffix_en} vence em {days_left} dia(s)',
             'zh': f'订阅将在 {days_left} 天后到期',
             'ua': f'Підписка{tariff_suffix_ru} закінчується через {days_left} дн.',
         }
@@ -413,6 +501,26 @@ class EmailNotificationTemplates:
                 <p>Renew your subscription to maintain access to our service.</p>
                 {self._get_cabinet_button(language)}
             """,
+            'es': f"""
+                <h2>Tu suscripción está por vencer</h2>
+                <div class="highlight warning">
+                    {tariff_line_es}
+                    <p>Tu suscripción vence en <strong>{days_left}</strong> día(s).</p>
+                    <p>Fecha de vencimiento: <strong>{expires_at}</strong></p>
+                </div>
+                <p>Renuévala para no perder el acceso al servicio.</p>
+                {self._get_cabinet_button(language)}
+            """,
+            'pt': f"""
+                <h2>Sua assinatura está acabando</h2>
+                <div class="highlight warning">
+                    {tariff_line_pt}
+                    <p>Sua assinatura vence em <strong>{days_left}</strong> dia(s).</p>
+                    <p>Data de vencimento: <strong>{expires_at}</strong></p>
+                </div>
+                <p>Renove para não perder o acesso ao serviço.</p>
+                {self._get_cabinet_button(language)}
+            """,
             'zh': f"""
                 <h2>订阅即将到期</h2>
                 <div class="highlight warning">
@@ -436,8 +544,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     def _subscription_expired_template(self, language: str, context: dict[str, Any]) -> dict[str, str]:
@@ -447,12 +555,16 @@ class EmailNotificationTemplates:
         tariff_suffix_en = f' "{tariff_name}"' if tariff_name else ''
         tariff_line_ru = f'<p>Тариф: <strong>{tariff_name}</strong></p>' if tariff_name else ''
         tariff_line_en = f'<p>Plan: <strong>{tariff_name}</strong></p>' if tariff_name else ''
+        tariff_line_es = f'<p>Plan: <strong>{tariff_name}</strong></p>' if tariff_name else ''
+        tariff_line_pt = f'<p>Plano: <strong>{tariff_name}</strong></p>' if tariff_name else ''
         tariff_line_zh = f'<p>套餐: <strong>{tariff_name}</strong></p>' if tariff_name else ''
         tariff_line_ua = f'<p>Тариф: <strong>{tariff_name}</strong></p>' if tariff_name else ''
 
         subjects = {
             'ru': f'Подписка{tariff_suffix_ru} истекла',
             'en': f'Subscription{tariff_suffix_en} Expired',
+            'es': f'Tu suscripción{tariff_suffix_en} ha vencido',
+            'pt': f'Sua assinatura{tariff_suffix_en} venceu',
             'zh': '订阅已到期',
             'ua': f'Підписка{tariff_suffix_ru} закінчилась',
         }
@@ -476,6 +588,24 @@ class EmailNotificationTemplates:
                 <p>Purchase a new subscription to continue using our service.</p>
                 {self._get_cabinet_button(language)}
             """,
+            'es': f"""
+                <h2>Suscripción vencida</h2>
+                <div class="highlight danger">
+                    {tariff_line_es}
+                    <p>Tu suscripción venció y el acceso VPN quedó desactivado.</p>
+                </div>
+                <p>Contrata una nueva suscripción para seguir usando el servicio.</p>
+                {self._get_cabinet_button(language)}
+            """,
+            'pt': f"""
+                <h2>Assinatura vencida</h2>
+                <div class="highlight danger">
+                    {tariff_line_pt}
+                    <p>Sua assinatura venceu e o acesso VPN foi desativado.</p>
+                </div>
+                <p>Contrate uma nova assinatura para continuar usando o serviço.</p>
+                {self._get_cabinet_button(language)}
+            """,
             'zh': f"""
                 <h2>订阅已到期</h2>
                 <div class="highlight danger">
@@ -497,8 +627,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     def _subscription_renewed_template(self, language: str, context: dict[str, Any]) -> dict[str, str]:
@@ -541,8 +671,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     _WEBHOOK_EMAIL_COPY = {
@@ -813,8 +943,8 @@ class EmailNotificationTemplates:
             'ua': f'<h2>Підписка закінчилася</h2><div class="highlight danger"><p>Ваша VPN-підписка закінчилася{f" ({end_date})" if end_date else ""} — доступ вимкнено.</p><p>Продовжте підписку, щоб повернутися до сервісу.</p></div>{self._get_cabinet_button(language)}',
         }
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     def _winback_discount_template(self, language: str, context: dict[str, Any]) -> dict[str, str]:
@@ -834,8 +964,8 @@ class EmailNotificationTemplates:
             'ua': f'<h2>Знижка {percent}% на продовження</h2><div class="highlight"><p>Повертайтеся зі знижкою <strong>{percent}%</strong>{f" — діє до {expires_at}" if expires_at else ""}.</p><p>Знижка вже прив’язана до вашого акаунта й сумується з промогрупою — просто продовжте підписку в кабінеті.</p></div>{self._get_cabinet_button(language)}',
         }
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     def _winback_trial_ending_template(self, language: str, context: dict[str, Any]) -> dict[str, str]:
@@ -853,8 +983,8 @@ class EmailNotificationTemplates:
             'ua': f'<h2>Пробна підписка скоро закінчиться</h2><div class="highlight warning"><p>Ваша тестова підписка скоро закінчується.</p><p>Оформіть підписку, щоб не залишитися без VPN — конфіг і пристрої збережуться.</p></div>{self._get_cabinet_button(language)}',
         }
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     def _subscription_activated_template(self, language: str, context: dict[str, Any]) -> dict[str, str]:
@@ -865,10 +995,14 @@ class EmailNotificationTemplates:
         tariff_suffix_en = f' "{tariff_name}"' if tariff_name else ''
         tariff_line_ru = f'<p>Тариф: <strong>{tariff_name}</strong></p>' if tariff_name else ''
         tariff_line_en = f'<p>Plan: <strong>{tariff_name}</strong></p>' if tariff_name else ''
+        tariff_line_es = f'<p>Plan: <strong>{tariff_name}</strong></p>' if tariff_name else ''
+        tariff_line_pt = f'<p>Plano: <strong>{tariff_name}</strong></p>' if tariff_name else ''
 
         subjects = {
             'ru': f'Подписка{tariff_suffix_ru} активирована',
             'en': f'Subscription{tariff_suffix_en} Activated',
+            'es': f'Suscripción{tariff_suffix_en} activada',
+            'pt': f'Assinatura{tariff_suffix_en} ativada',
             'zh': '订阅已激活',
             'ua': f'Підписку{tariff_suffix_ru} активовано',
         }
@@ -894,11 +1028,31 @@ class EmailNotificationTemplates:
                 <p>You can now use the VPN service.</p>
                 {self._get_cabinet_button(language)}
             """,
+            'es': f"""
+                <h2>¡Suscripción activada!</h2>
+                <div class="highlight success">
+                    {tariff_line_es}
+                    <p>Tu suscripción VPN se activó correctamente.</p>
+                    <p>Válida hasta: <strong>{expires_at}</strong></p>
+                </div>
+                <p>Ya puedes usar el servicio.</p>
+                {self._get_cabinet_button(language)}
+            """,
+            'pt': f"""
+                <h2>Assinatura ativada!</h2>
+                <div class="highlight success">
+                    {tariff_line_pt}
+                    <p>Sua assinatura VPN foi ativada com sucesso.</p>
+                    <p>Válida até: <strong>{expires_at}</strong></p>
+                </div>
+                <p>Você já pode usar o serviço.</p>
+                {self._get_cabinet_button(language)}
+            """,
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     # ============================================================================
@@ -939,8 +1093,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     def _autopay_failed_template(self, language: str, context: dict[str, Any]) -> dict[str, str]:
@@ -976,8 +1130,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     def _autopay_insufficient_funds_template(self, language: str, context: dict[str, Any]) -> dict[str, str]:
@@ -1016,8 +1170,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     # ============================================================================
@@ -1056,8 +1210,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     def _daily_insufficient_funds_template(self, language: str, context: dict[str, Any]) -> dict[str, str]:
@@ -1091,8 +1245,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     def _traffic_reset_template(self, language: str, context: dict[str, Any]) -> dict[str, str]:
@@ -1122,8 +1276,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     # ============================================================================
@@ -1161,8 +1315,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     def _unban_template(self, language: str, context: dict[str, Any]) -> dict[str, str]:
@@ -1194,8 +1348,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     def _warning_template(self, language: str, context: dict[str, Any]) -> dict[str, str]:
@@ -1225,8 +1379,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     # ============================================================================
@@ -1267,8 +1421,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     def _promo_offer_template(self, language: str, context: dict[str, Any]) -> dict[str, str]:
@@ -1345,8 +1499,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     def _referral_registered_template(self, language: str, context: dict[str, Any]) -> dict[str, str]:
@@ -1380,8 +1534,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     # ============================================================================
@@ -1444,8 +1598,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     def _partner_rejected_template(self, language: str, context: dict[str, Any]) -> dict[str, str]:
@@ -1499,8 +1653,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     # ============================================================================
@@ -1563,8 +1717,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     def _withdrawal_rejected_template(self, language: str, context: dict[str, Any]) -> dict[str, str]:
@@ -1623,8 +1777,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     # ============================================================================
@@ -1665,8 +1819,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     # ============================================================================
@@ -1682,6 +1836,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': 'Подтверждение email адреса',
             'en': 'Verify your email address',
+            'es': 'Verifica tu correo electrónico',
+            'pt': 'Verifique seu e-mail',
             'zh': '验证您的邮箱地址',
             'ua': 'Підтвердження email адреси',
             'fa': 'تایید آدرس ایمیل',
@@ -1690,6 +1846,8 @@ class EmailNotificationTemplates:
         greeting = {
             'ru': f'Здравствуйте{", " + username if username else ""}!',
             'en': f'Hello{", " + username if username else ""}!',
+            'es': f'¡Hola{", " + username if username else ""}!',
+            'pt': f'Olá{", " + username if username else ""}!',
             'zh': f'您好{", " + username if username else ""}!',
             'ua': f'Вітаємо{", " + username if username else ""}!',
             'fa': f'سلام{" " + username if username else ""}!',
@@ -1705,7 +1863,7 @@ class EmailNotificationTemplates:
                 <p>Или скопируйте и вставьте эту ссылку в браузер:</p>
                 <p><a href="{verification_url}">{verification_url}</a></p>
                 <p>Ссылка действительна в течение {expire_hours} часов.</p>
-                <p style="color: #666;">Если вы не создавали аккаунт, просто проигнорируйте это письмо.</p>
+                <p style="color: #8A8A93;">Если вы не создавали аккаунт, просто проигнорируйте это письмо.</p>
             """,
             'fa': f"""
                 <h2>{greeting.get('fa')}</h2>
@@ -1716,7 +1874,7 @@ class EmailNotificationTemplates:
                 <p>یا این لینک را در مرورگر خود کپی و باز کنید:</p>
                 <p><a href="{verification_url}">{verification_url}</a></p>
                 <p>این لینک تا {expire_hours} ساعت معتبر است.</p>
-                <p style="color: #666;">اگر شما این حساب را ایجاد نکرده‌اید، این ایمیل را نادیده بگیرید.</p>
+                <p style="color: #8A8A93;">اگر شما این حساب را ایجاد نکرده‌اید، این ایمیل را نادیده بگیرید.</p>
             """,
             'en': f"""
                 <h2>{greeting.get('en')}</h2>
@@ -1727,7 +1885,29 @@ class EmailNotificationTemplates:
                 <p>Or copy and paste this link in your browser:</p>
                 <p><a href="{verification_url}">{verification_url}</a></p>
                 <p>This link will expire in {expire_hours} hours.</p>
-                <p style="color: #666;">If you didn't create an account, you can safely ignore this email.</p>
+                <p style="color: #8A8A93;">If you didn't create an account, you can safely ignore this email.</p>
+            """,
+            'es': f"""
+                <h2>{greeting.get('es')}</h2>
+                <p>¡Gracias por registrarte! Confirma tu correo electrónico pulsando el botón:</p>
+                <p style="text-align: center;">
+                    <a href="{verification_url}" class="button">Verificar correo</a>
+                </p>
+                <p>O copia y pega este enlace en tu navegador:</p>
+                <p><a href="{verification_url}">{verification_url}</a></p>
+                <p>El enlace caduca en {expire_hours} horas.</p>
+                <p style="color: #8A8A93;">Si no creaste esta cuenta, puedes ignorar este mensaje.</p>
+            """,
+            'pt': f"""
+                <h2>{greeting.get('pt')}</h2>
+                <p>Obrigado por se cadastrar! Confirme seu e-mail clicando no botão abaixo:</p>
+                <p style="text-align: center;">
+                    <a href="{verification_url}" class="button">Verificar e-mail</a>
+                </p>
+                <p>Ou copie e cole este link no seu navegador:</p>
+                <p><a href="{verification_url}">{verification_url}</a></p>
+                <p>O link expira em {expire_hours} horas.</p>
+                <p style="color: #8A8A93;">Se você não criou esta conta, pode ignorar este e-mail.</p>
             """,
             'zh': f"""
                 <h2>{greeting.get('zh')}</h2>
@@ -1738,7 +1918,7 @@ class EmailNotificationTemplates:
                 <p>或将此链接复制并粘贴到浏览器中：</p>
                 <p><a href="{verification_url}">{verification_url}</a></p>
                 <p>此链接将在 {expire_hours} 小时后过期。</p>
-                <p style="color: #666;">如果您没有创建账户，请忽略此邮件。</p>
+                <p style="color: #8A8A93;">如果您没有创建账户，请忽略此邮件。</p>
             """,
             'ua': f"""
                 <h2>{greeting.get('ua')}</h2>
@@ -1749,13 +1929,13 @@ class EmailNotificationTemplates:
                 <p>Або скопіюйте та вставте це посилання в браузер:</p>
                 <p><a href="{verification_url}">{verification_url}</a></p>
                 <p>Посилання дійсне протягом {expire_hours} годин.</p>
-                <p style="color: #666;">Якщо ви не створювали акаунт, просто проігноруйте цей лист.</p>
+                <p style="color: #8A8A93;">Якщо ви не створювали акаунт, просто проігноруйте цей лист.</p>
             """,
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     def _password_reset_template(self, language: str, context: dict[str, Any]) -> dict[str, str]:
@@ -1767,6 +1947,8 @@ class EmailNotificationTemplates:
         subjects = {
             'ru': 'Сброс пароля',
             'en': 'Reset your password',
+            'es': 'Restablecer tu contraseña',
+            'pt': 'Redefinir sua senha',
             'zh': '重置您的密码',
             'ua': 'Скидання пароля',
             'fa': 'بازنشانی رمز عبور',
@@ -1775,6 +1957,8 @@ class EmailNotificationTemplates:
         greeting = {
             'ru': f'Здравствуйте{", " + username if username else ""}!',
             'en': f'Hello{", " + username if username else ""}!',
+            'es': f'¡Hola{", " + username if username else ""}!',
+            'pt': f'Olá{", " + username if username else ""}!',
             'zh': f'您好{", " + username if username else ""}!',
             'ua': f'Вітаємо{", " + username if username else ""}!',
             'fa': f'سلام{" " + username if username else ""}!',
@@ -1785,62 +1969,84 @@ class EmailNotificationTemplates:
                 <h2>{greeting.get('fa')}</h2>
                 <p>درخواستی برای بازنشانی رمز عبور شما دریافت شد. برای تعیین رمز جدید روی دکمه زیر بزنید:</p>
                 <p style="text-align: center;">
-                    <a href="{reset_url}" class="button" style="background-color: #dc3545;">بازنشانی رمز عبور</a>
+                    <a href="{reset_url}" class="button" style="background-color: #FF5C5C;">بازنشانی رمز عبور</a>
                 </p>
                 <p>یا این لینک را در مرورگر خود کپی و باز کنید:</p>
                 <p><a href="{reset_url}">{reset_url}</a></p>
                 <p>این لینک تا {expire_hours} ساعت معتبر است.</p>
-                <p class="warning" style="color: #dc3545; font-weight: bold;">اگر شما درخواست بازنشانی رمز عبور نداده‌اید، این ایمیل را نادیده بگیرید یا با پشتیبانی تماس بگیرید.</p>
+                <p class="warning" style="color: #FF5C5C; font-weight: bold;">اگر شما درخواست بازنشانی رمز عبور نداده‌اید، این ایمیل را نادیده بگیرید یا با پشتیبانی تماس بگیرید.</p>
             """,
             'ru': f"""
                 <h2>{greeting.get('ru')}</h2>
                 <p>Мы получили запрос на сброс вашего пароля. Нажмите на кнопку ниже, чтобы установить новый пароль:</p>
                 <p style="text-align: center;">
-                    <a href="{reset_url}" class="button" style="background-color: #dc3545;">Сбросить пароль</a>
+                    <a href="{reset_url}" class="button" style="background-color: #FF5C5C;">Сбросить пароль</a>
                 </p>
                 <p>Или скопируйте и вставьте эту ссылку в браузер:</p>
                 <p><a href="{reset_url}">{reset_url}</a></p>
                 <p>Ссылка действительна в течение {expire_hours} часов.</p>
-                <p class="warning" style="color: #dc3545; font-weight: bold;">Если вы не запрашивали сброс пароля, проигнорируйте это письмо или свяжитесь с поддержкой.</p>
+                <p class="warning" style="color: #FF5C5C; font-weight: bold;">Если вы не запрашивали сброс пароля, проигнорируйте это письмо или свяжитесь с поддержкой.</p>
             """,
             'en': f"""
                 <h2>{greeting.get('en')}</h2>
                 <p>We received a request to reset your password. Click the button below to set a new password:</p>
                 <p style="text-align: center;">
-                    <a href="{reset_url}" class="button" style="background-color: #dc3545;">Reset Password</a>
+                    <a href="{reset_url}" class="button" style="background-color: #FF5C5C;">Reset Password</a>
                 </p>
                 <p>Or copy and paste this link in your browser:</p>
                 <p><a href="{reset_url}">{reset_url}</a></p>
                 <p>This link will expire in {expire_hours} hour(s).</p>
-                <p class="warning" style="color: #dc3545; font-weight: bold;">If you didn't request a password reset, please ignore this email or contact support.</p>
+                <p class="warning" style="color: #FF5C5C; font-weight: bold;">If you didn't request a password reset, please ignore this email or contact support.</p>
+            """,
+            'es': f"""
+                <h2>{greeting.get('es')}</h2>
+                <p>Recibimos una solicitud para restablecer tu contraseña. Pulsa el botón para crear una nueva:</p>
+                <p style="text-align: center;">
+                    <a href="{reset_url}" class="button" style="background-color: #FF5C5C;">Restablecer contraseña</a>
+                </p>
+                <p>O copia y pega este enlace en tu navegador:</p>
+                <p><a href="{reset_url}">{reset_url}</a></p>
+                <p>El enlace caduca en {expire_hours} hora(s).</p>
+                <p class="warning" style="color: #FF5C5C; font-weight: bold;">Si no solicitaste este cambio, ignora este mensaje o contacta con soporte.</p>
+            """,
+            'pt': f"""
+                <h2>{greeting.get('pt')}</h2>
+                <p>Recebemos um pedido para redefinir sua senha. Clique no botão para criar uma nova:</p>
+                <p style="text-align: center;">
+                    <a href="{reset_url}" class="button" style="background-color: #FF5C5C;">Redefinir senha</a>
+                </p>
+                <p>Ou copie e cole este link no seu navegador:</p>
+                <p><a href="{reset_url}">{reset_url}</a></p>
+                <p>O link expira em {expire_hours} hora(s).</p>
+                <p class="warning" style="color: #FF5C5C; font-weight: bold;">Se você não solicitou esta alteração, ignore este e-mail ou fale com o suporte.</p>
             """,
             'zh': f"""
                 <h2>{greeting.get('zh')}</h2>
                 <p>我们收到了重置您密码的请求。点击下方按钮设置新密码：</p>
                 <p style="text-align: center;">
-                    <a href="{reset_url}" class="button" style="background-color: #dc3545;">重置密码</a>
+                    <a href="{reset_url}" class="button" style="background-color: #FF5C5C;">重置密码</a>
                 </p>
                 <p>或将此链接复制并粘贴到浏览器中：</p>
                 <p><a href="{reset_url}">{reset_url}</a></p>
                 <p>此链接将在 {expire_hours} 小时后过期。</p>
-                <p class="warning" style="color: #dc3545; font-weight: bold;">如果您没有请求重置密码，请忽略此邮件或联系客服。</p>
+                <p class="warning" style="color: #FF5C5C; font-weight: bold;">如果您没有请求重置密码，请忽略此邮件或联系客服。</p>
             """,
             'ua': f"""
                 <h2>{greeting.get('ua')}</h2>
                 <p>Ми отримали запит на скидання вашого пароля. Натисніть на кнопку нижче, щоб встановити новий пароль:</p>
                 <p style="text-align: center;">
-                    <a href="{reset_url}" class="button" style="background-color: #dc3545;">Скинути пароль</a>
+                    <a href="{reset_url}" class="button" style="background-color: #FF5C5C;">Скинути пароль</a>
                 </p>
                 <p>Або скопіюйте та вставте це посилання в браузер:</p>
                 <p><a href="{reset_url}">{reset_url}</a></p>
                 <p>Посилання дійсне протягом {expire_hours} годин.</p>
-                <p class="warning" style="color: #dc3545; font-weight: bold;">Якщо ви не запитували скидання пароля, проігноруйте цей лист або зв'яжіться з підтримкою.</p>
+                <p class="warning" style="color: #FF5C5C; font-weight: bold;">Якщо ви не запитували скидання пароля, проігноруйте цей лист або зв'яжіться з підтримкою.</p>
             """,
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     def _email_change_code_template(self, language: str, context: dict[str, Any]) -> dict[str, str]:
@@ -1877,41 +2083,41 @@ class EmailNotificationTemplates:
                 <p>Вы запросили смену email адреса. Используйте код ниже для подтверждения:</p>
                 {code_box}
                 <p>Код действителен в течение {expire_minutes} минут.</p>
-                <p style="color: #666;">Если вы не запрашивали смену email, просто проигнорируйте это письмо.</p>
+                <p style="color: #8A8A93;">Если вы не запрашивали смену email, просто проигнорируйте это письмо.</p>
             """,
             'en': f"""
                 <h2>{greeting.get('en')}</h2>
                 <p>You requested to change your email address. Use the code below to confirm:</p>
                 {code_box}
                 <p>This code will expire in {expire_minutes} minutes.</p>
-                <p style="color: #666;">If you didn't request an email change, you can safely ignore this email.</p>
+                <p style="color: #8A8A93;">If you didn't request an email change, you can safely ignore this email.</p>
             """,
             'zh': f"""
                 <h2>{greeting.get('zh')}</h2>
                 <p>您请求更换邮箱地址。请使用以下验证码确认：</p>
                 {code_box}
                 <p>此验证码将在 {expire_minutes} 分钟后过期。</p>
-                <p style="color: #666;">如果您没有请求更换邮箱，请忽略此邮件。</p>
+                <p style="color: #8A8A93;">如果您没有请求更换邮箱，请忽略此邮件。</p>
             """,
             'ua': f"""
                 <h2>{greeting.get('ua')}</h2>
                 <p>Ви запросили зміну email адреси. Використовуйте код нижче для підтвердження:</p>
                 {code_box}
                 <p>Код дійсний протягом {expire_minutes} хвилин.</p>
-                <p style="color: #666;">Якщо ви не запитували зміну email, просто проігноруйте цей лист.</p>
+                <p style="color: #8A8A93;">Якщо ви не запитували зміну email, просто проігноруйте цей лист.</p>
             """,
             'fa': f"""
                 <h2>{greeting.get('fa')}</h2>
                 <p>شما درخواست تغییر ایمیل داده‌اید. برای تایید از کد زیر استفاده کنید:</p>
                 {code_box}
                 <p>این کد تا {expire_minutes} دقیقه معتبر است.</p>
-                <p style="color: #666;">اگر شما درخواست تغییر ایمیل نداده‌اید، این ایمیل را نادیده بگیرید.</p>
+                <p style="color: #8A8A93;">اگر شما درخواست تغییر ایمیل نداده‌اید، این ایمیل را نادیده بگیرید.</p>
             """,
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     # ============================================================================
@@ -2048,8 +2254,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     def _guest_activation_required_template(self, language: str, context: dict[str, Any]) -> dict[str, str]:
@@ -2135,8 +2341,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     def _guest_gift_received_template(self, language: str, context: dict[str, Any]) -> dict[str, str]:
@@ -2275,8 +2481,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
     def _guest_cabinet_credentials_template(self, language: str, context: dict[str, Any]) -> dict[str, str]:
@@ -2364,8 +2570,8 @@ class EmailNotificationTemplates:
         }
 
         return {
-            'subject': subjects.get(language, subjects['ru']),
-            'body_html': self._get_base_template(bodies.get(language, bodies['ru']), language),
+            'subject': subjects.get(language, subjects['en']),
+            'body_html': self._get_base_template(bodies.get(language, bodies['en']), language),
         }
 
 
